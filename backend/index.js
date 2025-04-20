@@ -43,4 +43,25 @@ app.get('/events', async (req, res) => {
   }
 });
 
+app.post('/events/create', async (req, res) => {
+  try {
+    const { eventId, title, date, location, price, capacity, vendorId } = req.body;
+
+    const newRecord = await base('Events').create({
+      "Event ID": eventId,
+      "Event Title": title,
+      "Date": date,
+      "Location": location,
+      "Price (EUR)": price,
+      "Capacity": capacity,
+      "Vendors": [vendorId]  // assumes linked record ID
+    });
+
+    res.json({ message: 'Event created successfully', recordId: newRecord.id });
+  } catch (err) {
+    console.error('Error creating event:', err);
+    res.status(500).json({ error: 'Failed to create event', detail: err.message });
+  }
+});
+
 app.listen(3000, () => console.log('Backend running on port 3000'));
