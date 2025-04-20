@@ -18,19 +18,18 @@ app.get('/', (req, res) => res.send('Backend is live'));
 app.get('/events', async (req, res) => {
   try {
     const records = await base('Events').select({}).all();
+
     const events = records.map(record => ({
-      id: record.id,
-      title: record.fields['Event Title'],
-      date: record.fields['Date'],
-      location: record.fields['Location'],
-      price: record.fields['Price (EUR)'],
-      capacity: record.fields['Capacity'],
-      vendor: record.fields['Vendor ID']
+      airtableId: record.id,
+      rawFields: record.fields  // 👈 show everything exactly as Airtable sends it
     }));
+
+    console.log("Fetched records:", events);  // helpful for logs on Render
     res.json(events);
+
   } catch (err) {
     console.error('Airtable error:', err);
-    res.status(500).json({ error: 'Failed to fetch events from Airtable' });
+    res.status(500).json({ error: 'Failed to fetch events from Airtable', detail: err.message });
   }
 });
 
