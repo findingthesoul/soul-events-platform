@@ -29,7 +29,7 @@ app.get('/events', async (req, res) => {
         date: f['Date'] || '',
         location: f['Location'] || '',
         price: f['Price (EUR)'] || 0,
-        vendor: f['Vendors'] ? f['Vendors'][0] : null // handle linked vendor
+        vendor: f['Vendors'] ? f['Vendors'][0] : null
       };
     });
 
