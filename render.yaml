@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node index.js
+  - type: static
+    name: dashboard
+    rootDir: dashboard
+    buildCommand: echo "No build needed"
+    staticPublishPath: .
