@@ -7,6 +7,9 @@ require('dotenv').config();
 
 app.use(bodyParser.json());
 
+const cors = require('cors');
+app.use(cors());
+
 // Airtable config
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
   .base(process.env.AIRTABLE_BASE_ID);
