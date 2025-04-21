@@ -67,4 +67,38 @@ res.status(500).json({
   }
 });
 
+
+const jwt = require('jsonwebtoken');
+
+// Temporary secret key (store in .env in the future)
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
+
+app.post('/vendors/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const records = await base('Vendors').select({
+      filterByFormula: `{Contact Email} = '${email}'`
+    }).firstPage();
+
+    if (records.length === 0) {
+      return res.status(401).json({ error: 'Vendor not found' });
+    }
+
+    const vendor = records[0];
+    const storedPassword = vendor.fields['Password'];
+
+    if (storedPassword !== password) {
+      return res.status(403).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ vendorId: vendor.id }, JWT_SECRET, { expiresIn: '2h' });
+
+    res.json({ token, vendorId: vendor.id, vendorName: vendor.fields['Vendor Name'] });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed', detail: err.message });
+  }
+});
+
 app.listen(3000, () => console.log('Backend running on port 3000'));
