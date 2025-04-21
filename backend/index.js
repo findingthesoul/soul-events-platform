@@ -59,7 +59,11 @@ app.post('/events/create', async (req, res) => {
     res.json({ message: 'Event created successfully', recordId: newRecord.id });
   } catch (err) {
     console.error('Error creating event:', err);
-    res.status(500).json({ error: 'Failed to create event', detail: err.message });
+res.status(500).json({ 
+  error: 'Failed to create event', 
+  detail: err.message, 
+  airtableError: err?.response?.data 
+});
   }
 });
 
