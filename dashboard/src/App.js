@@ -25,8 +25,11 @@ function App() {
     setMessage('');
 
     try {
-      const res = await axios.post('https://soul-events-platform-1.onrender.com/events/create', formData);
-      setMessage('🎉 Event created successfully!');
+const res = await axios.post('https://soul-events-platform-1.onrender.com/events/create', {
+  ...formData,
+  price: Number(formData.price),
+  capacity: Number(formData.capacity)
+});      setMessage('🎉 Event created successfully!');
       setFormData({
         title: '', date: '', location: '', price: '', capacity: '', vendorId: ''
       });
