@@ -116,3 +116,24 @@ app.post('/vendors/login', async (req, res) => {
 });
 
 app.listen(3000, () => console.log('Backend running on port 3000'));
+
+
+app.patch('/events/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, date, location, price, capacity } = req.body;
+
+  try {
+    await base('Events').update(id, {
+      "Event Title": title,
+      "Date": date,
+      "Location": location,
+      "Price (EUR)": price,
+      "Capacity": capacity
+    });
+
+    res.json({ message: 'Event updated successfully' });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).json({ error: 'Failed to update event', detail: err.message });
+  }
+});
