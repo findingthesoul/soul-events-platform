@@ -86,7 +86,6 @@ res.status(500).json({
 
 
 // Temporary secret key (store in .env in the future)
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
 app.post('/vendors/login', async (req, res) => {
   const { email, password } = req.body;
