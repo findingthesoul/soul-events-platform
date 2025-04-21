@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function App() {
@@ -12,6 +12,8 @@ function App() {
   });
 
   const [message, setMessage] = useState('');
+  const [token, setToken] = useState('');
+  const [events, setEvents] = useState([]);
 
   const handleChange = (e) => {
     setFormData({ 
@@ -25,35 +27,81 @@ function App() {
     setMessage('');
 
     try {
-const res = await axios.post('https://soul-events-platform-1.onrender.com/events/create', {
-  ...formData,
-  price: Number(formData.price),
-  capacity: Number(formData.capacity)
-});      setMessage('🎉 Event created successfully!');
+      await axios.post('https://soul-events-platform-1.onrender.com/events/create', {
+        ...formData,
+        price: Number(formData.price),
+        capacity: Number(formData.capacity)
+      });
+      setMessage('🎉 Event created successfully!');
       setFormData({
         title: '', date: '', location: '', price: '', capacity: '', vendorId: ''
       });
+      fetchEvents();
     } catch (err) {
       console.error(err);
       setMessage('Something went wrong 😔');
     }
   };
 
+  const fetchEvents = async () => {
+    if (!token) return;
+
+    try {
+      const res = await axios.get('https://soul-events-platform-1.onrender.com/events', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEvents(res.data);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setEvents([]);
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchEvents();
+  }, [token]);
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '2rem', borderRadius: '1rem', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Create New Event</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
-          <input type="text" name="title" placeholder="Event Title" value={formData.title} onChange={handleChange} />
-          <input type="date" name="date" value={formData.date} onChange={handleChange} />
-          <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} />
-          <input type="number" name="price" placeholder="Price (€)" value={formData.price} onChange={handleChange} />
-          <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} />
-          <input type="text" name="vendorId" placeholder="Vendor Airtable ID" value={formData.vendorId} onChange={handleChange} />
-          <button type="submit" style={{ background: '#4c4cff', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: 'bold' }}>Create Event</button>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-xl mx-auto bg-white shadow-lg p-6 rounded-xl">
+        <h2 className="text-xl font-semibold mb-4">Create New Event</h2>
+
+        <input
+          type="text"
+          placeholder="JWT Token"
+          className="w-full p-2 mb-4 border rounded"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+        />
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" name="title" placeholder="Title" value={formData.title} onChange={handleChange} className="w-full p-2 border rounded" />
+          <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-2 border rounded" />
+          <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full p-2 border rounded" />
+          <input type="number" name="price" placeholder="Price (€)" value={formData.price} onChange={handleChange} className="w-full p-2 border rounded" />
+          <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full p-2 border rounded" />
+          <input type="text" name="vendorId" placeholder="Vendor Airtable ID" value={formData.vendorId} onChange={handleChange} className="w-full p-2 border rounded" />
+          <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded">Create Event</button>
         </form>
-        {message && <p style={{ marginTop: '1rem', color: '#444' }}>{message}</p>}
+        {message && <p className="mt-4 text-center text-sm text-gray-700">{message}</p>}
       </div>
+
+      {events.length > 0 && (
+        <div className="max-w-xl mx-auto mt-12">
+          <h2 className="text-lg font-semibold mb-4">Your Events</h2>
+          <div className="space-y-4">
+            {events.map(event => (
+              <div key={event.id} className="p-4 bg-white shadow rounded">
+                <h3 className="text-md font-bold">{event.title}</h3>
+                <p><strong>Date:</strong> {event.date}</p>
+                <p><strong>Location:</strong> {event.location}</p>
+                <p><strong>Price:</strong> €{event.price}</p>
+                <p><strong>Capacity:</strong> {event.capacity}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
