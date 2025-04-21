@@ -70,6 +70,7 @@ res.status(500).json({
 
 const jwt = require('jsonwebtoken');
 
+
 // Temporary secret key (store in .env in the future)
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
