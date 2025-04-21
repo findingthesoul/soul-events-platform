@@ -18,13 +18,28 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
 app.get('/', (req, res) => res.send('Backend is live'));
 
 // Get events from Airtable
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
+
 app.get('/events', async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
   try {
-    const records = await base('Events').select({}).all();
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const vendorId = decoded.vendorId;
+
+    const records = await base('Events').select({
+      filterByFormula: `{Vendors} = '${vendorId}'`
+    }).all();
 
     const events = records.map(record => {
       const f = record.fields;
-
       return {
         id: record.id,
         eventId: f['Event ID'],
@@ -32,14 +47,15 @@ app.get('/events', async (req, res) => {
         date: f['Date'] || '',
         location: f['Location'] || '',
         price: f['Price (EUR)'] || 0,
+        capacity: f['Capacity'] || 0,
         vendor: f['Vendors'] ? f['Vendors'][0] : null
       };
     });
 
     res.json(events);
   } catch (err) {
-    console.error('Airtable error:', err);
-    res.status(500).json({ error: 'Failed to fetch events from Airtable', detail: err.message });
+    console.error('Auth error:', err);
+    res.status(401).json({ error: 'Unauthorized', detail: err.message });
   }
 });
 
