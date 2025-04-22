@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 function EventCard({ event, fetchEvents }) {
   const isUpcoming = new Date(event.date) >= new Date();
@@ -131,10 +132,26 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    if (token) fetchEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+useEffect(() => {
+  if (!token) return;
+
+  try {
+    const decoded = jwtDecode(token);
+    const extractedVendorId = decoded.vendorId;
+
+    if (extractedVendorId) {
+      setFormData((prev) => ({
+        ...prev,
+        vendorId: extractedVendorId
+      }));
+    }
+
+    fetchEvents();
+  } catch (err) {
+    console.error('Invalid token:', err);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [token]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -155,7 +172,6 @@ function App() {
           <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full p-2 border rounded" />
           <input type="number" name="price" placeholder="Price (€)" value={formData.price} onChange={handleChange} className="w-full p-2 border rounded" />
           <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full p-2 border rounded" />
-          <input type="text" name="vendorId" placeholder="Vendor Airtable ID" value={formData.vendorId} onChange={handleChange} className="w-full p-2 border rounded" />
           <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded">Create Event</button>
         </form>
         {message && <p className="mt-4 text-center text-sm text-gray-700">{message}</p>}
