@@ -1,6 +1,9 @@
+// App.js — Fully integrated with EventEditorModal logic
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import EventEditorModal from './EventEditorModal';
 
 function EventCard({ event, fetchEvents }) {
   const isUpcoming = new Date(event.date) >= new Date();
@@ -50,19 +53,12 @@ function EventCard({ event, fetchEvents }) {
 }
 
 function App() {
-  const [formData, setFormData] = useState({
-    title: '',
-    date: '',
-    location: '',
-    price: '',
-    capacity: '',
-    vendorId: ''
-  });
-
+  const [formData, setFormData] = useState({ title: '', date: '', location: '', price: '', capacity: '', vendorId: '' });
   const [token, setToken] = useState('');
   const [message, setMessage] = useState('');
   const [events, setEvents] = useState([]);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -154,11 +150,20 @@ function App() {
           <h2 className="text-lg font-semibold mb-4">Your Events</h2>
           <div className="space-y-6">
             {events.map(event => (
-              <EventCard key={event.id} event={event} fetchEvents={fetchEvents} />
+              <div key={event.id} onClick={() => setSelectedEvent(event)} className="cursor-pointer">
+                <EventCard event={event} fetchEvents={fetchEvents} />
+              </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* Modal at the end */}
+      <EventEditorModal
+        event={selectedEvent}
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </div>
   );
 }
