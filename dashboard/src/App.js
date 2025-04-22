@@ -1,4 +1,4 @@
-// App.js — Fully integrated with EventEditorModal logic
+// App.js — Fully integrated with EventEditorModal logic 
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';

@@ -1,4 +1,4 @@
-// App.js — list layout for event overview + create event button using modal
+// App.js — list layout for event overview + create event button using modal 
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
