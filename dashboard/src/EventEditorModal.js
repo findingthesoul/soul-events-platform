@@ -55,7 +55,29 @@ export default function EventEditorModal({ event, isOpen, onClose }) {
         <p className="text-sm text-gray-500 mb-6">Cloning, URLs, calendar links and more will be added here.</p>
 
         <div className="mt-6 text-right">
-          <button onClick={() => console.log('Save event:', eventData)} className="bg-indigo-600 text-white px-6 py-2 rounded">Save</button>
+
+<button
+  onClick={async () => {
+    try {
+      await fetch(`https://soul-events-platform-1.onrender.com/events/${eventData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventData)
+      });
+      alert('✅ Event updated!');
+      onClose(); // close modal
+    } catch (err) {
+      console.error('Update failed', err);
+      alert('❌ Failed to update event');
+    }
+  }}
+  className="bg-indigo-600 text-white px-6 py-2 rounded"
+>
+  Save
+</button>
+
         </div>
       </div>
     </div>
