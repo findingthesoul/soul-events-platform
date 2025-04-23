@@ -146,7 +146,7 @@ app.post('/vendors/login', async (req, res) => {
     res.json({
       token,
       vendorId: vendor.id,
-      vendorName: vendor.fields['Name'],
+      vendorName: vendor.fields['Vendor Name'],
     });
   } catch (err) {
     console.error('Login error:', err);
