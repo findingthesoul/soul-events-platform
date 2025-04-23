@@ -9,24 +9,23 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/vendors/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        onLogin(data.vendorId);
-      } else {
-        setMessage(data.error || 'Login failed');
-      }
-    } catch (err) {
-      setMessage('Something went wrong. Please try again.');
-    }
-  };
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/vendors/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+      
+        const data = await res.json();
+        console.log('Login response:', data); // ADD THIS LINE
+      
+        if (res.ok) {
+          onLogin(data); // This passes { token, vendorId, vendorName }
+        } else {
+          setError(data.error || 'Login failed');
+        }
+      };
 
   return (
     <div style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto' }}>
