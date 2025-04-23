@@ -19,12 +19,11 @@ function App() {
     const storedToken = localStorage.getItem('token');
     const storedVendorId = localStorage.getItem('vendorId');
     const storedVendorName = localStorage.getItem('vendorName');
-
     if (storedToken && storedVendorId) {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
-      fetchEvents(storedToken, storedVendorId);
+      //fetchEvents(storedToken, storedVendorId);
     }
   }, []);
 
@@ -53,7 +52,7 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
-    fetchEvents(token, vendorId);
+    //fetchEvents(token, vendorId);
   };
 
   const handleLogout = () => {
@@ -86,7 +85,7 @@ function App() {
   return (
     <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <h2>Welcome, {vendorName}</h2>
+        <h2>Welcome, {vendorName || 'Vendor'}!</h2>
         <button onClick={handleLogout}>Logout</button>
       </div>
 
