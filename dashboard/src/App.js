@@ -23,7 +23,6 @@ function App() {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
-      //fetchEvents(storedToken, storedVendorId);
     }
   }, []);
 
@@ -52,7 +51,7 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
-    //fetchEvents(token, vendorId);
+    fetchEvents(); // Or useEffect will fetch when token is set
   };
 
   const handleLogout = () => {
@@ -85,7 +84,7 @@ function App() {
   return (
     <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <h2>Welcome, {vendorName || 'Vendor'}!</h2>
+      {vendorName && <h2>Welcome, {vendorName}</h2>}
         <button onClick={handleLogout}>Logout</button>
       </div>
 
