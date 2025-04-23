@@ -1,104 +1,141 @@
-// App.js — list layout for event overview + create event button using modal 
-
+// src/EventEditorModal.js
 import React, { useState, useEffect } from 'react';
+import Modal from 'react-modal';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import EventEditorModal from './EventEditorModal';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
-function App() {
-  const [formData, setFormData] = useState({ title: '', date: '', location: '', price: '', capacity: '', vendorId: '' });
-  const [token, setToken] = useState('');
+const EventEditorModal = ({ isOpen, onRequestClose, event, fetchEvents }) => {
+  const [form, setForm] = useState({});
+  const [tab, setTab] = useState('event');
   const [message, setMessage] = useState('');
-  const [events, setEvents] = useState([]);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post('https://soul-events-platform-1.onrender.com/vendors/login', loginData);
-      setToken(res.data.token);
-      setLoginData({ email: '', password: '' });
-    } catch (err) {
-      console.error('Login failed:', err);
-      setMessage('Login failed ❌');
-    }
-  };
-
-  const fetchEvents = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get('https://soul-events-platform-1.onrender.com/events', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const upcoming = res.data.filter(e => new Date(e.date) >= new Date());
-      setEvents(upcoming);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setEvents([]);
-    }
-  };
 
   useEffect(() => {
-    if (!token) return;
-    try {
-      const decoded = jwtDecode(token);
-      if (decoded.vendorId) {
-        setFormData((prev) => ({ ...prev, vendorId: decoded.vendorId }));
-      }
-      fetchEvents();
-    } catch (err) {
-      console.error('Invalid token:', err);
+    if (event) {
+      setForm({
+        id: event.id,
+        title: event.title || '',
+        startDate: event.startDate || '',
+        endDate: event.endDate || '',
+        description: event.description || '',
+        format: event.format || '',
+        zoomLink: event.zoomLink || '',
+        locationUrl: event.locationUrl || '',
+        locationDescription: event.locationDescription || '',
+        image: event.image || '',
+      });
     }
-  }, [token]);
+  }, [event]);
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        fields: {
+          'Event Title': form.title,
+          'Start Date': form.startDate,
+          'End Date': form.endDate,
+          Description: form.description,
+          Format: form.format,
+          'Zoom link': form.zoomLink,
+          'Location URL': form.locationUrl,
+          'Location Description': form.locationDescription,
+          'Event Image': form.image ? [{ url: form.image }] : [],
+        },
+      };
+
+      await axios.patch(
+        `https://api.airtable.com/v0/YOUR_BASE_ID/Events/${form.id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer YOUR_API_KEY`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      setMessage('Event saved!');
+      fetchEvents();
+      onRequestClose();
+    } catch (err) {
+      console.error(err);
+      setMessage('Error saving event.');
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-xl mx-auto bg-white shadow p-4 mb-8 rounded-xl">
-        <h2 className="text-lg font-semibold mb-3">Vendor Login</h2>
-        <form onSubmit={handleLogin} className="space-y-3">
-          <input type="email" placeholder="Email" value={loginData.email} onChange={(e) => setLoginData({ ...loginData, email: e.target.value })} className="w-full p-2 border rounded" />
-          <input type="password" placeholder="Password" value={loginData.password} onChange={(e) => setLoginData({ ...loginData, password: e.target.value })} className="w-full p-2 border rounded" />
-          <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded">Log In</button>
-        </form>
+    <Modal isOpen={isOpen} onRequestClose={onRequestClose} contentLabel="Edit Event">
+      <h2>{form.title || 'New Event'}</h2>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+        <button onClick={() => setTab('event')}>Event Info</button>
+        <button onClick={() => setTab('registration')}>Registration</button>
+        <button onClick={() => setTab('guests')}>Guests</button>
+        <button onClick={() => setTab('more')}>More</button>
       </div>
 
-      {events.length > 0 && (
-        <div className="max-w-xl mx-auto mt-12">
-          <h2 className="text-lg font-semibold mb-4">Upcoming Events</h2>
-          <ul className="space-y-3">
-            {events.map(event => (
-              <li
-                key={event.id}
-                onClick={() => setSelectedEvent(event)}
-                className="cursor-pointer hover:bg-gray-100 p-3 rounded border border-gray-200"
-              >
-                <strong>{event.title}</strong> <span className="text-gray-500">({event.date} @ {event.location})</span>
-              </li>
-            ))}
-          </ul>
+      {tab === 'event' && (
+        <div>
+          <input name="title" value={form.title} onChange={handleChange} placeholder="Event Title" />
+          <input name="startDate" value={form.startDate} onChange={handleChange} placeholder="Start Date" />
+          <input name="endDate" value={form.endDate} onChange={handleChange} placeholder="End Date" />
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setSelectedEvent({ title: '', startDate: '', endDate: '', description: '', image: '', format: 'online', zoom: '', location: '', locationDescription: '', host: '', id: '' })}
-              className="mt-6 px-4 py-2 bg-green-600 text-white rounded"
-            >
-              + Create New Event
-            </button>
+          <div style={{ marginBottom: '1rem' }}>
+            <label>Description</label>
+            <ReactQuill
+              theme="snow"
+              value={form.description}
+              onChange={(val) => setForm((prev) => ({ ...prev, description: val }))}
+            />
           </div>
+
+          <select name="format" value={form.format} onChange={handleChange}>
+            <option value="">Select format</option>
+            <option value="Online">Online</option>
+            <option value="In-person">In-person</option>
+          </select>
+
+          {form.format === 'Online' && (
+            <input name="zoomLink" value={form.zoomLink} onChange={handleChange} placeholder="Zoom Link" />
+          )}
+
+          {form.format === 'In-person' && (
+            <>
+              <input
+                name="locationUrl"
+                value={form.locationUrl}
+                onChange={handleChange}
+                placeholder="Location URL"
+              />
+              <input
+                name="locationDescription"
+                value={form.locationDescription}
+                onChange={handleChange}
+                placeholder="Location Description"
+              />
+            </>
+          )}
+
+          <input name="image" value={form.image} onChange={handleChange} placeholder="Image URL" />
         </div>
       )}
 
-      <EventEditorModal
-        event={selectedEvent}
-        isOpen={!!selectedEvent}
-        onClose={() => {
-          setSelectedEvent(null);
-          fetchEvents();
-        }}
-      />
-    </div>
-  );
-}
+      {tab === 'registration' && <div>🎟️ Registration settings (Tickets & Coupons coming soon)</div>}
+      {tab === 'guests' && <div>👥 Guests list (To be implemented)</div>}
+      {tab === 'more' && <div>🛠️ More options (Clone, Link, Calendar)</div>}
 
-export default App;
+      <div style={{ marginTop: '1rem' }}>
+        <button onClick={handleSave}>💾 Save</button>
+        <button onClick={onRequestClose} style={{ marginLeft: '1rem' }}>Cancel</button>
+        <div>{message}</div>
+      </div>
+    </Modal>
+  );
+};
+
+export default EventEditorModal;

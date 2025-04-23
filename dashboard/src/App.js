@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Airtable from 'airtable';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+import ModalEditor from './EventEditorModal';
 
 const airtable = new Airtable({ apiKey: 'patHHK20bvITjKviJ.f639dabb04319b63a7559d43cda711a34451f83f612eea0ea4b3165974b9aca5' });
 const base = airtable.base('app9qQNFV0zpH9R9y'); // Your Airtable Base ID
@@ -12,6 +13,7 @@ function App() {
   const [events, setEvents] = useState([]);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+	const [selectedEvent, setSelectedEvent] = useState(null);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -39,13 +41,24 @@ function App() {
             const vendors = r.fields['Vendors'] || [];
             return vendors.includes(vendorId);
           })
-          .map((record) => ({
-            id: record.id,
-            title: record.fields['Event Title'],
-            date: record.fields['Date'],
-            location: record.fields['Location'],
-          }));
+	.map((record) => ({
+	  id: record.id,
+	  title: record.fields['Event Title'],
+startDate: record.fields['Start Date']
+  ? record.fields['Start Date'].slice(0, 10)
+  : '',
+endDate: record.fields['End Date']
+  ? record.fields['End Date'].slice(0, 10)
+  : '',
 
+	  description: record.fields['Description'],
+	  image: record.fields['Event Image'],
+	  format: record.fields['Format'],
+	  zoom: record.fields['Zoom link'],
+	  locationUrl: record.fields['Location URL'],
+	  locationDesc: record.fields['Location Description'],
+	  location: record.fields['Location'] // if still used
+	}));
         setEvents(filtered);
         setLoading(false);
       })
@@ -91,25 +104,54 @@ function App() {
           {!loading && (
             <ul style={{ listStyle: 'none', padding: 0 }}>
               {events.map((event) => (
-                <li
-                  key={event.id}
-                  style={{
-                    border: '1px solid #ccc',
-                    padding: '0.75rem',
-                    marginBottom: '0.5rem',
-                    borderRadius: '6px',
-                  }}
-                >
-                  <strong>{event.title}</strong>{' '}
-                  <span style={{ color: '#666' }}>
-                    ({event.date} @ {event.location})
-                  </span>
-                </li>
+		<li
+		  key={event.id}
+		  onClick={() => setSelectedEvent(event)}
+		  style={{
+		    cursor: 'pointer',
+		    border: '1px solid #ccc',
+		    padding: '0.75rem',
+		    marginBottom: '0.5rem',
+		    borderRadius: '6px'
+		  }}
+		>
+		  <strong>{event.title}</strong>{' '}
+		  <span style={{ color: '#666' }}>
+		    ({event.date} @ {event.location})
+		  </span>
+		</li>
               ))}
             </ul>
           )}
         </div>
       )}
+<ModalEditor
+  event={selectedEvent}
+  onClose={() => setSelectedEvent(null)}
+  onSave={() => {
+    setSelectedEvent(null);
+    const fetchAgain = async () => {
+      const records = await base('Events').select({ view: 'Grid view' }).all();
+      const filtered = records
+        .filter((r) => (r.fields['Vendors'] || []).includes(vendorId))
+        .map((record) => ({
+          id: record.id,
+          title: record.fields['Event Title'],
+          startDate: record.fields['Start Date'],
+          endDate: record.fields['End Date'],
+          description: record.fields['Description'],
+          image: record.fields['Event Image'],
+          format: record.fields['Format'],
+          zoom: record.fields['Zoom link'],
+          locationUrl: record.fields['Location URL'],
+          locationDesc: record.fields['Location Description'],
+          location: record.fields['Location'],
+        }));
+      setEvents(filtered);
+    };
+    fetchAgain();
+  }}
+/>
     </div>
   );
 }
