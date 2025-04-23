@@ -1,157 +1,142 @@
 import React, { useState, useEffect } from 'react';
-import Airtable from 'airtable';
-import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
-import ModalEditor from './EventEditorModal';
+import Login from './Login';
+import EventEditorModal from './EventEditorModal';
 
-const airtable = new Airtable({ apiKey: 'patHHK20bvITjKviJ.f639dabb04319b63a7559d43cda711a34451f83f612eea0ea4b3165974b9aca5' });
-const base = airtable.base('app9qQNFV0zpH9R9y'); // Your Airtable Base ID
+const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
+const AIRTABLE_TABLE_NAME = 'Events';
 
 function App() {
-  const [token, setToken] = useState('');
-  const [vendorId, setVendorId] = useState('');
+  const [token, setToken] = useState(null);
+  const [vendorId, setVendorId] = useState(null);
+  const [vendorName, setVendorName] = useState(null);
   const [events, setEvents] = useState([]);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-	const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showEditor, setShowEditor] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Restore session from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedVendorId = localStorage.getItem('vendorId');
+    const storedVendorName = localStorage.getItem('vendorName');
+
+    if (storedToken && storedVendorId) {
+      setToken(storedToken);
+      setVendorId(storedVendorId);
+      setVendorName(storedVendorName);
+      fetchEvents(storedToken, storedVendorId);
+    }
+  }, []);
+
+  const fetchEvents = async (jwt = token, id = vendorId) => {
     try {
-      const res = await axios.post('https://soul-events-platform-1.onrender.com/vendors/login', loginData);
-      setToken(res.data.token);
-      const decoded = jwtDecode(res.data.token);
-      setVendorId(decoded.vendorId);
+      const response = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula={Vendors}='${id}'`,
+        {
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      setEvents(data.records || []);
     } catch (err) {
-      console.error('Login failed:', err);
-      alert('Login failed. Please check your credentials.');
+      console.error('Failed to fetch events:', err);
     }
   };
 
-  useEffect(() => {
-    if (!vendorId) return;
+  const handleLogin = ({ token, vendorId, vendorName }) => {
+    setToken(token);
+    setVendorId(vendorId);
+    setVendorName(vendorName);
+    localStorage.setItem('token', token);
+    localStorage.setItem('vendorId', vendorId);
+    localStorage.setItem('vendorName', vendorName);
+    fetchEvents(token, vendorId);
+  };
 
-    setLoading(true);
-    base('Events')
-      .select({ view: 'Grid view' })
-      .all()
-      .then((records) => {
-        const filtered = records
-          .filter((r) => {
-            const vendors = r.fields['Vendors'] || [];
-            return vendors.includes(vendorId);
-          })
-	.map((record) => ({
-	  id: record.id,
-	  title: record.fields['Event Title'],
-startDate: record.fields['Start Date']
-  ? record.fields['Start Date'].slice(0, 10)
-  : '',
-endDate: record.fields['End Date']
-  ? record.fields['End Date'].slice(0, 10)
-  : '',
+  const handleLogout = () => {
+    setToken(null);
+    setVendorId(null);
+    setVendorName(null);
+    localStorage.clear();
+    setEvents([]);
+  };
 
-	  description: record.fields['Description'],
-	  image: record.fields['Event Image'],
-	  format: record.fields['Format'],
-	  zoom: record.fields['Zoom link'],
-	  locationUrl: record.fields['Location URL'],
-	  locationDesc: record.fields['Location Description'],
-	  location: record.fields['Location'] // if still used
-	}));
-        setEvents(filtered);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching Airtable:', err);
-        setLoading(false);
-      });
-  }, [vendorId]);
+  const openEditor = (event = null) => {
+    setSelectedEvent(event);
+    setShowEditor(true);
+  };
+
+  const closeEditor = () => {
+    setShowEditor(false);
+    setSelectedEvent(null);
+  };
+
+  const handleEventSaved = () => {
+    closeEditor();
+    fetchEvents();
+  };
+
+  if (!token || !vendorId) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      {!token ? (
-        <div>
-          <h2 style={{ marginBottom: '1rem' }}>Vendor Login</h2>
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', maxWidth: '300px' }}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={loginData.email}
-              onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-              required
-              style={{ marginBottom: '0.5rem', padding: '0.5rem' }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={loginData.password}
-              onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-              required
-              style={{ marginBottom: '0.5rem', padding: '0.5rem' }}
-            />
-            <button type="submit" style={{ padding: '0.5rem', backgroundColor: '#4CAF50', color: 'white' }}>
-              Log In
-            </button>
-          </form>
-        </div>
-      ) : (
-        <div>
-          <h2 style={{ marginBottom: '1rem' }}>Your Events</h2>
+    <div style={{ padding: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h2>Welcome, {vendorName}</h2>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
 
-          {loading && <p>Loading events…</p>}
+      <div>
+        {events.map((e) => (
+          <div
+            key={e.id}
+            style={{
+              padding: '0.75rem 1rem',
+              marginBottom: '0.5rem',
+              background: '#f2f2f2',
+              borderRadius: '8px',
+              cursor: 'pointer',
+            }}
+            onClick={() => openEditor(e)}
+          >
+            <strong>{e.fields['Event Title']}</strong>{' '}
+            {e.fields['Start Date'] && (
+              <span>
+                ({e.fields['Start Date']}
+                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
+              </span>
+            )}
+          </div>
+        ))}
 
-          {!loading && (
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {events.map((event) => (
-		<li
-		  key={event.id}
-		  onClick={() => setSelectedEvent(event)}
-		  style={{
-		    cursor: 'pointer',
-		    border: '1px solid #ccc',
-		    padding: '0.75rem',
-		    marginBottom: '0.5rem',
-		    borderRadius: '6px'
-		  }}
-		>
-		  <strong>{event.title}</strong>{' '}
-		  <span style={{ color: '#666' }}>
-		    ({event.date} @ {event.location})
-		  </span>
-		</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <button
+          onClick={() => openEditor(null)}
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            background: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          + Create Event
+        </button>
+      </div>
+
+      {showEditor && (
+        <EventEditorModal
+          event={selectedEvent}
+          vendorId={vendorId}
+          onClose={closeEditor}
+          onSave={handleEventSaved}
+        />
       )}
-<ModalEditor
-  event={selectedEvent}
-  onClose={() => setSelectedEvent(null)}
-  onSave={() => {
-    setSelectedEvent(null);
-    const fetchAgain = async () => {
-      const records = await base('Events').select({ view: 'Grid view' }).all();
-      const filtered = records
-        .filter((r) => (r.fields['Vendors'] || []).includes(vendorId))
-        .map((record) => ({
-          id: record.id,
-          title: record.fields['Event Title'],
-          startDate: record.fields['Start Date'],
-          endDate: record.fields['End Date'],
-          description: record.fields['Description'],
-          image: record.fields['Event Image'],
-          format: record.fields['Format'],
-          zoom: record.fields['Zoom link'],
-          locationUrl: record.fields['Location URL'],
-          locationDesc: record.fields['Location Description'],
-          location: record.fields['Location'],
-        }));
-      setEvents(filtered);
-    };
-    fetchAgain();
-  }}
-/>
     </div>
   );
 }

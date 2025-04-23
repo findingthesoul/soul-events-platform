@@ -115,8 +115,44 @@ app.post('/vendors/login', async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Backend running on port 3000'));
+app.listen(3001, () => console.log('Backend running on port 3001'));
 
+
+app.post('/vendors/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const records = await base('Vendors').select({
+      filterByFormula: `{Contact Email} = '${email}'`
+    }).firstPage();
+
+    if (records.length === 0) {
+      return res.status(401).json({ error: 'Vendor not found' });
+    }
+
+    const vendor = records[0];
+    const storedPassword = vendor.fields['Password'];
+
+    if (storedPassword !== password) {
+      return res.status(403).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { vendorId: vendor.id, email },
+      JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+
+    res.json({
+      token,
+      vendorId: vendor.id,
+      vendorName: vendor.fields['Name'],
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed', detail: err.message });
+  }
+});
 
 app.patch('/events/:id', async (req, res) => {
   const { id } = req.params;
