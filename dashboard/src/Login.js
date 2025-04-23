@@ -11,19 +11,25 @@ const Login = ({ onLogin }) => {
     try {
       const handleSubmit = async (e) => {
         e.preventDefault();
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/vendors/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
       
-        const data = await res.json();
-        console.log('Login response:', data); // ADD THIS LINE
+        try {
+          const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/vendors/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
       
-        if (res.ok) {
-          onLogin(data); // This passes { token, vendorId, vendorName }
-        } else {
-          setError(data.error || 'Login failed');
+          const data = await res.json();
+          console.log('Login response:', data); // ✅ Debug output
+      
+          if (res.ok) {
+            onLogin(data);
+          } else {
+            setError(data.error || 'Login failed');
+          }
+        } catch (err) {
+          console.error('Login request failed:', err); // ✅ Error catch
+          setError('Unable to connect to server');
         }
       };
 
