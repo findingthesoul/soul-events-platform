@@ -24,6 +24,7 @@ function App() {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
+
       setTimeout(() => {
         fetchEvents(storedToken, storedVendorId);
       }, 100);
@@ -32,7 +33,7 @@ function App() {
 
   const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
-      const formula = `SEARCH(\"${overrideVendorId}\", ARRAYJOIN({Vendors} & \"\"))`;
+      const formula = `SEARCH("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`;
       const response = await fetch(
         `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`,
         {
@@ -59,6 +60,7 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
+
     setTimeout(() => {
       fetchEvents(token, vendorId);
     }, 100);
@@ -92,71 +94,42 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Left panel: Event list */}
-      <div style={{
-        flex: '0 0 50%',
-        padding: '2rem',
-        overflowY: 'auto',
-        backgroundColor: '#fafafa',
-        borderRight: '1px solid #eee'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          {vendorName && <h2>Welcome, {vendorName}</h2>}
+    <div className="dashboard-container">
+      <div className="event-list-panel">
+        <div className="header">
+          <h2>Welcome, {vendorName}</h2>
           <button onClick={handleLogout}>Logout</button>
         </div>
-  
-        <div>
+        <div className="event-cards">
           {events.map((e) => (
             <div
               key={e.id}
-              style={{
-                padding: '0.75rem 1rem',
-                marginBottom: '0.5rem',
-                background: '#f2f2f2',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
+              className={`event-card ${selectedEvent?.id === e.id ? 'selected' : ''}`}
               onClick={() => openEditor(e)}
             >
-              <strong>{e.fields['Event Title']}</strong>{' '}
+              <strong>{e.fields['Event Title']}</strong>
               {e.fields['Start Date'] && (
-                <span style={{ fontWeight: 'normal' }}>
-                  ({e.fields['Start Date']}
-                  {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
+                <span>
+                  <br />
+                  {e.fields['Start Date']}
+                  {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
                 </span>
               )}
             </div>
           ))}
-  
-          <button
-            onClick={() => openEditor(null)}
-            style={{
-              marginTop: '1.5rem',
-              padding: '0.5rem 1rem',
-              background: '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
-          >
-            + Create Event
-          </button>
         </div>
+        <button className="create-btn" onClick={() => openEditor(null)}>
+          + Create Event
+        </button>
       </div>
-  
-      {/* Right panel: Event editor */}
+
       {showEditor && (
-        <div style={{ flex: '1', overflowY: 'auto', height: '100vh' }}>
-          <EventEditorModal
-            event={selectedEvent}
-            vendorId={vendorId}
-            onClose={closeEditor}
-            onSave={handleEventSaved}
-          />
-        </div>
+        <EventEditorModal
+          event={selectedEvent}
+          vendorId={vendorId}
+          onClose={closeEditor}
+          onSave={handleEventSaved}
+        />
       )}
     </div>
   );
