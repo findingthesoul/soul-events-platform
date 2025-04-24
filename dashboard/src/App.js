@@ -14,6 +14,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
 
+  // Restore session from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedVendorId = localStorage.getItem('vendorId');
@@ -28,14 +29,14 @@ function App() {
   const fetchEvents = async (jwt = token, id = vendorId) => {
     try {
       const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula={Vendors}='${id}'`,
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=FIND('%22${id}%22', ARRAYJOIN({Vendors} & ''))`,
         {
           headers: {
             Authorization: `Bearer ${AIRTABLE_API_KEY}`,
           },
         }
       );
-  
+
       const data = await response.json();
       setEvents(data.records || []);
     } catch (err) {
@@ -44,18 +45,17 @@ function App() {
   };
 
   const handleLogin = ({ token, vendorId, vendorName }) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('vendorId', vendorId);
-    localStorage.setItem('vendorName', vendorName);
-  
     setToken(token);
     setVendorId(vendorId);
     setVendorName(vendorName);
-  
-    // Use a timeout to wait for state updates to complete before fetching
+    localStorage.setItem('token', token);
+    localStorage.setItem('vendorId', vendorId);
+    localStorage.setItem('vendorName', vendorName);
+
+    // Wait for state to update before fetching
     setTimeout(() => {
       fetchEvents(token, vendorId);
-    }, 100); // slight delay to ensure setState is done
+    }, 100);
   };
 
   const handleLogout = () => {
