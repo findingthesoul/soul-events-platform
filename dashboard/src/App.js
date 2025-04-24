@@ -14,18 +14,16 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
 
-  // Restore session from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedVendorId = localStorage.getItem('vendorId');
     const storedVendorName = localStorage.getItem('vendorName');
-  
+
     if (storedToken && storedVendorId) {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
-  
-      // Add this to ensure fetch only runs *after* state is updated
+
       setTimeout(() => {
         fetchEvents(storedToken, storedVendorId);
       }, 100);
@@ -34,16 +32,21 @@ function App() {
 
   const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
+      console.log("Fetching events for vendor:", overrideVendorId);
+      const formula = `SEARCH(\"${overrideVendorId}\", ARRAYJOIN({Vendors} & \"\"))`;
       const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=ARRAYJOIN({Vendors} & '') = '${overrideVendorId}'`,
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`,
         {
           headers: {
             Authorization: `Bearer ${AIRTABLE_API_KEY}`,
           },
         }
       );
-  
       const data = await response.json();
+      if (data.error) {
+        console.error("Airtable fetch error:", data.error.message);
+        return;
+      }
       setEvents(data.records || []);
     } catch (err) {
       console.error('Failed to fetch events:', err);
@@ -58,7 +61,6 @@ function App() {
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
 
-    // Wait for state to update before fetching
     setTimeout(() => {
       fetchEvents(token, vendorId);
     }, 100);
