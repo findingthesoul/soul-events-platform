@@ -92,43 +92,71 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <div className="list-panel">
-        <div className="header">
+    <div style={{ display: 'flex', height: '100vh' }}>
+      {/* Left panel: Event list */}
+      <div style={{
+        flex: '0 0 50%',
+        padding: '2rem',
+        overflowY: 'auto',
+        backgroundColor: '#fafafa',
+        borderRight: '1px solid #eee'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           {vendorName && <h2>Welcome, {vendorName}</h2>}
           <button onClick={handleLogout}>Logout</button>
         </div>
-
-        <div className="event-list">
+  
+        <div>
           {events.map((e) => (
             <div
               key={e.id}
-              className="event-card"
+              style={{
+                padding: '0.75rem 1rem',
+                marginBottom: '0.5rem',
+                background: '#f2f2f2',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
               onClick={() => openEditor(e)}
             >
               <strong>{e.fields['Event Title']}</strong>{' '}
               {e.fields['Start Date'] && (
-                <span>
+                <span style={{ fontWeight: 'normal' }}>
                   ({e.fields['Start Date']}
                   {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
                 </span>
               )}
             </div>
           ))}
-
-          <button className="create-btn" onClick={() => openEditor(null)}>
+  
+          <button
+            onClick={() => openEditor(null)}
+            style={{
+              marginTop: '1.5rem',
+              padding: '0.5rem 1rem',
+              background: '#007bff',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
             + Create Event
           </button>
         </div>
       </div>
-
+  
+      {/* Right panel: Event editor */}
       {showEditor && (
-        <EventEditorModal
-          event={selectedEvent}
-          vendorId={vendorId}
-          onClose={closeEditor}
-          onSave={handleEventSaved}
-        />
+        <div style={{ flex: '1', overflowY: 'auto', height: '100vh' }}>
+          <EventEditorModal
+            event={selectedEvent}
+            vendorId={vendorId}
+            onClose={closeEditor}
+            onSave={handleEventSaved}
+          />
+        </div>
       )}
     </div>
   );
