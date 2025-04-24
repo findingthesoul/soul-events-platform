@@ -101,21 +101,21 @@ function App() {
           <button onClick={handleLogout}>Logout</button>
         </div>
 
-        {events.map((e) => (
-  <div
-    key={e.id}
-    className={`event-card ${selectedEvent?.id === e.id ? 'active' : ''}`}
-    onClick={() => openEditor(e)}
-  >
-    <h3>{e.fields['Event Title']}</h3>
-    {e.fields['Start Date'] && (
-      <p className="event-sub">
-        {e.fields['Start Date']}
-        {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
-      </p>
-    )}
-  </div>
-))}
+          {events.map((e) => (
+            <div
+              key={e.id}
+              className={`event-card ${selectedEvent?.id === e.id ? 'active' : ''}`}
+              onClick={() => openEditor(e)}
+            >
+              <h3>{e.fields['Event Title']}</h3>
+              {e.fields['Start Date'] && (
+                <p className="event-sub">
+                  {e.fields['Start Date']}
+                  {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
+                </p>
+              )}
+            </div>
+          ))}
 
         <button
           onClick={() => openEditor(null)}
