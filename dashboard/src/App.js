@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Login from './Login';
 import EventEditorModal from './EventEditorModal';
 
@@ -14,26 +14,9 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedVendorId = localStorage.getItem('vendorId');
-    const storedVendorName = localStorage.getItem('vendorName');
-
-    if (storedToken && storedVendorId) {
-      setToken(storedToken);
-      setVendorId(storedVendorId);
-      setVendorName(storedVendorName);
-
-      setTimeout(() => {
-        fetchEvents(storedToken, storedVendorId);
-      }, 100);
-    }
-  }, []);
-
-  const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
+  const fetchEvents = useCallback(async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
-      console.log("Fetching events for vendor:", overrideVendorId);
-      const formula = `SEARCH(\"${overrideVendorId}\", ARRAYJOIN({Vendors} & \"\"))`;
+      const formula = `SEARCH("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`;
       const response = await fetch(
         `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`,
         {
@@ -51,7 +34,23 @@ function App() {
     } catch (err) {
       console.error('Failed to fetch events:', err);
     }
-  };
+  }, [token, vendorId]);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedVendorId = localStorage.getItem('vendorId');
+    const storedVendorName = localStorage.getItem('vendorName');
+
+    if (storedToken && storedVendorId) {
+      setToken(storedToken);
+      setVendorId(storedVendorId);
+      setVendorName(storedVendorName);
+
+      setTimeout(() => {
+        fetchEvents(storedToken, storedVendorId);
+      }, 100);
+    }
+  }, [fetchEvents]);
 
   const handleLogin = ({ token, vendorId, vendorName }) => {
     setToken(token);
@@ -94,37 +93,46 @@ function App() {
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        {vendorName && <h2 className="text-xl font-semibold">Welcome, {vendorName}</h2>}
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-gray-200 text-sm rounded hover:bg-gray-300"
-        >
-          Logout
-        </button>
+    <div style={{ padding: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {vendorName && <h2>Welcome, {vendorName}</h2>}
+        <button onClick={handleLogout}>Logout</button>
       </div>
 
-      <div className="space-y-3">
+      <div>
         {events.map((e) => (
           <div
             key={e.id}
-            className="p-4 bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer"
+            style={{
+              padding: '0.75rem 1rem',
+              marginBottom: '0.5rem',
+              background: '#f2f2f2',
+              borderRadius: '8px',
+              cursor: 'pointer',
+            }}
             onClick={() => openEditor(e)}
           >
-            <div className="font-medium text-lg text-gray-800">{e.fields['Event Title']}</div>
+            <strong>{e.fields['Event Title']}</strong>{' '}
             {e.fields['Start Date'] && (
-              <div className="text-sm text-gray-500">
-                {e.fields['Start Date']}
-                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
-              </div>
+              <span>
+                ({e.fields['Start Date']}
+                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
+              </span>
             )}
           </div>
         ))}
 
         <button
           onClick={() => openEditor(null)}
-          className="mt-6 px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            background: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
         >
           + Create Event
         </button>
