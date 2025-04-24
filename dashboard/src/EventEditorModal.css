@@ -1,144 +1,112 @@
-/* PANEL LAYOUT */
+/* EventEditorModal.css */
+
 .editor-overlay {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #f9f9f9;
-  font-family: 'Inter', sans-serif;
 }
 
 .event-list {
   width: 50%;
-  padding: 2rem;
-  box-sizing: border-box;
+  padding: 1rem;
   overflow-y: auto;
   border-right: 1px solid #eee;
-  background-color: #ffffff;
+  background: #f9f9f9;
+  box-sizing: border-box;
+}
+
+.event-list .event-card {
+  background: white;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.event-list .event-card:hover {
+  background: #f0f0f0;
 }
 
 .editor-panel {
   width: 50%;
+  background: #fefefe;
+  box-shadow: -8px 0 16px rgba(0, 0, 0, 0.05);
   padding: 2rem;
   overflow-y: auto;
-  background-color: #f8f8f8;
-  box-shadow: -8px 0 16px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  position: relative;
   box-sizing: border-box;
 }
 
-/* HEADERS */
 .editor-panel h2 {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #222;
   margin-bottom: 2rem;
 }
 
-/* FORM ELEMENTS */
-.editor-panel label {
-  display: block;
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #444;
+.form-group {
+  margin-bottom: 1.5rem;
 }
 
-.editor-panel input,
-.editor-panel textarea,
-.editor-panel select {
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 0.65rem 0.75rem;
   font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: white;
-  color: #222;
   box-sizing: border-box;
+  background: white;
+  color: #333;
 }
 
-.editor-panel input:focus,
-.editor-panel textarea:focus,
-.editor-panel select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+.form-group textarea {
+  min-height: 100px;
 }
 
-/* TEXTAREA */
-.editor-panel textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-/* TOGGLE SWITCH */
-.format-toggle {
+.toggle-container {
   display: flex;
-  background: #eaeaea;
-  border-radius: 10px;
+  background: #eee;
+  border-radius: 999px;
   overflow: hidden;
-  margin-top: 0.5rem;
   width: fit-content;
 }
 
-.format-toggle button {
+.toggle-btn {
   flex: 1;
   padding: 0.5rem 1.2rem;
-  background: none;
   border: none;
+  background: none;
+  cursor: pointer;
   font-weight: 500;
   color: #666;
-  cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 
-.format-toggle button.active {
+.toggle-btn.active {
   background: #007bff;
   color: white;
 }
 
-/* EVENT LIST STYLING */
-.event-card {
-  background: white;
-  border: 1px solid #ddd;
-  padding: 1rem;
-  border-radius: 0;
-  margin-bottom: 1rem;
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.event-card:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-.event-card.selected {
-  background-color: #f0f4ff;
-  border-color: #007bff;
-}
-
-/* CLOSE BUTTON */
 .close-btn {
   position: absolute;
-  top: 20px;
-  right: 30px;
-  font-size: 2rem;
-  background: none;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
   border: none;
-  color: #999;
+  background: transparent;
   cursor: pointer;
-}
-
-.close-btn:hover {
   color: #333;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .editor-overlay {
-    flex-direction: column;
-  }
-
-  .event-list,
-  .editor-panel {
-    width: 100%;
-  }
 }
