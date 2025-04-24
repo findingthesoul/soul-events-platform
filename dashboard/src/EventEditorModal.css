@@ -1,4 +1,4 @@
-/* Slide-in panel with soft look */
+/* Slide-in panel */
 .editor-panel {
   position: fixed;
   right: 0;
@@ -15,7 +15,6 @@
   transform: translateX(100%);
 }
 
-/* Slide-in animation */
 .editor-panel.open {
   transform: translateX(0);
 }
@@ -28,7 +27,7 @@
   margin-bottom: 2rem;
 }
 
-/* Labels */
+/* Field spacing and layout */
 .editor-panel label {
   display: block;
   margin-top: 1.5rem;
@@ -37,7 +36,6 @@
   color: #444;
 }
 
-/* Inputs and selects */
 .editor-panel input,
 .editor-panel textarea,
 .editor-panel select {
@@ -66,22 +64,24 @@
   resize: vertical;
 }
 
-/* Format toggle as slider */
+/* Format toggle */
 .format-toggle {
   display: flex;
   background: #f2f2f2;
   border-radius: 12px;
   overflow: hidden;
-  width: fit-content;
+  width: 100%;
   margin-top: 0.5rem;
+  border: 1px solid #ccc;
 }
 
 .format-toggle button {
   flex: 1;
-  padding: 0.5rem 1.2rem;
+  padding: 0.6rem 1.2rem;
   background: none;
   border: none;
   font-weight: 500;
+  font-size: 1rem;
   color: #666;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -89,10 +89,14 @@
 
 .format-toggle button.active {
   background: #007bff;
-  color: white;
+  color: #fff;
 }
 
-/* Button footer */
+.format-toggle button:not(:last-child) {
+  border-right: 1px solid #ccc;
+}
+
+/* Footer buttons */
 .editor-footer {
   display: flex;
   justify-content: flex-end;
@@ -109,7 +113,6 @@
   transition: background 0.2s, transform 0.2s;
 }
 
-/* Save button */
 .editor-footer .save-button {
   background: #007bff;
   color: white;
@@ -120,7 +123,6 @@
   transform: translateY(-1px);
 }
 
-/* Cancel button */
 .editor-footer .cancel-button {
   background: transparent;
   color: #333;
