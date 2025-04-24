@@ -35,7 +35,7 @@ function App() {
   const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
       const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=FIND("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`,
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=ARRAYJOIN({Vendors} & '') = '${overrideVendorId}'`,
         {
           headers: {
             Authorization: `Bearer ${AIRTABLE_API_KEY}`,
