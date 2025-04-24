@@ -1,0 +1,169 @@
+/* Slide-in panel with soft look */
+.editor-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 480px;
+  background-color: #fefefe;
+  box-shadow: -8px 0 16px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+  z-index: 999;
+  font-family: 'Inter', sans-serif;
+  transform: translateX(100%);
+}
+
+/* Slide-in animation */
+.editor-panel.open {
+  transform: translateX(0);
+}
+
+/* Headline */
+.editor-panel h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 2rem;
+}
+
+/* Labels */
+.editor-panel label {
+  display: block;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #444;
+}
+
+/* Inputs and selects */
+.editor-panel input,
+.editor-panel textarea,
+.editor-panel select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  transition: border 0.2s, background 0.2s;
+  box-sizing: border-box;
+  color-scheme: light dark;
+}
+
+.editor-panel input:focus,
+.editor-panel textarea:focus,
+.editor-panel select:focus {
+  outline: none;
+  border-color: #6ca0ff;
+  box-shadow: 0 0 0 2px rgba(108, 160, 255, 0.15);
+}
+
+/* Textarea */
+.editor-panel textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Format toggle as slider */
+.format-toggle {
+  display: flex;
+  background: #f2f2f2;
+  border-radius: 12px;
+  overflow: hidden;
+  width: fit-content;
+  margin-top: 0.5rem;
+}
+
+.format-toggle button {
+  flex: 1;
+  padding: 0.5rem 1.2rem;
+  background: none;
+  border: none;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.format-toggle button.active {
+  background: #007bff;
+  color: white;
+}
+
+/* Button footer */
+.editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 3rem;
+  gap: 1rem;
+}
+
+.editor-footer button {
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+/* Save button */
+.editor-footer .save-button {
+  background: #007bff;
+  color: white;
+}
+
+.editor-footer .save-button:hover {
+  background: #005dc4;
+  transform: translateY(-1px);
+}
+
+/* Cancel button */
+.editor-footer .cancel-button {
+  background: transparent;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.editor-footer .cancel-button:hover {
+  background: #f1f1f1;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .editor-panel {
+    background-color: #1e1e1e;
+    color: #ddd;
+  }
+
+  .editor-panel input,
+  .editor-panel textarea,
+  .editor-panel select {
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+    border: 1px solid #444;
+  }
+
+  .format-toggle {
+    background: #333;
+  }
+
+  .format-toggle button {
+    color: #aaa;
+  }
+
+  .format-toggle button.active {
+    background: #3399ff;
+  }
+
+  .editor-footer .cancel-button {
+    color: #ccc;
+    border-color: #555;
+  }
+
+  .editor-footer .cancel-button:hover {
+    background: #333;
+  }
+}
