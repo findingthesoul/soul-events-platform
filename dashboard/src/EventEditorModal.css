@@ -1,153 +1,137 @@
-/* Reset base styles */
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: #f9fafb;
-  color: #111;
-}
-
-/* Layout wrapper */
-.app-layout {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* Event list panel */
-.event-list-panel {
-  width: 50%;
-  padding: 2rem;
-  padding-right: 0;
-  background-color: #f9fafb;
-  overflow-y: auto;
-  border-right: 1px solid #e5e7eb;
-}
-
-/* Event list header */
-.event-list-panel h2 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-
-/* Event cards */
-.event-card {
-  background: #fff;
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
-  border-radius: 0;
-  border-left: 4px solid transparent;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.event-card:hover {
-  background-color: #f1f5f9;
-}
-
-.event-card.active {
-  border-left: 4px solid #007bff;
-  background-color: #eef6ff;
-}
-
-/* Editor panel */
-.editor-panel {
-  width: 50%;
-  padding: 2rem;
-  background-color: #fff;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  height: 100vh;
+/* Layout: editor side panel */
+.editor-overlay {
   position: fixed;
   top: 0;
   right: 0;
+  height: 100%;
+  width: 50%;
+  background-color: #f9f9f9;
+  padding: 2rem;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Editor header */
-.editor-panel h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
+/* Editor content */
+.editor-panel {
+  flex: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+}
+
+/* Title & close */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
 }
 
-.editor-panel label {
+.editor-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Form layout */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
   display: block;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
   font-weight: 500;
+  margin-bottom: 0.5rem;
   color: #333;
 }
 
-.editor-panel input,
-.editor-panel textarea,
-.editor-panel select {
+input,
+textarea,
+select {
   width: 100%;
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem 1rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-  background: #fff;
-}
-
-.editor-panel textarea {
-  resize: vertical;
-  min-height: 90px;
-}
-
-.editor-panel input:focus,
-.editor-panel textarea:focus,
-.editor-panel select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
-}
-
-/* Format toggle */
-.format-toggle {
-  display: flex;
-  margin-top: 0.5rem;
   border-radius: 10px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Toggle Format Switch */
+.toggle-container {
+  display: flex;
+  background: #eee;
+  border-radius: 999px;
   overflow: hidden;
-  background-color: #e5e7eb;
   width: fit-content;
 }
 
-.format-toggle button {
-  padding: 0.5rem 1rem;
+.toggle-btn {
+  padding: 0.5rem 1.5rem;
+  background: none;
   border: none;
-  background: transparent;
-  color: #444;
   font-weight: 500;
+  color: #555;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-.format-toggle button.active {
+.toggle-btn.active {
   background-color: #007bff;
   color: #fff;
 }
 
-/* Close button */
-.editor-panel .close-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  color: #666;
+/* Event List Styling */
+.event-list {
+  width: 50%;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #fafafa;
+  box-sizing: border-box;
+  border-right: 1px solid #e5e5e5;
 }
 
-/* Scroll behavior */
-.editor-panel::-webkit-scrollbar {
-  width: 8px;
+.event-card {
+  background: #fff;
+  border-radius: 0;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: background 0.2s;
 }
-.editor-panel::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 4px;
+
+.event-card:hover {
+  background: #f0f8ff;
+}
+
+.event-card strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.event-card span {
+  color: #555;
+  font-size: 0.95rem;
 }
