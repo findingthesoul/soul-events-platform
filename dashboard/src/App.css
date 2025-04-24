@@ -36,3 +36,51 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* Left panel container */
+.event-list-container {
+  width: 50%;
+  min-width: 400px;
+  max-width: 600px;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+  border-right: 1px solid #e0e0e0;
+}
+
+/* Event card style */
+..event-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-card:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.event-card.active {
+  background: #f4f9ff;
+  border-color: #007bff;
+}
+
+.event-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #222;
+}
+
+.event-sub {
+  font-size: 0.95rem;
+  color: #666;
+}
