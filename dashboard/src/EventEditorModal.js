@@ -14,9 +14,10 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     description: '',
     format: 'Online',
     zoomLink: '',
+    location: '',
     locationUrl: '',
     locationDescription: '',
-    location: '',
+    image: '',
   });
 
   useEffect(() => {
@@ -29,9 +30,10 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         description: f['Description'] || '',
         format: f['Format'] || 'Online',
         zoomLink: f['Zoom link'] || '',
+        location: f['Location'] || '',
         locationUrl: f['Location URL'] || '',
         locationDescription: f['Location Description'] || '',
-        location: f['Location'] || '',
+        image: f['Event Image']?.[0]?.url || '',
       });
     } else {
       setForm({
@@ -41,9 +43,10 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         description: '',
         format: 'Online',
         zoomLink: '',
+        location: '',
         locationUrl: '',
         locationDescription: '',
-        location: '',
+        image: '',
       });
     }
   }, [event]);
@@ -62,42 +65,47 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         Description: form.description,
         Format: form.format,
         'Zoom link': form.format === 'Online' ? form.zoomLink : '',
+        Location: form.format === 'In-person' ? form.location : '',
         'Location URL': form.format === 'In-person' ? form.locationUrl : '',
         'Location Description': form.format === 'In-person' ? form.locationDescription : '',
-        Location: form.format === 'In-person' ? form.location : '',
+        'Event Image': form.image ? [{ url: form.image }] : [],
         Vendors: [vendorId],
       };
 
-      // Remove empty values before sending to Airtable
       Object.keys(updatedFields).forEach((key) => {
-        if (updatedFields[key] === '' || updatedFields[key] == null) {
+        if (
+          updatedFields[key] === undefined ||
+          updatedFields[key] === null ||
+          updatedFields[key] === '' ||
+          (Array.isArray(updatedFields[key]) && updatedFields[key].length === 0)
+        ) {
           delete updatedFields[key];
         }
       });
 
-      const url = event
-        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`
-        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`;
-
-      const response = await fetch(url, {
-        method: event ? 'PATCH' : 'POST',
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fields: updatedFields }),
-      });
+      const response = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields: updatedFields }),
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Airtable error:', errorData);
-        throw new Error('Failed to save event');
+        const error = await response.json();
+        console.error('Airtable error:', error);
+        alert('❌ Could not save changes. See console for details.');
+        return;
       }
 
       onSave();
     } catch (err) {
-      console.error('Error:', err);
-      alert('❌ Something went wrong while saving the event. Check the console for details.');
+      console.error(err);
+      alert('❌ Unexpected error saving event.');
     }
   };
 
@@ -110,14 +118,14 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         content: {
           maxWidth: '600px',
           margin: 'auto',
-          borderRadius: '12px',
+          borderRadius: '16px',
           padding: '2rem',
         },
       }}
     >
-      <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
+      <h2 style={{ marginBottom: '1rem' }}>{event ? 'Edit Event' : 'Create Event'}</h2>
 
-      <label>Title</label>
+      <label>Event Title</label>
       <input name="title" value={form.title} onChange={handleChange} />
 
       <label>Start Date</label>
@@ -151,19 +159,21 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
 
           <label>Location Description</label>
-          <textarea
-            name="locationDescription"
-            value={form.locationDescription}
-            onChange={handleChange}
-          />
+          <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
         </>
       )}
 
+      <label>Event Image URL</label>
+      <input name="image" value={form.image} onChange={handleChange} />
+
       <div style={{ marginTop: '1rem' }}>
-        <button onClick={handleSave} style={{ marginRight: '1rem' }}>
+        <button
+          onClick={handleSave}
+          style={{ marginRight: '1rem', background: '#007bff', color: '#fff', padding: '0.5rem 1rem', border: 'none', borderRadius: '6px' }}
+        >
           Save
         </button>
-        <button onClick={onClose}>Cancel</button>
+        <button onClick={onClose} style={{ padding: '0.5rem 1rem' }}>Cancel</button>
       </div>
     </Modal>
   );

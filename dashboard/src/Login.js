@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
@@ -30,19 +31,75 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto' }}>
-      <h2>Vendor Login</h2>
+    <div style={{ padding: '3rem 1.5rem', maxWidth: '400px', margin: '0 auto', fontFamily: 'sans-serif' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Welcome back</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email</label><br />
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label style={{ display: 'block', marginBottom: '0.25rem' }}>Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            marginBottom: '1rem',
+          }}
+        />
+
+        <label style={{ display: 'block', marginBottom: '0.25rem' }}>Password</label>
+        <div style={{ position: 'relative' }}>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              marginBottom: '1rem',
+              paddingRight: '2.5rem',
+            }}
+          />
+          <span
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              color: '#666',
+            }}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </span>
         </div>
-        <div style={{ marginTop: '1rem' }}>
-          <label>Password</label><br />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        {message && <p style={{ color: 'red' }}>{message}</p>}
-        <button type="submit" style={{ marginTop: '1rem' }}>Login</button>
+
+        {message && (
+          <p style={{ color: 'red', marginBottom: '1rem' }}>{message}</p>
+        )}
+
+        <button
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          Login
+        </button>
       </form>
     </div>
   );
