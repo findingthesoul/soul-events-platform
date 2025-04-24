@@ -19,10 +19,16 @@ function App() {
     const storedToken = localStorage.getItem('token');
     const storedVendorId = localStorage.getItem('vendorId');
     const storedVendorName = localStorage.getItem('vendorName');
+  
     if (storedToken && storedVendorId) {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
+  
+      // ✅ Also fetch events after restoring session
+      setTimeout(() => {
+        fetchEvents(storedToken, storedVendorId);
+      }, 100);
     }
   }, []);
 
