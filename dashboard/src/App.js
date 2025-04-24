@@ -94,46 +94,37 @@ function App() {
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        {vendorName && <h2>Welcome, {vendorName}</h2>}
-        <button onClick={handleLogout}>Logout</button>
+    <div className="p-8 max-w-3xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        {vendorName && <h2 className="text-xl font-semibold">Welcome, {vendorName}</h2>}
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-gray-200 text-sm rounded hover:bg-gray-300"
+        >
+          Logout
+        </button>
       </div>
 
-      <div>
+      <div className="space-y-3">
         {events.map((e) => (
           <div
             key={e.id}
-            style={{
-              padding: '0.75rem 1rem',
-              marginBottom: '0.5rem',
-              background: '#f2f2f2',
-              borderRadius: '8px',
-              cursor: 'pointer',
-            }}
+            className="p-4 bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer"
             onClick={() => openEditor(e)}
           >
-            <strong>{e.fields['Event Title']}</strong>{' '}
+            <div className="font-medium text-lg text-gray-800">{e.fields['Event Title']}</div>
             {e.fields['Start Date'] && (
-              <span>
-                ({e.fields['Start Date']}
-                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
-              </span>
+              <div className="text-sm text-gray-500">
+                {e.fields['Start Date']}
+                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
+              </div>
             )}
           </div>
         ))}
 
         <button
           onClick={() => openEditor(null)}
-          style={{
-            marginTop: '1rem',
-            padding: '0.5rem 1rem',
-            background: '#007bff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className="mt-6 px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
         >
           + Create Event
         </button>

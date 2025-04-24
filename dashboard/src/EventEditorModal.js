@@ -14,13 +14,14 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     description: '',
     format: 'Online',
     zoomLink: '',
+    location: '',
     locationUrl: '',
     locationDescription: '',
-    location: '',
+    image: '',
   });
 
   useEffect(() => {
-    if (event && event.fields) {
+    if (event?.fields) {
       const f = event.fields;
       setForm({
         title: f['Event Title'] || '',
@@ -28,10 +29,11 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         endDate: f['End Date'] || '',
         description: f['Description'] || '',
         format: f['Format'] || 'Online',
-        zoomLink: f['Zoom Link'] || '',
+        zoomLink: f['Zoom link'] || '',
+        location: f['Location'] || '',
         locationUrl: f['Location URL'] || '',
         locationDescription: f['Location Description'] || '',
-        location: f['Location'] || '',
+        image: f['Event Image']?.[0]?.url || '',
       });
     } else {
       setForm({
@@ -41,9 +43,10 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         description: '',
         format: 'Online',
         zoomLink: '',
+        location: '',
         locationUrl: '',
         locationDescription: '',
-        location: '',
+        image: '',
       });
     }
   }, [event]);
@@ -55,55 +58,56 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   const handleSave = async () => {
     try {
-      const updatedFields = {
-        'Event Title': form.title || '',
+      const fields = {
+        'Event Title': form.title,
         'Start Date': form.startDate || null,
         'End Date': form.endDate || null,
-        Description: form.description || '',
-        'Event Image': form.image
-          ? [{ url: form.image }]
-          : [],
-        Format: form.format || '',
-        'Zoom link': form.format === 'Online' ? form.zoomLink || '' : '',
-        'Location URL': form.format === 'In-person' ? form.locationUrl || '' : '',
-        'Location Description': form.format === 'In-person' ? form.locationDescription || '' : '',
-        Location: form.format === 'In-person' ? form.location || '' : '',
-        Vendors: [vendorId],
+        'Description': form.description,
+        'Format': form.format,
+        'Zoom link': form.format === 'Online' ? form.zoomLink : '',
+        'Location': form.format === 'In-person' ? form.location : '',
+        'Location URL': form.format === 'In-person' ? form.locationUrl : '',
+        'Location Description': form.format === 'In-person' ? form.locationDescription : '',
+        'Event Image': form.image ? [{ url: form.image }] : [],
+        'Vendors': [vendorId],
       };
-  
-      // Remove any undefined/null fields (Airtable doesn't like them in PATCH)
-      Object.keys(updatedFields).forEach((key) => {
+
+      // Clean up undefined/null/empty strings for PATCH
+      Object.keys(fields).forEach((key) => {
         if (
-          updatedFields[key] === undefined ||
-          updatedFields[key] === null ||
-          updatedFields[key] === ''
+          fields[key] === undefined ||
+          fields[key] === null ||
+          fields[key] === ''
         ) {
-          delete updatedFields[key];
+          delete fields[key];
         }
       });
-  
-      const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields: updatedFields }),
-        }
-      );
-  
+
+      const method = event ? 'PATCH' : 'POST';
+      const url = event
+        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`
+        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fields }),
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Airtable error:', errorData);
-        throw new Error('Failed to save event');
+        alert('❌ Error saving event. See console for details.');
+        return;
       }
-  
+
       onSave();
     } catch (err) {
-      console.error('Error:', err);
-      alert('❌ Something went wrong while saving the event. Check the console for details.');
+      console.error('Save failed:', err);
+      alert('❌ Unexpected error during save.');
     }
   };
 
@@ -160,6 +164,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
         </>
       )}
+
+      <label>Image URL (optional)</label>
+      <input name="image" value={form.image} onChange={handleChange} />
 
       <div style={{ marginTop: '1rem' }}>
         <button onClick={handleSave} style={{ marginRight: '1rem' }}>
