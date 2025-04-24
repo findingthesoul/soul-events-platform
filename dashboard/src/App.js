@@ -43,13 +43,18 @@ function App() {
   };
 
   const handleLogin = ({ token, vendorId, vendorName }) => {
-    setToken(token);
-    setVendorId(vendorId);
-    setVendorName(vendorName);
     localStorage.setItem('token', token);
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
-    fetchEvents();
+  
+    setToken(token);
+    setVendorId(vendorId);
+    setVendorName(vendorName);
+  
+    // Use a timeout to wait for state updates to complete before fetching
+    setTimeout(() => {
+      fetchEvents(token, vendorId);
+    }, 100); // slight delay to ensure setState is done
   };
 
   const handleLogout = () => {
