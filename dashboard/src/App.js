@@ -28,8 +28,7 @@ function App() {
   const fetchEvents = async (jwt = token, id = vendorId) => {
     try {
       const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula={Vendors}='${id}'`,
-        {
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=AND(FIND("${id}", ARRAYJOIN({Vendors} & "")))`, {
           headers: {
             Authorization: `Bearer ${AIRTABLE_API_KEY}`,
           },
