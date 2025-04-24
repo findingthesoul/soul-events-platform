@@ -14,14 +14,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     description: '',
     format: 'Online',
     zoomLink: '',
-    location: '',
     locationUrl: '',
     locationDescription: '',
-    image: '',
+    location: '',
   });
 
   useEffect(() => {
-    if (event?.fields) {
+    if (event && event.fields) {
       const f = event.fields;
       setForm({
         title: f['Event Title'] || '',
@@ -30,10 +29,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         description: f['Description'] || '',
         format: f['Format'] || 'Online',
         zoomLink: f['Zoom link'] || '',
-        location: f['Location'] || '',
         locationUrl: f['Location URL'] || '',
         locationDescription: f['Location Description'] || '',
-        image: f['Event Image']?.[0]?.url || '',
+        location: f['Location'] || '',
       });
     } else {
       setForm({
@@ -43,10 +41,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         description: '',
         format: 'Online',
         zoomLink: '',
-        location: '',
         locationUrl: '',
         locationDescription: '',
-        image: '',
+        location: '',
       });
     }
   }, [event]);
@@ -58,56 +55,49 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   const handleSave = async () => {
     try {
-      const fields = {
+      const updatedFields = {
         'Event Title': form.title,
         'Start Date': form.startDate || null,
         'End Date': form.endDate || null,
-        'Description': form.description,
-        'Format': form.format,
+        Description: form.description,
+        Format: form.format,
         'Zoom link': form.format === 'Online' ? form.zoomLink : '',
-        'Location': form.format === 'In-person' ? form.location : '',
         'Location URL': form.format === 'In-person' ? form.locationUrl : '',
         'Location Description': form.format === 'In-person' ? form.locationDescription : '',
-        'Event Image': form.image ? [{ url: form.image }] : [],
-        'Vendors': [vendorId],
+        Location: form.format === 'In-person' ? form.location : '',
+        Vendors: [vendorId],
       };
 
-      // Clean up undefined/null/empty strings for PATCH
-      Object.keys(fields).forEach((key) => {
-        if (
-          fields[key] === undefined ||
-          fields[key] === null ||
-          fields[key] === ''
-        ) {
-          delete fields[key];
+      // Remove empty values before sending to Airtable
+      Object.keys(updatedFields).forEach((key) => {
+        if (updatedFields[key] === '' || updatedFields[key] == null) {
+          delete updatedFields[key];
         }
       });
 
-      const method = event ? 'PATCH' : 'POST';
       const url = event
         ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`
         : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`;
 
       const response = await fetch(url, {
-        method,
+        method: event ? 'PATCH' : 'POST',
         headers: {
           Authorization: `Bearer ${AIRTABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fields }),
+        body: JSON.stringify({ fields: updatedFields }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Airtable error:', errorData);
-        alert('❌ Error saving event. See console for details.');
-        return;
+        throw new Error('Failed to save event');
       }
 
       onSave();
     } catch (err) {
-      console.error('Save failed:', err);
-      alert('❌ Unexpected error during save.');
+      console.error('Error:', err);
+      alert('❌ Something went wrong while saving the event. Check the console for details.');
     }
   };
 
@@ -161,12 +151,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
 
           <label>Location Description</label>
-          <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
+          <textarea
+            name="locationDescription"
+            value={form.locationDescription}
+            onChange={handleChange}
+          />
         </>
       )}
-
-      <label>Image URL (optional)</label>
-      <input name="image" value={form.image} onChange={handleChange} />
 
       <div style={{ marginTop: '1rem' }}>
         <button onClick={handleSave} style={{ marginRight: '1rem' }}>
