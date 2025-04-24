@@ -25,18 +25,17 @@ function App() {
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
   
-      // ✅ Also fetch events after restoring session
+      // Add this to ensure fetch only runs *after* state is updated
       setTimeout(() => {
         fetchEvents(storedToken, storedVendorId);
       }, 100);
     }
   }, []);
 
-  const fetchEvents = async (jwt = token, id = vendorId) => {
+  const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
-      const filterFormula = encodeURIComponent(`FIND("${id}", ARRAYJOIN({Vendors} & ""))`);
       const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${filterFormula}`,
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=FIND("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`,
         {
           headers: {
             Authorization: `Bearer ${AIRTABLE_API_KEY}`,
