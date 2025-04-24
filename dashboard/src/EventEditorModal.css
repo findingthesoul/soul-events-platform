@@ -1,88 +1,129 @@
-/* Layout and slide-in */
-.editor-overlay {
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
+/* Reset base styles */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
+  color: #111;
 }
 
+/* Layout wrapper */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Event list panel */
+.event-list-panel {
+  width: 50%;
+  padding: 2rem;
+  padding-right: 0;
+  background-color: #f9fafb;
+  overflow-y: auto;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Event list header */
+.event-list-panel h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+/* Event cards */
+.event-card {
+  background: #fff;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0;
+  border-left: 4px solid transparent;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-card:hover {
+  background-color: #f1f5f9;
+}
+
+.event-card.active {
+  border-left: 4px solid #007bff;
+  background-color: #eef6ff;
+}
+
+/* Editor panel */
 .editor-panel {
   width: 50%;
-  max-width: 600px;
-  background: #f9f9f9;
   padding: 2rem;
+  background-color: #fff;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
   overflow-y: auto;
-  box-shadow: -4px 0 10px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease-in-out;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
 }
 
-.editor-panel.open {
-  transform: translateX(0);
-}
-
-/* Header */
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Editor header */
+.editor-panel h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
   margin-bottom: 2rem;
 }
 
-.editor-header h2 {
-  font-size: 1.5rem;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-/* Inputs and form elements */
-label {
-  font-weight: 600;
-  margin-top: 1rem;
+.editor-panel label {
   display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
 }
 
-input,
-textarea {
+.editor-panel input,
+.editor-panel textarea,
+.editor-panel select {
   width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
   box-sizing: border-box;
-  font-size: 1rem;
+  background: #fff;
 }
 
-textarea {
-  min-height: 100px;
+.editor-panel textarea {
+  resize: vertical;
+  min-height: 90px;
 }
 
-/* Toggle buttons */
+.editor-panel input:focus,
+.editor-panel textarea:focus,
+.editor-panel select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/* Format toggle */
 .format-toggle {
   display: flex;
   margin-top: 0.5rem;
-  background: #eee;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
+  background-color: #e5e7eb;
   width: fit-content;
 }
 
 .format-toggle button {
-  flex: 1;
   padding: 0.5rem 1rem;
   border: none;
-  background: none;
+  background: transparent;
+  color: #444;
   font-weight: 500;
   cursor: pointer;
-  color: #333;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .format-toggle button.active {
@@ -90,76 +131,23 @@ textarea {
   color: #fff;
 }
 
-/* Overlay behind the editor */
-.editor-overlay {
-  position: fixed;
-  top: 0;
-  left: 50%; /* sits right of the 50% event list */
-  width: 50%;
-  height: 100vh;
-  background: #f6f7f9;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
-  z-index: 999;
-  overflow-y: auto;
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-/* Inner layout of the editor panel */
-.editor-panel {
-  display: flex;
-  flex-direction: column;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* Ensure body doesn't scroll when panel is open */
-body.modal-open {
-  overflow: hidden;
-}
-
-.format-switch {
-  position: relative;
-  display: flex;
-  width: fit-content;
-  background: #eaeaea;
-  border-radius: 30px;
-  overflow: hidden;
-  margin-top: 0.5rem;
-}
-
-.switch-button {
-  flex: 1;
-  padding: 0.5rem 1.5rem;
-  background: transparent;
-  border: none;
-  font-weight: 500;
-  color: #555;
-  cursor: pointer;
-  z-index: 1;
-  transition: color 0.2s ease;
-}
-
-.switch-button.active {
-  color: white;
-  font-weight: 600;
-}
-
-.slider {
+/* Close button */
+.editor-panel .close-btn {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  background: #007bff;
-  border-radius: 30px;
-  transition: all 0.3s ease;
-  z-index: 0;
+  top: 1rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #666;
 }
 
-.slider.left {
-  left: 0;
+/* Scroll behavior */
+.editor-panel::-webkit-scrollbar {
+  width: 8px;
 }
-
-.slider.right {
-  left: 50%;
+.editor-panel::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
 }
