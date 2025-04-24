@@ -1,31 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import axios from 'axios';
+
+const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 
 Modal.setAppElement('#root');
 
-const EventEditorModal = ({ isOpen, onRequestClose, selectedEvent, onSave }) => {
-  const [form, setForm] = useState({});
-  const [message, setMessage] = useState('');
-  const [tickets, setTickets] = useState([]);
-  const [newTicket, setNewTicket] = useState({});
-  const [showTicketModal, setShowTicketModal] = useState(false);
+const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
+  const [form, setForm] = useState({
+    title: '',
+    startDate: '',
+    endDate: '',
+    description: '',
+    format: 'Online',
+    zoomLink: '',
+    locationUrl: '',
+    locationDescription: '',
+    location: '',
+  });
 
   useEffect(() => {
-    if (selectedEvent) {
+    if (event && event.fields) {
+      const f = event.fields;
       setForm({
-        name: selectedEvent.fields['Event Title'] || '',
-        startDate: selectedEvent.fields['Start Date'] || '',
-        endDate: selectedEvent.fields['End Date'] || '',
-        description: selectedEvent.fields['Description'] || '',
-        format: selectedEvent.fields['Format'] || '',
-        zoomLink: selectedEvent.fields['Zoom link'] || '',
-        location: selectedEvent.fields['Location URL'] || '',
-        locationDescription: selectedEvent.fields['Location Description'] || '',
+        title: f['Event Title'] || '',
+        startDate: f['Start Date'] || '',
+        endDate: f['End Date'] || '',
+        description: f['Description'] || '',
+        format: f['Format'] || 'Online',
+        zoomLink: f['Zoom Link'] || '',
+        locationUrl: f['Location URL'] || '',
+        locationDescription: f['Location Description'] || '',
+        location: f['Location'] || '',
       });
-      setTickets(selectedEvent.fields['Tickets'] || []);
+    } else {
+      setForm({
+        title: '',
+        startDate: '',
+        endDate: '',
+        description: '',
+        format: 'Online',
+        zoomLink: '',
+        locationUrl: '',
+        locationDescription: '',
+        location: '',
+      });
     }
-  }, [selectedEvent]);
+  }, [event]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,146 +54,107 @@ const EventEditorModal = ({ isOpen, onRequestClose, selectedEvent, onSave }) => 
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const fields = {
-        'Event Title': form.name,
+    const payload = {
+      fields: {
+        'Event Title': form.title,
         'Start Date': form.startDate,
         'End Date': form.endDate,
         'Description': form.description,
         'Format': form.format,
-        'Zoom link': form.zoomLink,
-        'Location URL': form.location,
+        'Zoom Link': form.zoomLink,
+        'Location': form.location,
+        'Location URL': form.locationUrl,
         'Location Description': form.locationDescription,
-      };
+        'Vendors': [vendorId],
+      },
+    };
 
-      await axios.patch(
-        `${import.meta.env.VITE_BACKEND_URL}/events/${selectedEvent.id}`,
-        { fields },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const method = event ? 'PATCH' : 'POST';
+    const url = event
+      ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`
+      : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`;
 
-      setMessage('Saved successfully!');
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save event');
+      }
+
       onSave();
     } catch (err) {
       console.error(err);
-      setMessage('Failed to save.');
-    }
-  };
-
-  const handleAddTicket = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/tickets`,
-        {
-          eventId: selectedEvent.id,
-          fields: newTicket,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTickets([...tickets, response.data]);
-      setShowTicketModal(false);
-      setNewTicket({});
-    } catch (err) {
-      console.error(err);
-      setMessage('Failed to add ticket.');
+      alert('Failed to save event');
     }
   };
 
   return (
     <Modal
-      isOpen={isOpen}
-      onRequestClose={onRequestClose}
+      isOpen={true}
+      onRequestClose={onClose}
       contentLabel="Edit Event"
-      className="modal"
-      overlayClassName="overlay"
+      style={{
+        content: {
+          maxWidth: '600px',
+          margin: 'auto',
+          borderRadius: '12px',
+          padding: '2rem',
+        },
+      }}
     >
-      <h2>Edit Event</h2>
-      <input
-        name="name"
-        value={form.name || ''}
-        onChange={handleChange}
-        placeholder="Event Title"
-      />
-      <input
-        name="startDate"
-        value={form.startDate || ''}
-        onChange={handleChange}
-        type="date"
-        placeholder="Start Date"
-      />
-      <input
-        name="endDate"
-        value={form.endDate || ''}
-        onChange={handleChange}
-        type="date"
-        placeholder="End Date"
-      />
-      <textarea
-        name="description"
-        value={form.description || ''}
-        onChange={handleChange}
-        placeholder="Description"
-      />
-      <select name="format" value={form.format || ''} onChange={handleChange}>
-        <option value="">Select Format</option>
+      <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
+
+      <label>Title</label>
+      <input name="title" value={form.title} onChange={handleChange} />
+
+      <label>Start Date</label>
+      <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
+
+      <label>End Date</label>
+      <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
+
+      <label>Description</label>
+      <textarea name="description" value={form.description} onChange={handleChange} />
+
+      <label>Format</label>
+      <select name="format" value={form.format} onChange={handleChange}>
         <option value="Online">Online</option>
         <option value="In-person">In-person</option>
       </select>
+
       {form.format === 'Online' && (
-        <input
-          name="zoomLink"
-          value={form.zoomLink || ''}
-          onChange={handleChange}
-          placeholder="Zoom link"
-        />
-      )}
-      {form.format === 'In-person' && (
         <>
-          <input
-            name="location"
-            value={form.location || ''}
-            onChange={handleChange}
-            placeholder="Location URL"
-          />
-          <input
-            name="locationDescription"
-            value={form.locationDescription || ''}
-            onChange={handleChange}
-            placeholder="Location Description"
-          />
+          <label>Zoom Link</label>
+          <input name="zoomLink" value={form.zoomLink} onChange={handleChange} />
         </>
       )}
 
-      <button onClick={handleSave}>Save</button>
-      <p>{message}</p>
-      <hr />
-      <h3>Tickets</h3>
-      {tickets.map((ticket, i) => (
-        <div key={i}>{ticket.fields?.['Ticket Name']}</div>
-      ))}
-      <button onClick={() => setShowTicketModal(true)}>Add Ticket</button>
+      {form.format === 'In-person' && (
+        <>
+          <label>Location</label>
+          <input name="location" value={form.location} onChange={handleChange} />
 
-      {showTicketModal && (
-        <Modal isOpen={showTicketModal} onRequestClose={() => setShowTicketModal(false)}>
-          <h4>New Ticket</h4>
-          <input
-            placeholder="Ticket Name"
-            value={newTicket['Ticket Name'] || ''}
-            onChange={(e) =>
-              setNewTicket({ ...newTicket, 'Ticket Name': e.target.value })
-            }
-          />
-          <input
-            placeholder="Price"
-            value={newTicket['Price'] || ''}
-            onChange={(e) => setNewTicket({ ...newTicket, 'Price': parseFloat(e.target.value) })}
-            type="number"
-          />
-          <button onClick={handleAddTicket}>Save Ticket</button>
-        </Modal>
+          <label>Location URL</label>
+          <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
+
+          <label>Location Description</label>
+          <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
+        </>
       )}
+
+      <div style={{ marginTop: '1rem' }}>
+        <button onClick={handleSave} style={{ marginRight: '1rem' }}>
+          Save
+        </button>
+        <button onClick={onClose}>Cancel</button>
+      </div>
     </Modal>
   );
 };

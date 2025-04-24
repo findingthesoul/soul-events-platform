@@ -14,7 +14,6 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
 
-  // Restore session from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedVendorId = localStorage.getItem('vendorId');
@@ -51,7 +50,7 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
-    fetchEvents(); // Or useEffect will fetch when token is set
+    fetchEvents();
   };
 
   const handleLogout = () => {
@@ -84,7 +83,7 @@ function App() {
   return (
     <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-      {vendorName && <h2>Welcome, {vendorName}</h2>}
+        {vendorName && <h2>Welcome, {vendorName}</h2>}
         <button onClick={handleLogout}>Logout</button>
       </div>
 
