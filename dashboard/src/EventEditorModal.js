@@ -121,30 +121,23 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       }, 1200);
     }
   };
-
   const handleSave = async (data = form) => {
     try {
       const newErrors = {};
 
-      if (!data.title || data.title.trim() === '') {
-        newErrors.title = 'Title is required';
-      }
-      if (!data.startDate) {
-        newErrors.startDate = 'Start date is required';
-      }
-      if (!data.endDate) {
-        newErrors.endDate = 'End date is required';
-      }
-      if (data.startDate > data.endDate) {
-        newErrors.startDate = 'Start date cannot be after end date';
-        newErrors.endDate = 'End date cannot be before start date';
+      if (!data.title?.trim()) newErrors.title = 'Required';
+      if (!data.startDate) newErrors.startDate = 'Required';
+      if (!data.endDate) newErrors.endDate = 'Required';
+      if (data.startDate && data.endDate && data.startDate > data.endDate) {
+        newErrors.startDate = 'Start must be before end';
+        newErrors.endDate = 'End must be after start';
       }
       if (data.startTime1 && data.endTime1 && compareTimes(data.startTime1, data.endTime1) > 0) {
         newErrors.startTime1 = 'Start time must be before end time';
       }
       if (data.startDate !== data.endDate && data.startTime2 && data.endTime2) {
         if (compareTimes(data.startTime2, data.endTime2) > 0) {
-          newErrors.startTime2 = 'Start time must be before end time on End Date';
+          newErrors.startTime2 = 'Start time (End Date) must be before end time';
         }
       }
 
@@ -154,8 +147,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         return;
       }
 
-      setErrors({}); // Clear previous errors
-
+      setErrors({});
       const updatedFields = {
         'Event Title': data.title,
         'Start Date': data.startDate,
@@ -193,16 +185,15 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       });
 
       const result = await res.json();
-
       if (!res.ok) {
-        console.error('❌ Airtable rejected the request:', result);
-        alert(result?.error?.message || 'Failed to save to Airtable.');
-        throw new Error('Failed to save');
+        console.error('❌ Airtable error:', result);
+        alert(result?.error?.message || 'Failed to save');
+        throw new Error('Save failed');
       }
 
       if (onSave) onSave();
       setIsDirty(false);
-      setSuccessMessage('Event saved successfully! ✅');
+      setSuccessMessage('Event saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
 
     } catch (err) {
@@ -213,30 +204,123 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const handleClose = () => {
     if (isDirty) {
       const confirm = window.confirm('You have unsaved changes. Save before closing?');
-      if (confirm) {
-        handleSave();
-      }
+      if (confirm) handleSave();
     }
     onClose();
   };
 
-  const toggleFormat = (value) => {
-    handleChange({ target: { name: 'format', value } });
-  };
+  const toggleFormat = (val) => handleChange({ target: { name: 'format', value: val } });
 
   return (
     <div className="editor-overlay">
       <div className="editor-panel">
         {successMessage && <div className="success-toast">{successMessage}</div>}
-
         <div className="editor-header">
           <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
-        {/* Add your full form layout here: all the fields, using error highlighting like:
-            <input name="zoomLink" className={errors.zoomLink ? 'input-error' : ''} ... />
-            Keep the same structure you had before. */}
+        <div className="form-group">
+          <label>Title</label>
+          <input name="title" value={form.title} onChange={handleChange} className={errors.title ? 'input-error' : ''} />
+        </div>
+
+        <div className="form-group">
+          <label>Start Date</label>
+          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className={errors.startDate ? 'input-error' : ''} />
+        </div>
+
+        <div className="time-row">
+          <div className="time-col">
+            <label>Start Time</label>
+            <select name="startTime1" value={form.startTime1} onChange={handleChange} className={errors.startTime1 ? 'input-error' : ''}>
+              {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="time-col">
+            <label>End Time</label>
+            <select name="endTime1" value={form.endTime1} onChange={handleChange}>
+              {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>End Date</label>
+          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} className={errors.endDate ? 'input-error' : ''} />
+        </div>
+
+        {form.startDate !== form.endDate && (
+          <div className="time-row">
+            <div className="time-col">
+              <label>Start Time (End Date)</label>
+              <select name="startTime2" value={form.startTime2} onChange={handleChange} className={errors.startTime2 ? 'input-error' : ''}>
+                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="time-col">
+              <label>End Time (End Date)</label>
+              <select name="endTime2" value={form.endTime2} onChange={handleChange}>
+                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+
+        <div className="form-group">
+          <label>Time Format</label>
+          <select name="timeFormat" value={form.timeFormat} onChange={handleChange}>
+            <option value="24">24-hour</option>
+            <option value="ampm">AM/PM</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Description</label>
+          <textarea name="description" value={form.description} onChange={handleChange} />
+        </div>
+
+        <div className="form-group">
+          <label>Format</label>
+          <div className="format-toggle">
+            <button className={form.format === 'In-person' ? 'active' : ''} onClick={() => toggleFormat('In-person')}>In-person</button>
+            <button className={form.format === 'Online' ? 'active' : ''} onClick={() => toggleFormat('Online')}>Online</button>
+          </div>
+        </div>
+
+        {form.format === 'Online' && (
+          <div className="form-group">
+            <label>Zoom Link</label>
+            <input name="zoomLink" value={form.zoomLink} onChange={handleChange} />
+          </div>
+        )}
+
+        {form.format === 'In-person' && (
+          <>
+            <div className="form-group">
+              <label>Location</label>
+              <input name="location" value={form.location} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Location URL</label>
+              <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Location Description</label>
+              <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
+            </div>
+          </>
+        )}
+
+        <div className="editor-footer">
+          <button
+            className={`save-btn ${isDirty ? 'dirty' : ''}`}
+            onClick={() => handleSave()}
+            disabled={!isDirty}
+          >
+            {isDirty ? 'Save Changes' : 'Saved'}
+          </button>
+        </div>
       </div>
     </div>
   );
