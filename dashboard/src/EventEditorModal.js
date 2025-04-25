@@ -298,8 +298,8 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
 
       const eventId = result.id;
 
-      await saveTicketsToAirtable(eventId);
-      await saveCouponsToAirtable(eventId);
+      await saveTicketsToAirtable(event.id);
+await saveCouponsToAirtable(); // no eventId needed
 
       setIsDirty(false);
       if (onSave) onSave();
@@ -314,7 +314,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
   const saveTicketsToAirtable = async (eventId) => {
     const updatedTickets = [];
   
-    for (let ticket of tickets) {
+    for (const ticket of tickets) {
       try {
         const fields = {
           'Ticket Name': ticket.name,
@@ -323,11 +323,11 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           'Currency': ticket.currency,
           'Limit': ticket.limit ? Number(ticket.limit) : undefined,
           'Until Date': ticket.untilDate || undefined,
-          'Event': [eventId],
+          'Event': [eventId], // 🧠 Link to event
         };
   
         Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+          (key) => fields[key] === '' || fields[key] == null ? delete fields[key] : null
         );
   
         const url = ticket.airtableId
@@ -346,15 +346,14 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
         });
   
         const result = await res.json();
-  
         if (!res.ok) {
-          console.error('❌ Airtable Ticket Error:', result);
+          console.error('❌ Failed to save ticket:', result);
           continue;
         }
   
         updatedTickets.push({
           ...ticket,
-          airtableId: result.id,
+          airtableId: result.id, // ✅ Save Airtable ID
         });
   
       } catch (err) {
@@ -362,14 +361,14 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       }
     }
   
-    // ✅ Very important: update local state
+    // 🔄 Reflect latest state in UI
     setTickets(updatedTickets);
   };
 
-  const saveCouponsToAirtable = async (eventId) => {
+  const saveCouponsToAirtable = async () => {
     const updatedCoupons = [];
   
-    for (let coupon of coupons) {
+    for (const coupon of coupons) {
       try {
         const fields = {
           'Coupon Code': coupon.code,
@@ -377,11 +376,11 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           'Type': coupon.type,
           'Amount': coupon.amount ? Number(coupon.amount) : undefined,
           'Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
-          'Linked Ticket': coupon.ticketId ? [coupon.ticketId] : [],
+          'Linked Ticket': coupon.ticketId ? [coupon.ticketId] : [], // 🧠 Link to ticket
         };
   
         Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+          (key) => fields[key] === '' || fields[key] == null ? delete fields[key] : null
         );
   
         const url = coupon.airtableId
@@ -400,15 +399,14 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
         });
   
         const result = await res.json();
-  
         if (!res.ok) {
-          console.error('❌ Airtable Coupon Error:', result);
+          console.error('❌ Failed to save coupon:', result);
           continue;
         }
   
         updatedCoupons.push({
           ...coupon,
-          airtableId: result.id,
+          airtableId: result.id, // ✅ Save Airtable ID
         });
   
       } catch (err) {
@@ -416,7 +414,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       }
     }
   
-    // ✅ Very important: update local state
+    // 🔄 Reflect latest state in UI
     setCoupons(updatedCoupons);
   };
 
