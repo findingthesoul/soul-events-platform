@@ -93,14 +93,16 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updated = { ...form, [name]: value };
-    setForm(updated);
-    setIsDirty(true);
+    if (form[name] !== value) {
+      const updated = { ...form, [name]: value };
+      setForm(updated);
+      setIsDirty(true);
 
-    if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(() => {
-      handleSave(updated);
-    }, 1200);
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      saveTimeout.current = setTimeout(() => {
+        handleSave(updated);
+      }, 1200);
+    }
   };
 
   const handleSave = async (data = form) => {
@@ -148,8 +150,8 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         throw new Error('Failed to save');
       }
 
-      setIsDirty(false);
       if (onSave) onSave();
+      setIsDirty(false); // ✅ Always reset dirty state after save
 
     } catch (err) {
       console.error('Save error:', err);
@@ -213,7 +215,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
         </div>
 
-        {/* Show second time row only if event spans multiple days */}
         {form.startDate && form.endDate && form.startDate !== form.endDate && (
           <div className="time-row">
             <div className="time-col">
