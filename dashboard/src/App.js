@@ -44,7 +44,7 @@ function App() {
       );
       const data = await response.json();
       if (data.error) {
-        console.error('Airtable fetch error:', data.error.message);
+        console.error("Airtable fetch error:", data.error.message);
         return;
       }
       setEvents(data.records || []);
@@ -72,6 +72,8 @@ function App() {
     setVendorName(null);
     localStorage.clear();
     setEvents([]);
+    setShowEditor(false);
+    setSelectedEvent(null);
   };
 
   const openEditor = (event = null) => {
@@ -117,7 +119,9 @@ function App() {
           </div>
         ))}
 
-        <button className="add-event-btn" onClick={() => openEditor(null)}>+ Create Event</button>
+        <button className="add-event-btn" onClick={() => openEditor(null)}>
+          + Create Event
+        </button>
       </div>
 
       {showEditor && (

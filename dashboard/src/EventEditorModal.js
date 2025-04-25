@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './EventEditorModal.css';
 
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
@@ -16,6 +16,8 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     locationUrl: '',
     locationDescription: '',
   });
+  const [isDirty, setIsDirty] = useState(false);
+  const saveTimeout = useRef(null);
 
   useEffect(() => {
     if (event?.fields) {
@@ -31,6 +33,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         locationUrl: f['Location URL'] || '',
         locationDescription: f['Location Description'] || '',
       });
+      setIsDirty(false);
     }
   }, [event]);
 
@@ -38,16 +41,15 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     const { name, value } = e.target;
     const updated = { ...form, [name]: value };
     setForm(updated);
-    autoSave(updated);
+    setIsDirty(true);
+
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(() => {
+      handleSave(updated);
+    }, 1200);
   };
 
-  const handleFormatToggle = (newFormat) => {
-    const updated = { ...form, format: newFormat };
-    setForm(updated);
-    autoSave(updated);
-  };
-
-  const autoSave = async (data = form) => {
+  const handleSave = async (data = form) => {
     try {
       const updatedFields = {
         'Event Title': data.title,
@@ -84,10 +86,17 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         throw new Error('Failed to save');
       }
 
-      if (onSave) onSave();
+      setIsDirty(false);
+      onSave();
     } catch (err) {
       console.error('Save error:', err);
     }
+  };
+
+  const handleClose = () => {
+    if (isDirty && !window.confirm('Save changes before closing?')) return;
+    if (isDirty) handleSave();
+    onClose();
   };
 
   return (
@@ -95,7 +104,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       <div className="editor-panel">
         <div className="editor-header">
           <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
         <div className="form-group">
@@ -120,16 +129,16 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
         <div className="form-group">
           <label>Format</label>
-          <div className="toggle-container">
+          <div className="format-toggle">
             <button
-              className={`toggle-btn ${form.format === 'In-person' ? 'active' : ''}`}
-              onClick={() => handleFormatToggle('In-person')}
+              className={form.format === 'In-person' ? 'active' : ''}
+              onClick={() => handleChange({ target: { name: 'format', value: 'In-person' } })}
             >
               In-person
             </button>
             <button
-              className={`toggle-btn ${form.format === 'Online' ? 'active' : ''}`}
-              onClick={() => handleFormatToggle('Online')}
+              className={form.format === 'Online' ? 'active' : ''}
+              onClick={() => handleChange({ target: { name: 'format', value: 'Online' } })}
             >
               Online
             </button>
@@ -159,6 +168,12 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
             </div>
           </>
         )}
+
+        <div className="editor-footer">
+          <button className={`save-btn ${isDirty ? 'dirty' : ''}`} onClick={() => handleSave()} disabled={!isDirty}>
+            {isDirty ? 'Save Changes' : 'Saved'}
+          </button>
+        </div>
       </div>
     </div>
   );

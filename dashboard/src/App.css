@@ -54,10 +54,10 @@ button {
   border: 1px solid #e5e7eb;
   border-left: 4px solid transparent;
   padding: 1rem 1.25rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
+  border-radius: 0;
 }
 
 .event-card:hover {
@@ -97,6 +97,30 @@ button {
   background-color: #2563eb;
 }
 
+/* Save status */
+.save-status {
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.save-btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  margin-left: auto;
+  background: #ccc;
+  border-radius: 6px;
+  border: none;
+  cursor: default;
+  transition: background 0.2s;
+}
+
+.save-btn.dirty {
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}
+
 /* Responsive behavior */
 @media (max-width: 768px) {
   .app-container {
@@ -107,6 +131,5 @@ button {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #ddd;
-    padding: 2rem;
   }
 }
