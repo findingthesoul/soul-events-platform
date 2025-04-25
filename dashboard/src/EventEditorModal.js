@@ -122,18 +122,22 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         'Start Time (End Date)': data.startTime2,
         'End Time (End Date)': data.endTime2,
         'Time Format': data.timeFormat,
-        Vendors: [vendorId],
+        Vendors: vendorId ? [vendorId] : [],  // ✅ only add if vendorId is valid
       };
-
+  
+      // Remove empty fields
       Object.keys(updatedFields).forEach(
         (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
       );
-
+  
+      // ✅ Show what you're sending
+      console.log("➡️ Sending to Airtable:", updatedFields);
+  
       const url = event === null
         ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
         : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
       const method = event === null ? 'POST' : 'PATCH';
-
+  
       const res = await fetch(url, {
         method,
         headers: {
@@ -142,17 +146,18 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         },
         body: JSON.stringify({ fields: updatedFields }),
       });
-
+  
       const result = await res.json();
-
+  
       if (!res.ok) {
-        console.error('Airtable error:', result);
+        console.error('❌ Airtable rejected the request:', result);
+        alert(result?.error?.message || 'Failed to save to Airtable.');
         throw new Error('Failed to save');
       }
-
+  
       if (onSave) onSave();
-      setIsDirty(false); // ✅ Always reset dirty state after save
-
+      setIsDirty(false);
+  
     } catch (err) {
       console.error('Save error:', err);
     }
