@@ -1,48 +1,20 @@
-/* Layout split */
-.app-container {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
+/* EventEditorModal.css - Styling for the right-side sliding editor panel */
 
-.event-list {
-  width: 50%;
-  background: #f8f9fa;
-  padding: 1rem;
-  box-sizing: border-box;
-  overflow-y: auto;
-  border-right: 1px solid #ddd;
-}
-
-.event-item {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.event-item:hover {
-  background: #f0f4ff;
-}
-
-/* Selected item */
-.event-item.selected {
-  border-left: 4px solid #007bff;
-  background: #eaf2ff;
-}
-
-/* Editor Panel */
 .editor-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
   width: 50%;
-  background: #fafafa;
+  background: #f8f9fb;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05);
   padding: 2rem;
   overflow-y: auto;
-  box-sizing: border-box;
+  transition: transform 0.3s ease;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .editor-header {
@@ -53,15 +25,18 @@
 }
 
 .editor-header h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
   margin: 0;
-  font-size: 1.5rem;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   cursor: pointer;
+  color: #888;
+  padding: 0;
 }
 
 .form-group {
@@ -70,64 +45,87 @@
 
 .form-group label {
   display: block;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  color: #333;
 }
 
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 1rem;
   box-sizing: border-box;
 }
 
-textarea {
+.form-group textarea {
+  min-height: 80px;
   resize: vertical;
-  min-height: 100px;
 }
 
-/* Format Toggle Slider */
-.toggle-container {
+.toggle-switch {
   display: flex;
-  background: #e0e0e0;
-  border-radius: 20px;
-  overflow: hidden;
-  width: 200px;
+  gap: 0.5rem;
+  background: #e5e7eb;
+  border-radius: 999px;
+  padding: 0.2rem;
+  width: fit-content;
 }
 
-.toggle-btn {
+.toggle-switch button {
   flex: 1;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+  padding: 0.4rem 1rem;
   border: none;
-  background: none;
-  color: #333;
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 500;
+  color: #555;
   cursor: pointer;
-  transition: background 0.3s, color 0.3s;
+  transition: all 0.2s ease;
 }
 
-.toggle-btn.active {
+.toggle-switch button.active {
   background: #007bff;
   color: white;
 }
 
-/* Scroll improvements */
-.event-list::-webkit-scrollbar,
-.editor-overlay::-webkit-scrollbar {
-  width: 8px;
+.editor-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 
-.event-list::-webkit-scrollbar-thumb,
-.editor-overlay::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
+.save-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
 }
 
-.event-list::-webkit-scrollbar-thumb:hover,
-.editor-overlay::-webkit-scrollbar-thumb:hover {
-  background: #999;
+.save-btn.unsaved {
+  background: #2563eb;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .editor-overlay {
+    width: 100%;
+    padding: 1.25rem;
+  }
 }
