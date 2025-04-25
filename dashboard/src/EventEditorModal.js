@@ -87,7 +87,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       }
 
       setIsDirty(false);
-      if (typeof onSave === 'function') onSave();
+      if (onSave) onSave();
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -95,12 +95,15 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   const handleClose = () => {
     if (isDirty) {
-      const confirmClose = window.confirm('Save changes before closing?');
+      const confirmClose = window.confirm('You have unsaved changes. Do you want to save before closing?');
       if (confirmClose) {
-        handleSave();
+        handleSave().then(() => onClose());
+      } else {
+        onClose();
       }
+    } else {
+      onClose();
     }
-    onClose();
   };
 
   return (
