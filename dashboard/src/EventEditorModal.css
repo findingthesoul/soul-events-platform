@@ -164,3 +164,28 @@ textarea {
     flex-direction: column;
   }
 }
+/* ✅ Red highlight for invalid inputs */
+.input-error {
+  border-color: #dc2626 !important; /* red-600 */
+  background-color: #fef2f2;         /* red-50 */
+}
+
+/* ✅ Success toast message */
+.success-toast {
+  background-color: #22c55e; /* green-500 */
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1rem;
+  animation: fadeInOut 3s forwards;
+}
+
+/* ✅ Subtle fade animation */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
