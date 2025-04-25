@@ -39,6 +39,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         locationDescription: f['Location Description'] || '',
       });
       setIsDirty(false);
+    if (onSave) onSave();
     }
   }, [event]);
 
@@ -93,6 +94,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       }
 
       setIsDirty(false);
+    if (onSave) onSave();
     } catch (err) {
       console.error('Save error:', err);
     }
