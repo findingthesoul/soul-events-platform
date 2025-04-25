@@ -87,15 +87,19 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       }
 
       setIsDirty(false);
-      onSave();
+      if (typeof onSave === 'function') onSave();
     } catch (err) {
       console.error('Save error:', err);
     }
   };
 
   const handleClose = () => {
-    if (isDirty && !window.confirm('Save changes before closing?')) return;
-    if (isDirty) handleSave();
+    if (isDirty) {
+      const confirmClose = window.confirm('Save changes before closing?');
+      if (confirmClose) {
+        handleSave();
+      }
+    }
     onClose();
   };
 
@@ -170,7 +174,11 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         )}
 
         <div className="editor-footer">
-          <button className={`save-btn ${isDirty ? 'dirty' : ''}`} onClick={() => handleSave()} disabled={!isDirty}>
+          <button
+            className={`save-btn ${isDirty ? 'dirty' : ''}`}
+            onClick={() => handleSave()}
+            disabled={!isDirty}
+          >
             {isDirty ? 'Save Changes' : 'Saved'}
           </button>
         </div>
