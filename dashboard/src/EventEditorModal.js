@@ -5,7 +5,7 @@ import './EventEditorModal.css';
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 
-// Helper: Generate Time Options
+// Helpers
 const generateTimeOptions = (format) => {
   const options = [];
   for (let h = 0; h < 24; h++) {
@@ -22,7 +22,6 @@ const generateTimeOptions = (format) => {
   return options;
 };
 
-// Helper: Compare two times
 const compareTimes = (t1, t2) => {
   const parse = (time) => {
     if (!time) return 0;
@@ -178,9 +177,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       </div>
     </div>
   );
-};
-
-const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
+};const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [form, setForm] = useState({
     id: '',
     title: '',
@@ -210,36 +207,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const saveTimeout = useRef(null);
   const timeOptions = generateTimeOptions(form.timeFormat);
-
-  useEffect(() => {
-    if (!event) {
-      resetForm();
-      return;
-    }
-    if (event.id !== form.id) {
-      const f = event.fields;
-      setForm({
-        id: event.id,
-        title: f['Event Title'] || '',
-        startDate: f['Start Date'] || '',
-        endDate: f['End Date'] || '',
-        description: f['Description'] || '',
-        format: f['Format'] || 'Online',
-        zoomLink: f['Zoom link'] || '',
-        location: f['Location'] || '',
-        locationUrl: f['Location URL'] || '',
-        locationDescription: f['Location Description'] || '',
-        startTime1: f['Start Time (Start Date)'] || '',
-        endTime1: f['End Time (Start Date)'] || '',
-        startTime2: f['Start Time (End Date)'] || '',
-        endTime2: f['End Time (End Date)'] || '',
-        timeFormat: f['Time Format'] || '24',
-      });
-      setTickets([]); // Load Tickets and Coupons later if needed
-      setCoupons([]);
-      setIsDirty(false);
-    }
-  }, [event]);
 
   const resetForm = () => {
     setForm({
@@ -271,7 +238,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
-      // Autosave optional
+      // Autosave would happen here if needed
     }, 1200);
   };
 
@@ -285,7 +252,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   const handleSave = async (data = form) => {
     try {
-      // Save Event
       const updatedFields = {
         'Event Title': data.title,
         'Start Date': data.startDate,
@@ -332,10 +298,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
       const eventId = result.id;
 
-      // Save Tickets
       await saveTicketsToAirtable(eventId);
-
-      // Save Coupons
       await saveCouponsToAirtable(eventId);
 
       setIsDirty(false);
@@ -348,10 +311,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     }
   };
 
-  
   const saveTicketsToAirtable = async (eventId) => {
     const updatedTickets = [];
-  
+
     for (let ticket of tickets) {
       try {
         const fields = {
@@ -363,16 +325,16 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           'Until Date': ticket.untilDate || null,
           'Event': [eventId],
         };
-  
+
         Object.keys(fields).forEach(
           (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
         );
-  
+
         const url = ticket.airtableId
           ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticket.airtableId}`
           : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`;
         const method = ticket.airtableId ? 'PATCH' : 'POST';
-  
+
         const res = await fetch(url, {
           method,
           headers: {
@@ -381,29 +343,29 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           },
           body: JSON.stringify({ fields }),
         });
-  
+
         const result = await res.json();
         if (!res.ok) {
           console.error('❌ Airtable Ticket Error:', result);
           continue;
         }
-  
-        // Update ticket with Airtable ID (important)
+
         updatedTickets.push({
           ...ticket,
           airtableId: result.id,
         });
-  
+
       } catch (err) {
         console.error('Ticket Save Error:', err);
       }
     }
-  
-    // Update local state
+
     setTickets(updatedTickets);
   };
 
   const saveCouponsToAirtable = async (eventId) => {
+    const updatedCoupons = [];
+
     for (let coupon of coupons) {
       try {
         const fields = {
@@ -439,27 +401,140 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           continue;
         }
 
-        if (!coupon.airtableId) {
-          coupon.airtableId = result.id;
-        }
+        updatedCoupons.push({
+          ...coupon,
+          airtableId: result.id,
+        });
 
       } catch (err) {
         console.error('Coupon Save Error:', err);
       }
     }
+
+    setCoupons(updatedCoupons);
   };
+
+  const loadTickets = async (eventId) => {
+    try {
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=FIND("${eventId}", ARRAYJOIN(Event))`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Error loading tickets:', result);
+        return;
+      }
+
+      const loadedTickets = result.records.map((record) => ({
+        id: crypto.randomUUID(),
+        airtableId: record.id,
+        name: record.fields['Ticket Name'] || '',
+        type: record.fields['Type'] || 'FREE',
+        price: record.fields['Price'] || '',
+        currency: record.fields['Currency'] || 'EUR',
+        limit: record.fields['Limit'] || '',
+        untilDate: record.fields['Until Date'] || '',
+      }));
+
+      setTickets(loadedTickets);
+
+      const ticketIds = loadedTickets.map(t => t.airtableId);
+      await loadCoupons(ticketIds);
+
+    } catch (err) {
+      console.error('Error loading tickets:', err);
+    }
+  };
+
+  const loadCoupons = async (ticketIds) => {
+    try {
+      if (!ticketIds.length) return;
+
+      const filterFormula = `OR(${ticketIds.map(id => `FIND("${id}", ARRAYJOIN({Linked Ticket}))`).join(", ")})`;
+
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(filterFormula)}`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Error loading coupons:', result);
+        return;
+      }
+
+      const loadedCoupons = result.records.map((record) => ({
+        id: crypto.randomUUID(),
+        airtableId: record.id,
+        ticketId: record.fields['Linked Ticket'] ? record.fields['Linked Ticket'][0] : '',
+        code: record.fields['Coupon Code'] || '',
+        name: record.fields['Coupon Name'] || '',
+        type: record.fields['Type'] || 'FREE',
+        amount: record.fields['Amount'] || '',
+        percentage: record.fields['Percentage'] || '',
+      }));
+
+      setCoupons(loadedCoupons);
+
+    } catch (err) {
+      console.error('Error loading coupons:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!event) {
+      resetForm();
+      return;
+    }
+    if (event.id !== form.id) {
+      const f = event.fields;
+      setForm({
+        id: event.id,
+        title: f['Event Title'] || '',
+        startDate: f['Start Date'] || '',
+        endDate: f['End Date'] || '',
+        description: f['Description'] || '',
+        format: f['Format'] || 'Online',
+        zoomLink: f['Zoom link'] || '',
+        location: f['Location'] || '',
+        locationUrl: f['Location URL'] || '',
+        locationDescription: f['Location Description'] || '',
+        startTime1: f['Start Time (Start Date)'] || '',
+        endTime1: f['End Time (Start Date)'] || '',
+        startTime2: f['Start Time (End Date)'] || '',
+        endTime2: f['End Time (End Date)'] || '',
+        timeFormat: f['Time Format'] || '24',
+      });
+      setTickets([]);
+      setCoupons([]);
+      setIsDirty(false);
+
+      loadTickets(event.id);
+    }
+  }, [event]);
 
   return (
     <div className="editor-overlay">
       <div className="editor-panel">
 
-         <div className="editor-header">
+        {/* Header */}
+        <div className="editor-header">
           <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
+        {/* Success Toast */}
         {successMessage && <div className="success-toast">{successMessage}</div>}
 
+        {/* Tabs */}
         <div className="tab-bar">
           <button onClick={() => setActiveTab('details')} className={activeTab === 'details' ? 'active' : ''}>
             Event Details
@@ -469,6 +544,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           </button>
         </div>
 
+        {/* Event Details Tab */}
         {activeTab === 'details' && (
           <>
             <div className="form-group">
@@ -485,13 +561,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
               <div className="time-col">
                 <label>Start Time</label>
                 <select name="startTime1" value={form.startTime1} onChange={handleChange}>
-                  {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="time-col">
                 <label>End Time</label>
                 <select name="endTime1" value={form.endTime1} onChange={handleChange}>
-                  {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             </div>
@@ -506,13 +582,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
                 <div className="time-col">
                   <label>Start Time (End Date)</label>
                   <select name="startTime2" value={form.startTime2} onChange={handleChange}>
-                    {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="time-col">
                   <label>End Time (End Date)</label>
                   <select name="endTime2" value={form.endTime2} onChange={handleChange}>
-                    {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
@@ -575,6 +651,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           </>
         )}
 
+        {/* Pricing & Coupons Tab */}
         {activeTab === 'pricing' && (
           <>
             <h3>Tickets</h3>
@@ -599,6 +676,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           </>
         )}
 
+        {/* Ticket Popup */}
         {showTicketPopup && (
           <TicketPopup
             ticket={editingTicket}
@@ -619,6 +697,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           />
         )}
 
+        {/* Coupon Popup */}
         {showCouponPopup && (
           <CouponPopup
             coupon={editingCoupon}
@@ -639,15 +718,18 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
             onDelete={(id) => setCoupons(prev => prev.filter(c => c.id !== id))}
           />
         )}
+
+        {/* Save Button */}
         <div className="editor-footer">
           <button
-          className={`save-btn ${isDirty ? 'dirty' : ''}`}
-          onClick={() => handleSave()}
-          disabled={!isDirty}
+            className={`save-btn ${isDirty ? 'dirty' : ''}`}
+            onClick={() => handleSave()}
+            disabled={!isDirty}
           >
-          {isDirty ? 'Save Changes' : 'Saved'}
+            {isDirty ? 'Save Changes' : 'Saved'}
           </button>
         </div>
+
       </div>
     </div>
   );
