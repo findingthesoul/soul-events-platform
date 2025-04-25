@@ -53,10 +53,10 @@
 
 /* Event card style */
 .event-card {
-  background: #fff;
+  background: #f0f6ff;
   border-left: 4px solid transparent;
   padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0rem;
   border-radius: 0;
   box-shadow: none;
   transition: all 0.2s ease;
@@ -70,7 +70,7 @@
 
 .event-card.active {
   border-left: 4px solid #007bff;
-  background: #f0f6ff;
+  background: #fff;;
 }
 
 .event-card h3 {

@@ -38,19 +38,16 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     const { name, value } = e.target;
     const updated = { ...form, [name]: value };
     setForm(updated);
+    autoSave(updated);
   };
 
-  const handleBlur = () => {
-    handleSave();
-  };
-
-  const handleFormatToggle = (value) => {
+  const handleFormatChange = (value) => {
     const updated = { ...form, format: value };
     setForm(updated);
-    handleSave(updated);
+    autoSave(updated);
   };
 
-  const handleSave = async (data = form) => {
+  const autoSave = async (data = form) => {
     try {
       const updatedFields = {
         'Event Title': data.title,
@@ -84,79 +81,76 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       if (!res.ok) {
         const errorData = await res.json();
         console.error('Airtable error:', errorData);
-        throw new Error('Failed to save');
       }
-
-      onSave();
     } catch (err) {
-      console.error('Save error:', err);
+      console.error('Auto-save error:', err);
     }
   };
 
   return (
-    <div className="editor-overlay">
-      <div className="editor-panel open">
-        <div className="editor-header">
-          <h2>Edit Event</h2>
-          <button className="close-btn" onClick={onClose}>
-            ×
-          </button>
-        </div>
-
-        <div className="editor-content">
+    <div className="editor-panel">
+      <div className="editor-header">
+        <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
+        <button className="close-btn" onClick={onClose}>×</button>
+      </div>
+      <div className="editor-body">
+        <div className="form-group">
           <label>Title</label>
-          <input name="title" value={form.title} onChange={handleChange} onBlur={handleBlur} />
-
+          <input name="title" value={form.title} onChange={handleChange} />
+        </div>
+        <div className="form-group">
           <label>Start Date</label>
-          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} onBlur={handleBlur} />
-
+          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
+        </div>
+        <div className="form-group">
           <label>End Date</label>
-          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} onBlur={handleBlur} />
-
+          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
+        </div>
+        <div className="form-group">
           <label>Description</label>
-          <textarea name="description" value={form.description} onChange={handleChange} onBlur={handleBlur} />
-
+          <textarea name="description" value={form.description} onChange={handleChange} />
+        </div>
+        <div className="form-group">
           <label>Format</label>
-          <div className="format-toggle">
+          <div className="format-switch">
             <button
               className={form.format === 'In-person' ? 'active' : ''}
-              onClick={() => handleFormatToggle('In-person')}
+              onClick={() => handleFormatChange('In-person')}
             >
               In-person
             </button>
             <button
               className={form.format === 'Online' ? 'active' : ''}
-              onClick={() => handleFormatToggle('Online')}
+              onClick={() => handleFormatChange('Online')}
             >
               Online
             </button>
           </div>
-
-          {form.format === 'Online' && (
-            <>
-              <label>Zoom Link</label>
-              <input name="zoomLink" value={form.zoomLink} onChange={handleChange} onBlur={handleBlur} />
-            </>
-          )}
-
-          {form.format === 'In-person' && (
-            <>
-              <label>Location</label>
-              <input name="location" value={form.location} onChange={handleChange} onBlur={handleBlur} />
-
-              <label>Location URL</label>
-              <input name="locationUrl" value={form.locationUrl} onChange={handleChange} onBlur={handleBlur} />
-
-              <label>Location Description</label>
-              <textarea
-                name="locationDescription"
-                value={form.locationDescription}
-                onChange={handleChange}
-                onBlur={handleBlur}
-              />
-            </>
-          )}
         </div>
+
+        {form.format === 'Online' && (
+          <div className="form-group">
+            <label>Zoom Link</label>
+            <input name="zoomLink" value={form.zoomLink} onChange={handleChange} />
+          </div>
+        )}
+
+        {form.format === 'In-person' && (
+          <>
+            <div className="form-group">
+              <label>Location</label>
+              <input name="location" value={form.location} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Location URL</label>
+              <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Location Description</label>
+              <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

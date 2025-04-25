@@ -1,19 +1,39 @@
-/* EventEditorModal.css - Full Updated Version */
+/* Layout split */
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-.editor-overlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
+.event-list {
   width: 50%;
-  background-color: #f9f9f9;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
+  background: #f8f9fa;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  border-right: 1px solid #ddd;
+}
+
+.event-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.event-item:hover {
+  background: #f0f4ff;
+}
+
+/* Editor Panel */
+.editor-overlay {
+  width: 50%;
+  background: #fafafa;
   padding: 2rem;
   overflow-y: auto;
-  transition: transform 0.3s ease;
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  flex-direction: column;
   box-sizing: border-box;
 }
 
@@ -21,98 +41,85 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
 }
 
 .editor-header h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #222;
   margin: 0;
+  font-size: 1.5rem;
 }
 
 .close-btn {
-  font-size: 1.5rem;
   background: none;
   border: none;
+  font-size: 1.5rem;
   cursor: pointer;
-  color: #666;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #333;
+  display: block;
+  margin-bottom: 0rem;
+  font-weight: 600;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   font-size: 1rem;
-  background-color: #fff;
   box-sizing: border-box;
 }
 
-.form-group textarea {
-  min-height: 100px;
+textarea {
   resize: vertical;
+  min-height: 100px;
 }
 
+/* Format Toggle Slider */
 .toggle-container {
   display: flex;
-  border-radius: 10px;
+  background: #e0e0e0;
+  border-radius: 20px;
   overflow: hidden;
-  background-color: #f1f1f1;
-  width: fit-content;
+  width: 200px;
+  margin-top: 0.5rem;
 }
 
 .toggle-btn {
-  padding: 0.6rem 1.4rem;
-  background: none;
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
   border: none;
-  cursor: pointer;
-  font-weight: 500;
+  background: none;
   color: #333;
-  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
 }
 
 .toggle-btn.active {
-  background-color: #007bff;
+  background: #007bff;
   color: white;
 }
 
-@media (prefers-color-scheme: dark) {
-  .editor-overlay {
-    background-color: #1e1e1e;
-    color: #f0f0f0;
-  }
+/* Scroll improvements */
+.event-list::-webkit-scrollbar,
+.editor-overlay::-webkit-scrollbar {
+  width: 8px;
+}
 
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    background-color: #2c2c2c;
-    border-color: #444;
-    color: #eee;
-  }
+.event-list::-webkit-scrollbar-thumb,
+.editor-overlay::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
 
-  .toggle-container {
-    background-color: #333;
-  }
-
-  .toggle-btn {
-    color: #ccc;
-  }
-
-  .toggle-btn.active {
-    background-color: #3399ff;
-  }
+.event-list::-webkit-scrollbar-thumb:hover,
+.editor-overlay::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }

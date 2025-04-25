@@ -1,7 +1,11 @@
+// Great! Let's get everything synced and styled properly.
+// Here’s your finalized App.js file:
+
 import React, { useState, useEffect } from 'react';
 import Login from './Login';
 import EventEditorModal from './EventEditorModal';
-import './App.css'; // Ensure this includes the .event-list-container and .event-card styles
+import './EventEditorModal.css';
+import './App.css';
 
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
@@ -33,7 +37,7 @@ function App() {
 
   const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
-      const formula = `SEARCH("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`;
+      const formula = `SEARCH(\"${overrideVendorId}\", ARRAYJOIN({Vendors} & \"\"))`;
       const response = await fetch(
         `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`,
         {
@@ -42,6 +46,7 @@ function App() {
           },
         }
       );
+
       const data = await response.json();
       if (data.error) {
         console.error("Airtable fetch error:", data.error.message);
@@ -94,45 +99,34 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <div className="event-list-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-          {vendorName && <h2 style={{ margin: 0 }}>Welcome, {vendorName}</h2>}
-          <button onClick={handleLogout}>Logout</button>
+    <div className="dashboard-container">
+      <div className="event-list-panel">
+        <div className="header-row">
+          <h2>Welcome, {vendorName}</h2>
+          <button className="logout-button" onClick={handleLogout}>Logout</button>
         </div>
 
+        <div className="event-list">
           {events.map((e) => (
             <div
               key={e.id}
               className={`event-card ${selectedEvent?.id === e.id ? 'active' : ''}`}
               onClick={() => openEditor(e)}
             >
-              <h3>{e.fields['Event Title']}</h3>
+              <strong>{e.fields['Event Title']}</strong>
               {e.fields['Start Date'] && (
-                <p className="event-sub">
+                <div>
                   {e.fields['Start Date']}
                   {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
-                </p>
+                </div>
               )}
             </div>
           ))}
 
-        <button
-          onClick={() => openEditor(null)}
-          style={{
-            marginTop: '2rem',
-            padding: '0.75rem 1.25rem',
-            background: '#007bff',
-            color: '#fff',
-            fontWeight: 500,
-            fontSize: '1rem',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-          }}
-        >
-          + Create Event
-        </button>
+          <button className="create-button" onClick={() => openEditor(null)}>
+            + Create Event
+          </button>
+        </div>
       </div>
 
       {showEditor && (
