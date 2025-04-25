@@ -22,6 +22,23 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const saveTimeout = useRef(null);
 
   useEffect(() => {
+    if (event === null) {
+      setForm({
+        id: '',
+        title: '',
+        startDate: '',
+        endDate: '',
+        description: '',
+        format: 'Online',
+        zoomLink: '',
+        location: '',
+        locationUrl: '',
+        locationDescription: '',
+      });
+      setIsDirty(false);
+      return;
+    }
+
     if (!event?.fields) return;
 
     if (event.id !== form.id) {
@@ -39,7 +56,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         locationDescription: f['Location Description'] || '',
       });
       setIsDirty(false);
-    if (onSave) onSave();
     }
   }, [event]);
 
@@ -49,7 +65,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     setForm(updated);
     setIsDirty(true);
 
-    // Debounced auto-save
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       handleSave(updated);
@@ -57,6 +72,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   };
 
   const handleSave = async (data = form) => {
+    console.log("Saving data:", data);
     try {
       const updatedFields = {
         'Event Title': data.title,
@@ -75,26 +91,31 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
       );
 
-      const res = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields: updatedFields }),
-        }
-      );
+      const url = event === null
+        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
+        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
+      const method = event === null ? 'POST' : 'PATCH';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fields: updatedFields }),
+      });
+
+      const result = await res.json();
+      console.log("Save result:", result);
 
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error('Airtable error:', errorData);
+        console.error('Airtable error:', result);
         throw new Error('Failed to save');
       }
 
       setIsDirty(false);
-    if (onSave) onSave();
+      if (onSave) onSave();
+
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -185,7 +206,11 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         )}
 
         <div className="editor-footer">
-          <button className={`save-btn ${isDirty ? 'dirty' : ''}`} onClick={() => handleSave()} disabled={!isDirty}>
+          <button
+            className={`save-btn ${isDirty ? 'dirty' : ''}`}
+            onClick={() => handleSave()}
+            disabled={!isDirty}
+          >
             {isDirty ? 'Save Changes' : 'Saved'}
           </button>
         </div>
