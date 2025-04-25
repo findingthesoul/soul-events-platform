@@ -424,7 +424,7 @@ await saveCouponsToAirtable(); // no eventId needed
 
   const loadTickets = async (eventId) => {
     try {
-      const filterFormula = `FIND("${eventId}", ARRAYJOIN({Event}))`;
+      const filterFormula = `{Event ID (text)} = "${eventId}"`;
       const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=${encodeURIComponent(filterFormula)}`;
       
       const res = await fetch(url, {
