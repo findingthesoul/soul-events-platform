@@ -336,6 +336,8 @@ await saveCouponsToAirtable(); // no eventId needed
   
         const method = ticket.airtableId ? 'PATCH' : 'POST';
   
+        console.log('🔄 Sending ticket fields to Airtable:', fields);
+
         const res = await fetch(url, {
           method,
           headers: {
@@ -404,6 +406,8 @@ await saveCouponsToAirtable(); // no eventId needed
           continue;
         }
   
+        console.log('✅ Airtable response:', result);
+
         updatedCoupons.push({
           ...coupon,
           airtableId: result.id, // ✅ Save Airtable ID
@@ -420,7 +424,7 @@ await saveCouponsToAirtable(); // no eventId needed
 
   const loadTickets = async (eventId) => {
     try {
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=FIND("${eventId}", ARRAYJOIN(Event))`;
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula={Event}="${eventId}"`;
       const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -428,12 +432,12 @@ await saveCouponsToAirtable(); // no eventId needed
         },
       });
       const result = await res.json();
-
+  
       if (!res.ok) {
         console.error('❌ Error loading tickets:', result);
         return;
       }
-
+  
       const loadedTickets = result.records.map((record) => ({
         id: crypto.randomUUID(),
         airtableId: record.id,
@@ -444,12 +448,11 @@ await saveCouponsToAirtable(); // no eventId needed
         limit: record.fields['Limit'] || '',
         untilDate: record.fields['Until Date'] || '',
       }));
-
+  
       setTickets(loadedTickets);
-
       const ticketIds = loadedTickets.map(t => t.airtableId);
       await loadCoupons(ticketIds);
-
+  
     } catch (err) {
       console.error('Error loading tickets:', err);
     }
