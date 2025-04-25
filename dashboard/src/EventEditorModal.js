@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventEditorModal.css';
 
+// Airtable config
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 
+// Helpers
 const generateTimeOptions = (format) => {
   const options = [];
   for (let h = 0; h < 24; h++) {
@@ -35,6 +37,146 @@ const compareTimes = (t1, t2) => {
   return parse(t1) - parse(t2);
 };
 
+// Ticket Popup
+const TicketPopup = ({ ticket, onSave, onClose, onDelete }) => {
+  const [form, setForm] = useState(ticket || {
+    type: 'FREE',
+    name: '',
+    price: '',
+    currency: 'EUR',
+    limit: '',
+    untilDate: '',
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  };
+
+  const handleSave = () => {
+    onSave({ ...form, id: ticket?.id || crypto.randomUUID() });
+    onClose();
+  };
+
+  return (
+    <div className="popup-overlay">
+      <div className="popup">
+        <h3>{ticket ? 'Edit Ticket' : 'Add Ticket'}</h3>
+
+        <label>Type</label>
+        <select name="type" value={form.type} onChange={handleChange}>
+          <option value="FREE">FREE</option>
+          <option value="PAID">PAID</option>
+        </select>
+
+        <label>Ticket Name</label>
+        <input name="name" value={form.name} onChange={handleChange} />
+
+        {form.type === 'PAID' && (
+          <>
+            <label>Price</label>
+            <input type="number" name="price" value={form.price} onChange={handleChange} />
+          </>
+        )}
+
+        <label>Currency</label>
+        <select name="currency" value={form.currency} onChange={handleChange}>
+          <option>EUR</option>
+          <option>USD</option>
+          <option>GBP</option>
+        </select>
+
+        <label>Limit</label>
+        <input type="number" name="limit" value={form.limit} onChange={handleChange} />
+
+        <label>Until Date</label>
+        <input type="date" name="untilDate" value={form.untilDate} onChange={handleChange} />
+
+        <div className="popup-footer">
+          <button onClick={handleSave}>Save</button>
+          {ticket && <button className="delete-btn" onClick={() => { onDelete(ticket.id); onClose(); }}>Delete</button>}
+          <button onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Coupon Popup
+const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
+  const [form, setForm] = useState(coupon || {
+    ticketId: '',
+    code: generateCouponCode(),
+    name: '',
+    type: 'FREE',
+    amount: '',
+    percentage: '',
+  });
+
+  function generateCouponCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  };
+
+  const handleSave = () => {
+    onSave({ ...form, id: coupon?.id || crypto.randomUUID() });
+    onClose();
+  };
+
+  return (
+    <div className="popup-overlay">
+      <div className="popup">
+        <h3>{coupon ? 'Edit Coupon' : 'Add Coupon'}</h3>
+
+        <label>Ticket</label>
+        <select name="ticketId" value={form.ticketId} onChange={handleChange}>
+          <option value="">Select Ticket</option>
+          {tickets.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+
+        <label>Coupon Code</label>
+        <input name="code" value={form.code} disabled />
+
+        <label>Coupon Name</label>
+        <input name="name" value={form.name} onChange={handleChange} />
+
+        <label>Type</label>
+        <select name="type" value={form.type} onChange={handleChange}>
+          <option value="FREE">FREE</option>
+          <option value="AMOUNT">AMOUNT</option>
+          <option value="PERCENTAGE">PERCENTAGE</option>
+        </select>
+
+        {form.type === 'AMOUNT' && (
+          <>
+            <label>Amount</label>
+            <input type="number" name="amount" value={form.amount} onChange={handleChange} />
+          </>
+        )}
+
+        {form.type === 'PERCENTAGE' && (
+          <>
+            <label>Percentage</label>
+            <input type="number" name="percentage" value={form.percentage} onChange={handleChange} />
+          </>
+        )}
+
+        <div className="popup-footer">
+          <button onClick={handleSave}>Save</button>
+          {coupon && <button className="delete-btn" onClick={() => { onDelete(coupon.id); onClose(); }}>Delete</button>}
+          <button onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [form, setForm] = useState({
     id: '',
@@ -54,36 +196,23 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     timeFormat: '24',
   });
 
+  const [activeTab, setActiveTab] = useState('details');
+  const [tickets, setTickets] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [showTicketPopup, setShowTicketPopup] = useState(false);
+  const [editingTicket, setEditingTicket] = useState(null);
+  const [showCouponPopup, setShowCouponPopup] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
-  const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const saveTimeout = useRef(null);
   const timeOptions = generateTimeOptions(form.timeFormat);
 
   useEffect(() => {
-    if (event === null) {
-      setForm({
-        id: '',
-        title: '',
-        startDate: '',
-        endDate: '',
-        description: '',
-        format: 'Online',
-        zoomLink: '',
-        location: '',
-        locationUrl: '',
-        locationDescription: '',
-        startTime1: '',
-        endTime1: '',
-        startTime2: '',
-        endTime2: '',
-        timeFormat: '24',
-      });
-      setIsDirty(false);
+    if (!event) {
+      resetForm();
       return;
     }
-
-    if (!event?.fields) return;
 
     if (event.id !== form.id) {
       const f = event.fields;
@@ -104,223 +233,249 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         endTime2: f['End Time (End Date)'] || '',
         timeFormat: f['Time Format'] || '24',
       });
+      setTickets([]);
+      setCoupons([]);
       setIsDirty(false);
     }
   }, [event]);
 
+  const resetForm = () => {
+    setForm({
+      id: '',
+      title: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      format: 'Online',
+      zoomLink: '',
+      location: '',
+      locationUrl: '',
+      locationDescription: '',
+      startTime1: '',
+      endTime1: '',
+      startTime2: '',
+      endTime2: '',
+      timeFormat: '24',
+    });
+    setTickets([]);
+    setCoupons([]);
+    setIsDirty(false);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (form[name] !== value) {
-      const updated = { ...form, [name]: value };
-      setForm(updated);
-      setIsDirty(true);
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setIsDirty(true);
 
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
-      saveTimeout.current = setTimeout(() => {
-        handleSave(updated);
-      }, 1200);
-    }
-  };
-  const handleSave = async (data = form) => {
-    try {
-      const newErrors = {};
-
-      if (!data.title?.trim()) newErrors.title = 'Required';
-      if (!data.startDate) newErrors.startDate = 'Required';
-      if (!data.endDate) newErrors.endDate = 'Required';
-      if (data.startDate && data.endDate && data.startDate > data.endDate) {
-        newErrors.startDate = 'Start must be before end';
-        newErrors.endDate = 'End must be after start';
-      }
-      if (data.startTime1 && data.endTime1 && compareTimes(data.startTime1, data.endTime1) > 0) {
-        newErrors.startTime1 = 'Start time must be before end time';
-      }
-      if (data.startDate !== data.endDate && data.startTime2 && data.endTime2) {
-        if (compareTimes(data.startTime2, data.endTime2) > 0) {
-          newErrors.startTime2 = 'Start time (End Date) must be before end time';
-        }
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        alert('Please correct the highlighted fields.');
-        return;
-      }
-
-      setErrors({});
-      const updatedFields = {
-        'Event Title': data.title,
-        'Start Date': data.startDate,
-        'End Date': data.endDate,
-        Description: data.description,
-        Format: data.format,
-        'Zoom link': data.format === 'Online' ? data.zoomLink : '',
-        Location: data.format === 'In-person' ? data.location : '',
-        'Location URL': data.format === 'In-person' ? data.locationUrl : '',
-        'Location Description': data.format === 'In-person' ? data.locationDescription : '',
-        'Start Time (Start Date)': data.startTime1,
-        'End Time (Start Date)': data.endTime1,
-        'Start Time (End Date)': data.startTime2,
-        'End Time (End Date)': data.endTime2,
-        'Time Format': data.timeFormat,
-        Vendors: vendorId ? [vendorId] : [],
-      };
-
-      Object.keys(updatedFields).forEach(
-        (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
-      );
-
-      const url = event === null
-        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
-        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
-      const method = event === null ? 'POST' : 'PATCH';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fields: updatedFields }),
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        console.error('❌ Airtable error:', result);
-        alert(result?.error?.message || 'Failed to save');
-        throw new Error('Save failed');
-      }
-
-      if (onSave) onSave();
-      setIsDirty(false);
-      setSuccessMessage('Event saved successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-
-    } catch (err) {
-      console.error('Save error:', err);
-    }
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(() => {
+      // (Optional autosave can be wired here)
+    }, 1200);
   };
 
   const handleClose = () => {
     if (isDirty) {
       const confirm = window.confirm('You have unsaved changes. Save before closing?');
-      if (confirm) handleSave();
+      if (!confirm) return;
     }
     onClose();
   };
 
-  const toggleFormat = (val) => handleChange({ target: { name: 'format', value: val } });
-
   return (
     <div className="editor-overlay">
       <div className="editor-panel">
+
         {successMessage && <div className="success-toast">{successMessage}</div>}
-        <div className="editor-header">
-          <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
-          <button className="close-btn" onClick={handleClose}>×</button>
+
+        <div className="tab-bar">
+          <button onClick={() => setActiveTab('details')} className={activeTab === 'details' ? 'active' : ''}>
+            Event Details
+          </button>
+          <button onClick={() => setActiveTab('pricing')} className={activeTab === 'pricing' ? 'active' : ''}>
+            Pricing & Coupons
+          </button>
         </div>
 
-        <div className="form-group">
-          <label>Title</label>
-          <input name="title" value={form.title} onChange={handleChange} className={errors.title ? 'input-error' : ''} />
-        </div>
-
-        <div className="form-group">
-          <label>Start Date</label>
-          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className={errors.startDate ? 'input-error' : ''} />
-        </div>
-
-        <div className="time-row">
-          <div className="time-col">
-            <label>Start Time</label>
-            <select name="startTime1" value={form.startTime1} onChange={handleChange} className={errors.startTime1 ? 'input-error' : ''}>
-              {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div className="time-col">
-            <label>End Time</label>
-            <select name="endTime1" value={form.endTime1} onChange={handleChange}>
-              {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>End Date</label>
-          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} className={errors.endDate ? 'input-error' : ''} />
-        </div>
-
-        {form.startDate !== form.endDate && (
-          <div className="time-row">
-            <div className="time-col">
-              <label>Start Time (End Date)</label>
-              <select name="startTime2" value={form.startTime2} onChange={handleChange} className={errors.startTime2 ? 'input-error' : ''}>
-                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div className="time-col">
-              <label>End Time (End Date)</label>
-              <select name="endTime2" value={form.endTime2} onChange={handleChange}>
-                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-        )}
-
-        <div className="form-group">
-          <label>Time Format</label>
-          <select name="timeFormat" value={form.timeFormat} onChange={handleChange}>
-            <option value="24">24-hour</option>
-            <option value="ampm">AM/PM</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Description</label>
-          <textarea name="description" value={form.description} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Format</label>
-          <div className="format-toggle">
-            <button className={form.format === 'In-person' ? 'active' : ''} onClick={() => toggleFormat('In-person')}>In-person</button>
-            <button className={form.format === 'Online' ? 'active' : ''} onClick={() => toggleFormat('Online')}>Online</button>
-          </div>
-        </div>
-
-        {form.format === 'Online' && (
-          <div className="form-group">
-            <label>Zoom Link</label>
-            <input name="zoomLink" value={form.zoomLink} onChange={handleChange} />
-          </div>
-        )}
-
-        {form.format === 'In-person' && (
+        {activeTab === 'details' && (
           <>
             <div className="form-group">
-              <label>Location</label>
-              <input name="location" value={form.location} onChange={handleChange} />
+              <label>Title</label>
+              <input name="title" value={form.title} onChange={handleChange} />
             </div>
+
             <div className="form-group">
-              <label>Location URL</label>
-              <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
+              <label>Start Date</label>
+              <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
             </div>
+
+            <div className="time-row">
+              <div className="time-col">
+                <label>Start Time</label>
+                <select name="startTime1" value={form.startTime1} onChange={handleChange}>
+                  {timeOptions.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="time-col">
+                <label>End Time</label>
+                <select name="endTime1" value={form.endTime1} onChange={handleChange}>
+                  {timeOptions.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="form-group">
-              <label>Location Description</label>
-              <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
+              <label>End Date</label>
+              <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
             </div>
+
+            {form.startDate !== form.endDate && (
+              <div className="time-row">
+                <div className="time-col">
+                  <label>Start Time (End Date)</label>
+                  <select name="startTime2" value={form.startTime2} onChange={handleChange}>
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="time-col">
+                  <label>End Time (End Date)</label>
+                  <select name="endTime2" value={form.endTime2} onChange={handleChange}>
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label>Time Format</label>
+              <select name="timeFormat" value={form.timeFormat} onChange={handleChange}>
+                <option value="24">24-hour</option>
+                <option value="ampm">AM/PM</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Description</label>
+              <textarea name="description" value={form.description} onChange={handleChange} />
+            </div>
+
+            <div className="form-group">
+              <label>Format</label>
+              <div className="format-toggle">
+                <button
+                  className={form.format === 'In-person' ? 'active' : ''}
+                  onClick={() => handleChange({ target: { name: 'format', value: 'In-person' } })}
+                >
+                  In-person
+                </button>
+                <button
+                  className={form.format === 'Online' ? 'active' : ''}
+                  onClick={() => handleChange({ target: { name: 'format', value: 'Online' } })}
+                >
+                  Online
+                </button>
+              </div>
+            </div>
+
+            {form.format === 'Online' && (
+              <div className="form-group">
+                <label>Zoom Link</label>
+                <input name="zoomLink" value={form.zoomLink} onChange={handleChange} />
+              </div>
+            )}
+
+            {form.format === 'In-person' && (
+              <>
+                <div className="form-group">
+                  <label>Location</label>
+                  <input name="location" value={form.location} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>Location URL</label>
+                  <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>Location Description</label>
+                  <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
+                </div>
+              </>
+            )}
           </>
         )}
 
-        <div className="editor-footer">
-          <button
-            className={`save-btn ${isDirty ? 'dirty' : ''}`}
-            onClick={() => handleSave()}
-            disabled={!isDirty}
-          >
-            {isDirty ? 'Save Changes' : 'Saved'}
-          </button>
-        </div>
+        {activeTab === 'pricing' && (
+          <>
+            <h3>Tickets</h3>
+            <button onClick={() => { setEditingTicket(null); setShowTicketPopup(true); }}>+ Add Ticket</button>
+            <ul>
+              {tickets.map((ticket, i) => (
+                <li key={i} onClick={() => { setEditingTicket(ticket); setShowTicketPopup(true); }}>
+                  {ticket.name} – {ticket.type} – {ticket.price} {ticket.currency}
+                </li>
+              ))}
+            </ul>
+
+            <h3>Coupons</h3>
+            <button onClick={() => { setEditingCoupon(null); setShowCouponPopup(true); }}>+ Add Coupon</button>
+            <ul>
+              {coupons.map((coupon, i) => (
+                <li key={i} onClick={() => { setEditingCoupon(coupon); setShowCouponPopup(true); }}>
+                  {coupon.code} – {coupon.type}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {/* Ticket Popup */}
+        {showTicketPopup && (
+          <TicketPopup
+            ticket={editingTicket}
+            onClose={() => setShowTicketPopup(false)}
+            onSave={(ticket) => {
+              setTickets(prev => {
+                const existing = prev.findIndex(t => t.id === ticket.id);
+                if (existing > -1) {
+                  const copy = [...prev];
+                  copy[existing] = ticket;
+                  return copy;
+                } else {
+                  return [...prev, ticket];
+                }
+              });
+            }}
+            onDelete={(id) => setTickets(prev => prev.filter(t => t.id !== id))}
+          />
+        )}
+
+        {/* Coupon Popup */}
+        {showCouponPopup && (
+          <CouponPopup
+            coupon={editingCoupon}
+            tickets={tickets}
+            onClose={() => setShowCouponPopup(false)}
+            onSave={(coupon) => {
+              setCoupons(prev => {
+                const existing = prev.findIndex(c => c.id === coupon.id);
+                if (existing > -1) {
+                  const copy = [...prev];
+                  copy[existing] = coupon;
+                  return copy;
+                } else {
+                  return [...prev, coupon];
+                }
+              });
+            }}
+            onDelete={(id) => setCoupons(prev => prev.filter(c => c.id !== id))}
+          />
+        )}
       </div>
     </div>
   );
