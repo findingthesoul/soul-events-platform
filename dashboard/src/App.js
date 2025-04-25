@@ -1,10 +1,6 @@
-// Great! Let's get everything synced and styled properly.
-// Here’s your finalized App.js file:
-
 import React, { useState, useEffect } from 'react';
 import Login from './Login';
 import EventEditorModal from './EventEditorModal';
-import './EventEditorModal.css';
 import './App.css';
 
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
@@ -46,10 +42,9 @@ function App() {
           },
         }
       );
-
       const data = await response.json();
       if (data.error) {
-        console.error("Airtable fetch error:", data.error.message);
+        console.error('Airtable fetch error:', data.error.message);
         return;
       }
       setEvents(data.records || []);
@@ -99,34 +94,30 @@ function App() {
   }
 
   return (
-    <div className="dashboard-container">
-      <div className="event-list-panel">
-        <div className="header-row">
-          <h2>Welcome, {vendorName}</h2>
-          <button className="logout-button" onClick={handleLogout}>Logout</button>
+    <div className="app-container">
+      <div className="event-list">
+        <div className="event-header">
+          {vendorName && <h2>Welcome, {vendorName}</h2>}
+          <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>
 
-        <div className="event-list">
-          {events.map((e) => (
-            <div
-              key={e.id}
-              className={`event-card ${selectedEvent?.id === e.id ? 'active' : ''}`}
-              onClick={() => openEditor(e)}
-            >
-              <strong>{e.fields['Event Title']}</strong>
-              {e.fields['Start Date'] && (
-                <div>
-                  {e.fields['Start Date']}
-                  {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''}
-                </div>
-              )}
-            </div>
-          ))}
+        {events.map((e) => (
+          <div
+            key={e.id}
+            className={`event-card ${selectedEvent?.id === e.id ? 'selected' : ''}`}
+            onClick={() => openEditor(e)}
+          >
+            <strong>{e.fields['Event Title']}</strong>
+            {e.fields['Start Date'] && (
+              <span>
+                ({e.fields['Start Date']}
+                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
+              </span>
+            )}
+          </div>
+        ))}
 
-          <button className="create-button" onClick={() => openEditor(null)}>
-            + Create Event
-          </button>
-        </div>
+        <button className="add-event-btn" onClick={() => openEditor(null)}>+ Create Event</button>
       </div>
 
       {showEditor && (

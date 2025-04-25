@@ -41,8 +41,8 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     autoSave(updated);
   };
 
-  const handleFormatChange = (value) => {
-    const updated = { ...form, format: value };
+  const handleFormatToggle = (newFormat) => {
+    const updated = { ...form, format: newFormat };
     setForm(updated);
     autoSave(updated);
   };
@@ -81,47 +81,55 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       if (!res.ok) {
         const errorData = await res.json();
         console.error('Airtable error:', errorData);
+        throw new Error('Failed to save');
       }
+
+      if (onSave) onSave();
     } catch (err) {
-      console.error('Auto-save error:', err);
+      console.error('Save error:', err);
     }
   };
 
   return (
-    <div className="editor-panel">
-      <div className="editor-header">
-        <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
-        <button className="close-btn" onClick={onClose}>×</button>
-      </div>
-      <div className="editor-body">
+    <div className="editor-overlay">
+      <div className="editor-panel">
+        <div className="editor-header">
+          <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+
         <div className="form-group">
           <label>Title</label>
           <input name="title" value={form.title} onChange={handleChange} />
         </div>
+
         <div className="form-group">
           <label>Start Date</label>
           <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
         </div>
+
         <div className="form-group">
           <label>End Date</label>
           <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
         </div>
+
         <div className="form-group">
           <label>Description</label>
           <textarea name="description" value={form.description} onChange={handleChange} />
         </div>
+
         <div className="form-group">
           <label>Format</label>
-          <div className="format-switch">
+          <div className="toggle-container">
             <button
-              className={form.format === 'In-person' ? 'active' : ''}
-              onClick={() => handleFormatChange('In-person')}
+              className={`toggle-btn ${form.format === 'In-person' ? 'active' : ''}`}
+              onClick={() => handleFormatToggle('In-person')}
             >
               In-person
             </button>
             <button
-              className={form.format === 'Online' ? 'active' : ''}
-              onClick={() => handleFormatChange('Online')}
+              className={`toggle-btn ${form.format === 'Online' ? 'active' : ''}`}
+              onClick={() => handleFormatToggle('Online')}
             >
               Online
             </button>
