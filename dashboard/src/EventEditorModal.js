@@ -6,6 +6,7 @@ const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 
 const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [form, setForm] = useState({
+    id: '',
     title: '',
     startDate: '',
     endDate: '',
@@ -16,13 +17,17 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     locationUrl: '',
     locationDescription: '',
   });
+
   const [isDirty, setIsDirty] = useState(false);
   const saveTimeout = useRef(null);
 
   useEffect(() => {
-    if (event?.fields) {
+    if (!event?.fields) return;
+
+    if (event.id !== form.id) {
       const f = event.fields;
       setForm({
+        id: event.id,
         title: f['Event Title'] || '',
         startDate: f['Start Date'] || '',
         endDate: f['End Date'] || '',
@@ -43,6 +48,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     setForm(updated);
     setIsDirty(true);
 
+    // Debounced auto-save
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       handleSave(updated);
@@ -87,7 +93,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       }
 
       setIsDirty(false);
-      if (onSave) onSave();
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -95,15 +100,16 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   const handleClose = () => {
     if (isDirty) {
-      const confirmClose = window.confirm('You have unsaved changes. Do you want to save before closing?');
-      if (confirmClose) {
-        handleSave().then(() => onClose());
-      } else {
-        onClose();
+      const confirm = window.confirm('You have unsaved changes. Save before closing?');
+      if (confirm) {
+        handleSave();
       }
-    } else {
-      onClose();
     }
+    onClose();
+  };
+
+  const toggleFormat = (value) => {
+    handleChange({ target: { name: 'format', value } });
   };
 
   return (
@@ -139,13 +145,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           <div className="format-toggle">
             <button
               className={form.format === 'In-person' ? 'active' : ''}
-              onClick={() => handleChange({ target: { name: 'format', value: 'In-person' } })}
+              onClick={() => toggleFormat('In-person')}
             >
               In-person
             </button>
             <button
               className={form.format === 'Online' ? 'active' : ''}
-              onClick={() => handleChange({ target: { name: 'format', value: 'Online' } })}
+              onClick={() => toggleFormat('Online')}
             >
               Online
             </button>
@@ -177,11 +183,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         )}
 
         <div className="editor-footer">
-          <button
-            className={`save-btn ${isDirty ? 'dirty' : ''}`}
-            onClick={() => handleSave()}
-            disabled={!isDirty}
-          >
+          <button className={`save-btn ${isDirty ? 'dirty' : ''}`} onClick={() => handleSave()} disabled={!isDirty}>
             {isDirty ? 'Save Changes' : 'Saved'}
           </button>
         </div>

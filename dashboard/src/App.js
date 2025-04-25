@@ -87,7 +87,6 @@ function App() {
   };
 
   const handleEventSaved = () => {
-    closeEditor();
     fetchEvents();
   };
 
