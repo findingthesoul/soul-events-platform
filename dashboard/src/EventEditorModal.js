@@ -4,22 +4,6 @@ import './EventEditorModal.css';
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 
-const generateTimeOptions = (format) => {
-  const options = [];
-  for (let h = 0; h < 24; h++) {
-    for (let m of [0, 30]) {
-      if (format === '24') {
-        options.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-      } else {
-        const hour = h % 12 || 12;
-        const suffix = h < 12 ? 'AM' : 'PM';
-        options.push(`${hour}:${String(m).padStart(2, '0')} ${suffix}`);
-      }
-    }
-  }
-  return options;
-};
-
 const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [form, setForm] = useState({
     id: '',
@@ -32,64 +16,48 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     location: '',
     locationUrl: '',
     locationDescription: '',
-    startTime1: '',
-    endTime1: '',
-    startTime2: '',
-    endTime2: '',
-    timeFormat: '24',
   });
 
   const [isDirty, setIsDirty] = useState(false);
   const saveTimeout = useRef(null);
-  const timeOptions = generateTimeOptions(form.timeFormat);
 
   useEffect(() => {
-    if (event === null) {
-      setForm({
-        id: '',
-        title: '',
-        startDate: '',
-        endDate: '',
-        description: '',
-        format: 'Online',
-        zoomLink: '',
-        location: '',
-        locationUrl: '',
-        locationDescription: '',
-        startTime1: '',
-        endTime1: '',
-        startTime2: '',
-        endTime2: '',
-        timeFormat: '24',
-      });
-      setIsDirty(false);
-      return;
-    }
+  if (event === null) {
+    setForm({
+      id: '',
+      title: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      format: 'Online',
+      zoomLink: '',
+      location: '',
+      locationUrl: '',
+      locationDescription: '',
+    });
+    setIsDirty(false);
+    return;
+  }
 
-    if (!event?.fields) return;
+  if (!event?.fields) return;
 
-    if (event.id !== form.id) {
-      const f = event.fields;
-      setForm({
-        id: event.id,
-        title: f['Event Title'] || '',
-        startDate: f['Start Date'] || '',
-        endDate: f['End Date'] || '',
-        description: f['Description'] || '',
-        format: f['Format'] || 'Online',
-        zoomLink: f['Zoom link'] || '',
-        location: f['Location'] || '',
-        locationUrl: f['Location URL'] || '',
-        locationDescription: f['Location Description'] || '',
-        startTime1: f['Start Time (Start Date)'] || '',
-        endTime1: f['End Time (Start Date)'] || '',
-        startTime2: f['Start Time (End Date)'] || '',
-        endTime2: f['End Time (End Date)'] || '',
-        timeFormat: f['Time Format'] || '24',
-      });
-      setIsDirty(false);
-    }
-  }, [event]);
+  if (event.id !== form.id) {
+    const f = event.fields;
+    setForm({
+      id: event.id,
+      title: f['Event Title'] || '',
+      startDate: f['Start Date'] || '',
+      endDate: f['End Date'] || '',
+      description: f['Description'] || '',
+      format: f['Format'] || 'Online',
+      zoomLink: f['Zoom link'] || '',
+      location: f['Location'] || '',
+      locationUrl: f['Location URL'] || '',
+      locationDescription: f['Location Description'] || '',
+    });
+    setIsDirty(false);
+  }
+}, [event]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,6 +65,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     setForm(updated);
     setIsDirty(true);
 
+    // Debounced auto-save
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       handleSave(updated);
@@ -104,53 +73,50 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   };
 
   const handleSave = async (data = form) => {
-    try {
-      const updatedFields = {
-        'Event Title': data.title,
-        'Start Date': data.startDate,
-        'End Date': data.endDate,
-        Description: data.description,
-        Format: data.format,
-        'Zoom link': data.format === 'Online' ? data.zoomLink : '',
-        Location: data.format === 'In-person' ? data.location : '',
-        'Location URL': data.format === 'In-person' ? data.locationUrl : '',
-        'Location Description': data.format === 'In-person' ? data.locationDescription : '',
-        'Start Time (Start Date)': data.startTime1,
-        'End Time (Start Date)': data.endTime1,
-        'Start Time (End Date)': data.startTime2,
-        'End Time (End Date)': data.endTime2,
-        'Time Format': data.timeFormat,
-        Vendors: [vendorId],
-      };
+  console.log("Saving data:", data);
+  try {
+    const updatedFields = {
+      'Event Title': data.title,
+      'Start Date': data.startDate,
+      'End Date': data.endDate,
+      Description: data.description,
+      Format: data.format,
+      'Zoom link': data.format === 'Online' ? data.zoomLink : '',
+      Location: data.format === 'In-person' ? data.location : '',
+      'Location URL': data.format === 'In-person' ? data.locationUrl : '',
+      'Location Description': data.format === 'In-person' ? data.locationDescription : '',
+      Vendors: [vendorId],
+    };
 
-      Object.keys(updatedFields).forEach(
-        (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
+    Object.keys(updatedFields).forEach(
+      (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
+    );
+
+    const url = event === null
+      ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
+      : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
+    const method = event === null ? 'POST' : 'PATCH';
+
+    const res = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields: updatedFields }),
+        }
       );
 
-      const url = event === null
-        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
-        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
-      const method = event === null ? 'POST' : 'PATCH';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fields: updatedFields }),
-      });
-
-      const result = await res.json();
-
       if (!res.ok) {
-        console.error('Airtable error:', result);
+        const errorData = await res.json();
+        console.error('Airtable error:', errorData);
         throw new Error('Failed to save');
       }
 
       setIsDirty(false);
-      if (onSave) onSave();
-
+    if (onSave) onSave();
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -189,52 +155,8 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         </div>
 
         <div className="form-group">
-          <label>Start Time (Start Date)</label>
-          <select name="startTime1" value={form.startTime1} onChange={handleChange}>
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>End Time (Start Date)</label>
-          <select name="endTime1" value={form.endTime1} onChange={handleChange}>
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
           <label>End Date</label>
           <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Start Time (End Date)</label>
-          <select name="startTime2" value={form.startTime2} onChange={handleChange}>
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>End Time (End Date)</label>
-          <select name="endTime2" value={form.endTime2} onChange={handleChange}>
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Time Format</label>
-          <select name="timeFormat" value={form.timeFormat} onChange={handleChange}>
-            <option value="24">24-hour</option>
-            <option value="ampm">AM/PM</option>
-          </select>
         </div>
 
         <div className="form-group">
@@ -285,11 +207,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         )}
 
         <div className="editor-footer">
-          <button
-            className={`save-btn ${isDirty ? 'dirty' : ''}`}
-            onClick={() => handleSave()}
-            disabled={!isDirty}
-          >
+          <button className={`save-btn ${isDirty ? 'dirty' : ''}`} onClick={() => handleSave()} disabled={!isDirty}>
             {isDirty ? 'Save Changes' : 'Saved'}
           </button>
         </div>
