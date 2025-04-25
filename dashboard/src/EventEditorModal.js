@@ -627,6 +627,15 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
             onDelete={(id) => setCoupons(prev => prev.filter(c => c.id !== id))}
           />
         )}
+        <div className="editor-footer">
+          <button
+          className={`save-btn ${isDirty ? 'dirty' : ''}`}
+          onClick={() => handleSave()}
+          disabled={!isDirty}
+          >
+          {isDirty ? 'Save Changes' : 'Saved'}
+          </button>
+        </div>
       </div>
     </div>
   );
