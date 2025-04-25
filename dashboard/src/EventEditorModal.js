@@ -350,6 +350,8 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
   
   const saveTicketsToAirtable = async (eventId) => {
+    const updatedTickets = [];
+  
     for (let ticket of tickets) {
       try {
         const fields = {
@@ -361,16 +363,16 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           'Until Date': ticket.untilDate || null,
           'Event': [eventId],
         };
-
+  
         Object.keys(fields).forEach(
           (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
         );
-
+  
         const url = ticket.airtableId
           ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticket.airtableId}`
           : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`;
         const method = ticket.airtableId ? 'PATCH' : 'POST';
-
+  
         const res = await fetch(url, {
           method,
           headers: {
@@ -379,21 +381,26 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           },
           body: JSON.stringify({ fields }),
         });
-
+  
         const result = await res.json();
         if (!res.ok) {
           console.error('❌ Airtable Ticket Error:', result);
           continue;
         }
-
-        if (!ticket.airtableId) {
-          ticket.airtableId = result.id;
-        }
-
+  
+        // Update ticket with Airtable ID (important)
+        updatedTickets.push({
+          ...ticket,
+          airtableId: result.id,
+        });
+  
       } catch (err) {
         console.error('Ticket Save Error:', err);
       }
     }
+  
+    // Update local state
+    setTickets(updatedTickets);
   };
 
   const saveCouponsToAirtable = async (eventId) => {
@@ -445,6 +452,11 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   return (
     <div className="editor-overlay">
       <div className="editor-panel">
+
+         <div className="editor-header">
+          <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
+          <button className="close-btn" onClick={handleClose}>×</button>
+        </div>
 
         {successMessage && <div className="success-toast">{successMessage}</div>}
 
