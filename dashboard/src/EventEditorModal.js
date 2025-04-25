@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventEditorModal.css';
 
-// Airtable config
+// Airtable Config
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 
-// Helpers
+// Helper: Generate Time Options
 const generateTimeOptions = (format) => {
   const options = [];
   for (let h = 0; h < 24; h++) {
@@ -22,6 +22,7 @@ const generateTimeOptions = (format) => {
   return options;
 };
 
+// Helper: Compare two times
 const compareTimes = (t1, t2) => {
   const parse = (time) => {
     if (!time) return 0;
@@ -136,7 +137,9 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
         <select name="ticketId" value={form.ticketId} onChange={handleChange}>
           <option value="">Select Ticket</option>
           {tickets.map(t => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </select>
 
@@ -196,9 +199,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     timeFormat: '24',
   });
 
-  const [activeTab, setActiveTab] = useState('details');
   const [tickets, setTickets] = useState([]);
   const [coupons, setCoupons] = useState([]);
+  const [activeTab, setActiveTab] = useState('details');
   const [showTicketPopup, setShowTicketPopup] = useState(false);
   const [editingTicket, setEditingTicket] = useState(null);
   const [showCouponPopup, setShowCouponPopup] = useState(false);
@@ -213,7 +216,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       resetForm();
       return;
     }
-
     if (event.id !== form.id) {
       const f = event.fields;
       setForm({
@@ -233,7 +235,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         endTime2: f['End Time (End Date)'] || '',
         timeFormat: f['Time Format'] || '24',
       });
-      setTickets([]);
+      setTickets([]); // Load Tickets and Coupons later if needed
       setCoupons([]);
       setIsDirty(false);
     }
@@ -269,7 +271,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
-      // (Optional autosave can be wired here)
+      // Autosave optional
     }, 1200);
   };
 
@@ -279,6 +281,165 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       if (!confirm) return;
     }
     onClose();
+  };
+
+  const handleSave = async (data = form) => {
+    try {
+      // Save Event
+      const updatedFields = {
+        'Event Title': data.title,
+        'Start Date': data.startDate,
+        'End Date': data.endDate,
+        'Description': data.description,
+        'Format': data.format,
+        'Zoom link': data.format === 'Online' ? data.zoomLink : '',
+        'Location': data.format === 'In-person' ? data.location : '',
+        'Location URL': data.format === 'In-person' ? data.locationUrl : '',
+        'Location Description': data.format === 'In-person' ? data.locationDescription : '',
+        'Start Time (Start Date)': data.startTime1,
+        'End Time (Start Date)': data.endTime1,
+        'Start Time (End Date)': data.startTime2,
+        'End Time (End Date)': data.endTime2,
+        'Time Format': data.timeFormat,
+        Vendors: vendorId ? [vendorId] : [],
+      };
+
+      Object.keys(updatedFields).forEach(
+        (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
+      );
+
+      const url = event === null
+        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
+        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
+      const method = event === null ? 'POST' : 'PATCH';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fields: updatedFields }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Airtable Event Error:', result);
+        alert('Failed to save event');
+        throw new Error('Failed');
+      }
+
+      const eventId = result.id;
+
+      // Save Tickets
+      await saveTicketsToAirtable(eventId);
+
+      // Save Coupons
+      await saveCouponsToAirtable(eventId);
+
+      setIsDirty(false);
+      if (onSave) onSave();
+      setSuccessMessage('Event, Tickets, and Coupons saved! ✅');
+      setTimeout(() => setSuccessMessage(''), 3000);
+
+    } catch (err) {
+      console.error('Save error:', err);
+    }
+  };
+
+  
+  const saveTicketsToAirtable = async (eventId) => {
+    for (let ticket of tickets) {
+      try {
+        const fields = {
+          'Ticket Name': ticket.name,
+          'Type': ticket.type,
+          'Price': ticket.type === 'PAID' ? Number(ticket.price) : 0,
+          'Currency': ticket.currency,
+          'Limit': ticket.limit ? Number(ticket.limit) : null,
+          'Until Date': ticket.untilDate || null,
+          'Event': [eventId],
+        };
+
+        Object.keys(fields).forEach(
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+        );
+
+        const url = ticket.airtableId
+          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticket.airtableId}`
+          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`;
+        const method = ticket.airtableId ? 'PATCH' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) {
+          console.error('❌ Airtable Ticket Error:', result);
+          continue;
+        }
+
+        if (!ticket.airtableId) {
+          ticket.airtableId = result.id;
+        }
+
+      } catch (err) {
+        console.error('Ticket Save Error:', err);
+      }
+    }
+  };
+
+  const saveCouponsToAirtable = async (eventId) => {
+    for (let coupon of coupons) {
+      try {
+        const fields = {
+          'Coupon Code': coupon.code,
+          'Coupon Name': coupon.name,
+          'Type': coupon.type,
+          'Amount': coupon.amount ? Number(coupon.amount) : undefined,
+          'Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
+          'Linked Ticket': [coupon.ticketId],
+        };
+
+        Object.keys(fields).forEach(
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+        );
+
+        const url = coupon.airtableId
+          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons/${coupon.airtableId}`
+          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`;
+        const method = coupon.airtableId ? 'PATCH' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) {
+          console.error('❌ Airtable Coupon Error:', result);
+          continue;
+        }
+
+        if (!coupon.airtableId) {
+          coupon.airtableId = result.id;
+        }
+
+      } catch (err) {
+        console.error('Coupon Save Error:', err);
+      }
+    }
   };
 
   return (
@@ -312,17 +473,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
               <div className="time-col">
                 <label>Start Time</label>
                 <select name="startTime1" value={form.startTime1} onChange={handleChange}>
-                  {timeOptions.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                  {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="time-col">
                 <label>End Time</label>
                 <select name="endTime1" value={form.endTime1} onChange={handleChange}>
-                  {timeOptions.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                  {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             </div>
@@ -337,17 +494,13 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
                 <div className="time-col">
                   <label>Start Time (End Date)</label>
                   <select name="startTime2" value={form.startTime2} onChange={handleChange}>
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
+                    {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="time-col">
                   <label>End Time (End Date)</label>
                   <select name="endTime2" value={form.endTime2} onChange={handleChange}>
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
+                    {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
@@ -434,7 +587,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           </>
         )}
 
-        {/* Ticket Popup */}
         {showTicketPopup && (
           <TicketPopup
             ticket={editingTicket}
@@ -455,7 +607,6 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           />
         )}
 
-        {/* Coupon Popup */}
         {showCouponPopup && (
           <CouponPopup
             coupon={editingCoupon}
