@@ -367,22 +367,24 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
     setTickets(updatedTickets);
   };
 
-  const saveCouponsToAirtable = async () => {
+  const saveCouponsToAirtable = async (eventId) => {
     const updatedCoupons = [];
   
     for (const coupon of coupons) {
       try {
         const fields = {
-          'Coupon Code': coupon.code,
           'Coupon Name': coupon.name,
-          'Type': coupon.type,
-          'Amount': coupon.amount ? Number(coupon.amount) : undefined,
-          'Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
-          'Linked Ticket': coupon.ticketId ? [coupon.ticketId] : [], // 🧠 Link to ticket
+          'Coupon Code': coupon.code,
+          'Coupon Type': coupon.type,
+          'Discount Amount': coupon.amount ? Number(coupon.amount) : undefined,
+          'Discount Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
+          'Event ID': [eventId],
+          'Ticket ID': coupon.ticketId ? [coupon.ticketId] : [],
         };
   
+        // Clean empty fields
         Object.keys(fields).forEach(
-          (key) => fields[key] === '' || fields[key] == null ? delete fields[key] : null
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
         );
   
         const url = coupon.airtableId
@@ -401,16 +403,15 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
         });
   
         const result = await res.json();
+  
         if (!res.ok) {
-          console.error('❌ Failed to save coupon:', result);
+          console.error('❌ Failed to save coupon:', result.error?.message || result);
           continue;
         }
   
-        console.log('✅ Airtable response:', result);
-
         updatedCoupons.push({
           ...coupon,
-          airtableId: result.id, // ✅ Save Airtable ID
+          airtableId: result.id,
         });
   
       } catch (err) {
@@ -418,7 +419,6 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       }
     }
   
-    // 🔄 Reflect latest state in UI
     setCoupons(updatedCoupons);
   };
 
