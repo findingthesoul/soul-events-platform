@@ -121,6 +121,10 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
   };
 
   const handleSave = () => {
+    if (!form.ticketId) {
+      alert('Please select a Ticket for this Coupon.');
+      return;
+    }
     onSave({ ...form, id: coupon?.id || crypto.randomUUID() });
     onClose();
   };
@@ -313,7 +317,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           'Discount Amount': coupon.amount ? Number(coupon.amount) : undefined,
           'Discount Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
           'Event ID': [eventId],
-          'Ticket ID': coupon.ticketId ? [coupon.ticketId] : [],
+          'Ticket ID': [coupon.ticketId],
         };
 
         Object.keys(fields).forEach(
