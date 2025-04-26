@@ -320,14 +320,14 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           'Ticket Name': ticket.name,
           'Type': ticket.type,
           'Price': ticket.type === 'PAID' ? Number(ticket.price) : undefined,
-          'Currency': ticket.currency,
+          'Currency': ticket.type === 'PAID' ? ticket.currency : undefined,
           'Limit': ticket.limit ? Number(ticket.limit) : undefined,
           'Until Date': ticket.untilDate || undefined,
           'Event': [eventId],
         };
-  
+        
         Object.keys(fields).forEach(
-          (key) => fields[key] === '' || fields[key] == null ? delete fields[key] : null
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
         );
   
         const url = ticket.airtableId
