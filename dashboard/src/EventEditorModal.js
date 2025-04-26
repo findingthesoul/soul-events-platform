@@ -100,9 +100,7 @@ const TicketPopup = ({ ticket, onSave, onClose, onDelete }) => {
       </div>
     </div>
   );
-};
-
-// Coupon Popup
+};// Coupon Popup
 const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
   const [form, setForm] = useState(coupon || {
     ticketId: '',
@@ -177,7 +175,10 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       </div>
     </div>
   );
-};const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
+};
+
+// Start EventEditorModal
+const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [form, setForm] = useState({
     id: '',
     title: '',
@@ -250,6 +251,185 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
     onClose();
   };
 
+  const saveTicketsToAirtable = async (eventId) => {
+    const updatedTickets = [];
+    for (const ticket of tickets) {
+      try {
+        const fields = {
+          'Ticket Name': ticket.name,
+          'Type': ticket.type,
+          'Price': ticket.type === 'PAID' ? Number(ticket.price) : undefined,
+          'Currency': ticket.type === 'PAID' ? ticket.currency : undefined,
+          'Limit': ticket.limit ? Number(ticket.limit) : undefined,
+          'Until Date': ticket.untilDate || undefined,
+          'Event ID': [eventId],
+        };
+
+        Object.keys(fields).forEach(
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+        );
+
+        const url = ticket.airtableId
+          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticket.airtableId}`
+          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`;
+
+        const method = ticket.airtableId ? 'PATCH' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) {
+          console.error('❌ Failed to save ticket:', result.error?.message || result);
+          continue;
+        }
+
+        updatedTickets.push({
+          ...ticket,
+          airtableId: result.id,
+        });
+
+      } catch (err) {
+        console.error('Ticket Save Error:', err);
+      }
+    }
+    setTickets(updatedTickets);
+  };
+
+  const saveCouponsToAirtable = async (eventId) => {
+    const updatedCoupons = [];
+    for (const coupon of coupons) {
+      try {
+        const fields = {
+          'Coupon Name': coupon.name,
+          'Coupon Code': coupon.code,
+          'Coupon Type': coupon.type,
+          'Discount Amount': coupon.amount ? Number(coupon.amount) : undefined,
+          'Discount Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
+          'Event ID': [eventId],
+          'Ticket ID': coupon.ticketId ? [coupon.ticketId] : [],
+        };
+
+        Object.keys(fields).forEach(
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+        );
+
+        const url = coupon.airtableId
+          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons/${coupon.airtableId}`
+          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`;
+
+        const method = coupon.airtableId ? 'PATCH' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) {
+          console.error('❌ Failed to save coupon:', result.error?.message || result);
+          continue;
+        }
+
+        updatedCoupons.push({
+          ...coupon,
+          airtableId: result.id,
+        });
+
+      } catch (err) {
+        console.error('Coupon Save Error:', err);
+      }
+    }
+    setCoupons(updatedCoupons);
+  };
+
+  const loadTickets = async (eventId) => {
+    try {
+      const filterFormula = `{Event ID} = "${eventId}"`;
+
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        console.error('❌ Error loading tickets:', result);
+        return;
+      }
+
+      const loadedTickets = result.records.map((record) => ({
+        id: crypto.randomUUID(),
+        airtableId: record.id,
+        name: record.fields['Ticket Name'] || '',
+        type: record.fields['Type'] || 'FREE',
+        price: record.fields['Price'] || '',
+        currency: record.fields['Currency'] || 'EUR',
+        limit: record.fields['Limit'] || '',
+        untilDate: record.fields['Until Date'] || '',
+      }));
+
+      setTickets(loadedTickets);
+      const ticketIds = loadedTickets.map(t => t.airtableId);
+      await loadCoupons(ticketIds);
+
+    } catch (err) {
+      console.error('Error loading tickets:', err);
+    }
+  };
+
+  const loadCoupons = async (ticketIds) => {
+    try {
+      if (!ticketIds.length) return;
+
+      const filterFormula = `OR(${ticketIds.map(id => `FIND("${id}", ARRAYJOIN({Ticket ID}))`).join(", ")})`;
+
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        console.error('❌ Error loading coupons:', result);
+        return;
+      }
+
+      const loadedCoupons = result.records.map((record) => ({
+        id: crypto.randomUUID(),
+        airtableId: record.id,
+        ticketId: record.fields['Ticket ID'] ? record.fields['Ticket ID'][0] : '',
+        code: record.fields['Coupon Code'] || '',
+        name: record.fields['Coupon Name'] || '',
+        type: record.fields['Coupon Type'] || 'FREE',
+        amount: record.fields['Discount Amount'] || '',
+        percentage: record.fields['Discount Percentage'] || '',
+      }));
+
+      setCoupons(loadedCoupons);
+
+    } catch (err) {
+      console.error('Error loading coupons:', err);
+    }
+  };
   const handleSave = async (data = form) => {
     try {
       const updatedFields = {
@@ -289,7 +469,6 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       });
 
       const result = await res.json();
-
       if (!res.ok) {
         console.error('❌ Airtable Event Error:', result);
         alert('Failed to save event');
@@ -298,8 +477,8 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
 
       const eventId = result.id;
 
-      await saveTicketsToAirtable(event.id);
-      await saveCouponsToAirtable(); // no eventId needed
+      await saveTicketsToAirtable(eventId);
+      await saveCouponsToAirtable(eventId);
 
       setIsDirty(false);
       if (onSave) onSave();
@@ -308,199 +487,6 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
 
     } catch (err) {
       console.error('Save error:', err);
-    }
-  };
-
-  const saveTicketsToAirtable = async (eventId) => {
-    const updatedTickets = [];
-  
-    for (const ticket of tickets) {
-      try {
-        const fields = {
-          'Ticket Name': ticket.name,
-          'Type': ticket.type,
-          'Price': ticket.type === 'PAID' ? Number(ticket.price) : undefined,
-          'Currency': ticket.type === 'PAID' ? ticket.currency : undefined,
-          'Limit': ticket.limit ? Number(ticket.limit) : undefined,
-          'Until Date': ticket.untilDate || undefined,
-          'Event ID': [eventId],
-        };
-        
-        Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
-        );
-  
-        const url = ticket.airtableId
-          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticket.airtableId}`
-          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`;
-  
-        const method = ticket.airtableId ? 'PATCH' : 'POST';
-  
-        console.log('🔄 Sending ticket fields to Airtable:', fields);
-
-        const res = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields }),
-        });
-  
-        const result = await res.json();
-        if (!res.ok) {
-          console.error('❌ Failed to save ticket:', result.error?.message || result);
-          continue;
-        }
-  
-        updatedTickets.push({
-          ...ticket,
-          airtableId: result.id, // ✅ Save Airtable ID
-        });
-  
-      } catch (err) {
-        console.error('Ticket Save Error:', err);
-      }
-    }
-  
-    // 🔄 Reflect latest state in UI
-    setTickets(updatedTickets);
-  };
-
-  const saveCouponsToAirtable = async (eventId) => {
-    const updatedCoupons = [];
-  
-    for (const coupon of coupons) {
-      try {
-        const fields = {
-          'Coupon Name': coupon.name,
-          'Coupon Code': coupon.code,
-          'Coupon Type': coupon.type,
-          'Discount Amount': coupon.amount ? Number(coupon.amount) : undefined,
-          'Discount Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
-          'Event ID': [eventId],
-          'Ticket ID': coupon.ticketId ? [coupon.ticketId] : [],
-        };
-  
-        // Clean empty fields
-        Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
-        );
-  
-        const url = coupon.airtableId
-          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons/${coupon.airtableId}`
-          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`;
-  
-        const method = coupon.airtableId ? 'PATCH' : 'POST';
-  
-        const res = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields }),
-        });
-  
-        const result = await res.json();
-  
-        if (!res.ok) {
-          console.error('❌ Failed to save coupon:', result.error?.message || result);
-          continue;
-        }
-  
-        updatedCoupons.push({
-          ...coupon,
-          airtableId: result.id,
-        });
-  
-      } catch (err) {
-        console.error('Coupon Save Error:', err);
-      }
-    }
-  
-    setCoupons(updatedCoupons);
-  };
-
-  const loadTickets = async (eventId) => {
-    try {
-      const filterFormula = `{Event ID} = "${eventId}"`;
-
-       // ✅ STEP 2: Add this line to log what you're sending
-        console.log("🚀 filterFormula being used:", filterFormula);
-
-
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=${encodeURIComponent(filterFormula)}`;
-      
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      const result = await res.json();
-  
-      if (!res.ok) {
-        console.error('❌ Error loading tickets:', result);
-        return;
-      }
-  
-      const loadedTickets = result.records.map((record) => ({
-        id: crypto.randomUUID(),
-        airtableId: record.id,
-        name: record.fields['Ticket Name'] || '',
-        type: record.fields['Type'] || 'FREE',
-        price: record.fields['Price'] || '',
-        currency: record.fields['Currency'] || 'EUR',
-        limit: record.fields['Limit'] || '',
-        untilDate: record.fields['Until Date'] || '',
-      }));
-  
-      setTickets(loadedTickets);
-      const ticketIds = loadedTickets.map(t => t.airtableId);
-      await loadCoupons(ticketIds);
-  
-    } catch (err) {
-      console.error('Error loading tickets:', err);
-    }
-  };
-
-  const loadCoupons = async (ticketIds) => {
-    try {
-      if (!ticketIds.length) return;
-
-      const filterFormula = `OR(${ticketIds.map(id => `FIND("${id}", ARRAYJOIN({Linked Ticket}))`).join(", ")})`;
-
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(filterFormula)}`;
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      const result = await res.json();
-
-      if (!res.ok) {
-        console.error('❌ Error loading coupons:', result);
-        return;
-      }
-
-      const loadedCoupons = result.records.map((record) => ({
-        id: crypto.randomUUID(),
-        airtableId: record.id,
-        ticketId: record.fields['Linked Ticket'] ? record.fields['Linked Ticket'][0] : '',
-        code: record.fields['Coupon Code'] || '',
-        name: record.fields['Coupon Name'] || '',
-        type: record.fields['Type'] || 'FREE',
-        amount: record.fields['Amount'] || '',
-        percentage: record.fields['Percentage'] || '',
-      }));
-
-      setCoupons(loadedCoupons);
-
-    } catch (err) {
-      console.error('Error loading coupons:', err);
     }
   };
 
@@ -559,7 +545,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           </button>
         </div>
 
-        {/* Event Details Tab */}
+        {/* Event Details */}
         {activeTab === 'details' && (
           <>
             <div className="form-group">
@@ -666,7 +652,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           </>
         )}
 
-        {/* Pricing & Coupons Tab */}
+        {/* Pricing and Coupons */}
         {activeTab === 'pricing' && (
           <>
             <h3>Tickets</h3>
@@ -707,7 +693,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
                   return [...prev, ticket];
                 }
               });
-              setIsDirty(true); // ✅ Mark form as dirty!
+              setIsDirty(true);
             }}
             onDelete={(id) => setTickets(prev => prev.filter(t => t.id !== id))}
           />
@@ -730,7 +716,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
                   return [...prev, coupon];
                 }
               });
-              setIsDirty(true); // ✅ Mark form as dirty!
+              setIsDirty(true);
             }}
             onDelete={(id) => setCoupons(prev => prev.filter(c => c.id !== id))}
           />
