@@ -349,7 +349,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
   
         const result = await res.json();
         if (!res.ok) {
-          console.error('❌ Failed to save ticket:', result);
+          console.error('❌ Failed to save ticket:', result.error?.message || result);
           continue;
         }
   
