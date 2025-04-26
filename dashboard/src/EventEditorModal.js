@@ -299,7 +299,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
       const eventId = result.id;
 
       await saveTicketsToAirtable(event.id);
-await saveCouponsToAirtable(); // no eventId needed
+      await saveCouponsToAirtable(); // no eventId needed
 
       setIsDirty(false);
       if (onSave) onSave();
@@ -319,12 +319,16 @@ await saveCouponsToAirtable(); // no eventId needed
         const fields = {
           'Ticket Name': ticket.name,
           'Type': ticket.type,
-          'Price': ticket.type === 'PAID' ? Number(ticket.price) : 0,
+          'Price': ticket.type === 'PAID' ? Number(ticket.price) : undefined,
           'Currency': ticket.currency,
           'Limit': ticket.limit ? Number(ticket.limit) : undefined,
           'Until Date': ticket.untilDate || undefined,
           'Event': [eventId], // 🧠 Link to event
         };
+
+        Object.keys(fields).forEach(
+          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
+        );
   
         Object.keys(fields).forEach(
           (key) => fields[key] === '' || fields[key] == null ? delete fields[key] : null
