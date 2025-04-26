@@ -323,7 +323,7 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           'Currency': ticket.type === 'PAID' ? ticket.currency : undefined,
           'Limit': ticket.limit ? Number(ticket.limit) : undefined,
           'Until Date': ticket.untilDate || undefined,
-          'Event': [eventId],
+          'Event ID': [eventId],
         };
         
         Object.keys(fields).forEach(
