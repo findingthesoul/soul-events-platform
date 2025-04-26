@@ -707,6 +707,7 @@ await saveCouponsToAirtable(); // no eventId needed
                   return [...prev, ticket];
                 }
               });
+              setIsDirty(true); // ✅ Mark form as dirty!
             }}
             onDelete={(id) => setTickets(prev => prev.filter(t => t.id !== id))}
           />
@@ -729,6 +730,7 @@ await saveCouponsToAirtable(); // no eventId needed
                   return [...prev, coupon];
                 }
               });
+              setIsDirty(true); // ✅ Mark form as dirty!
             }}
             onDelete={(id) => setCoupons(prev => prev.filter(c => c.id !== id))}
           />
