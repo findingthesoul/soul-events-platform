@@ -323,12 +323,8 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
           'Currency': ticket.currency,
           'Limit': ticket.limit ? Number(ticket.limit) : undefined,
           'Until Date': ticket.untilDate || undefined,
-          'Event': [eventId], // 🧠 Link to event
+          'Event': [eventId],
         };
-
-        Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
-        );
   
         Object.keys(fields).forEach(
           (key) => fields[key] === '' || fields[key] == null ? delete fields[key] : null
