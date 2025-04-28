@@ -420,7 +420,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       const loadedCoupons = result.records.map((record) => ({
         id: crypto.randomUUID(),
         airtableId: record.id,
-        ticketId: record.fields['Ticket ID'] ? record.fields['Ticket ID'][0] : '',
+        ticketId: record.fields['Linked Ticket'] ? record.fields['Linked Ticket'][0] : '',
         code: record.fields['Coupon Code'] || '',
         name: record.fields['Coupon Name'] || '',
         type: record.fields['Coupon Type'] || 'FREE',
