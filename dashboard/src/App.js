@@ -15,7 +15,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showUpcoming, setShowUpcoming] = useState(true);
-  const [showAccountInfo, setShowAccountInfo] = useState(false); // ✅ Added
+  const [selectedMode, setSelectedMode] = useState('event'); // 'event' or 'account'
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -80,6 +80,13 @@ function App() {
 
   const openEditor = (event = null) => {
     setSelectedEvent(event);
+    setSelectedMode('event');
+    setShowEditor(true);
+  };
+
+  const openAccountInfo = () => {
+    setSelectedEvent(null);
+    setSelectedMode('account');
     setShowEditor(true);
   };
 
@@ -122,17 +129,8 @@ function App() {
 
           {/* Account Info Toggle */}
           <div className="account-info-toggle" onClick={openAccountInfo}>
-          Account Info
+            Account Info
           </div>
-
-          {/* Account Info Panel */}
-          {showAccountInfo && (
-            <div className="account-info-panel">
-              <p><strong>Vendor Name:</strong> {vendorName}</p>
-              <p><strong>Vendor Email:</strong> {token}</p> {/* Or a real email if you store it separately */}
-              <button className="logout-btn" onClick={handleLogout}>Logout</button>
-            </div>
-          )}
 
           {/* View Toggle Switch */}
           <div className="view-toggle">
@@ -172,29 +170,30 @@ function App() {
         </button>
       </div>
 
+      {/* Right side panel */}
       {showEditor && selectedMode === 'event' && (
-  <EventEditorModal
-    event={selectedEvent}
-    vendorId={vendorId}
-    onClose={closeEditor}
-    onSave={handleEventSaved}
-  />
-)}
+        <EventEditorModal
+          event={selectedEvent}
+          vendorId={vendorId}
+          onClose={closeEditor}
+          onSave={handleEventSaved}
+        />
+      )}
 
-{showEditor && selectedMode === 'account' && (
-  <div className="editor-panel">
-    <div className="editor-header">
-      <h2>Account Information</h2>
-      <button className="close-btn" onClick={closeEditor}>×</button>
-    </div>
+      {showEditor && selectedMode === 'account' && (
+        <div className="editor-panel">
+          <div className="editor-header">
+            <h2>Account Information</h2>
+            <button className="close-btn" onClick={closeEditor}>×</button>
+          </div>
 
-    <div className="account-info-panel">
-      <p><strong>Vendor Name:</strong> {vendorName}</p>
-      <p><strong>Vendor Email:</strong> {token}</p> {/* If you later store a real email */}
-      <button className="logout-btn" onClick={handleLogout}>Logout</button>
-    </div>
-  </div>
-)}
+          <div className="account-info-panel">
+            <p><strong>Vendor Name:</strong> {vendorName}</p>
+            <p><strong>Vendor Email:</strong> {token}</p> {/* (If real email is available, replace token here) */}
+            <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
