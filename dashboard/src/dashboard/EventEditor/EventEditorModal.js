@@ -47,7 +47,19 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
       const data = await fetchEventById(eventId);
       console.log('Fetched event data:', data); // ADD THIS LINE
       if (data) {
-        setEventData(prev => ({ ...prev, ...data })); // Small improvement
+        setEventData(prev => ({
+          ...prev,
+          name: data['Event Title'] || '',
+          startDate: data['Start Date'] || '',
+          endDate: data['End Date'] || '',
+          description: data['Description'] || '',
+          status: data['Published'] || 'Draft',
+          format: data['Format'] || 'Online',
+          location: data['Location'] || '',
+          locationDescription: data['Location Description'] || '',
+          timeFormat: data['Time Format'] || 'ampm',
+          // you can also map tickets, vendors etc later
+        }));
       }
     } catch (error) {
       console.error('Error loading event:', error);
