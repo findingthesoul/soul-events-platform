@@ -14,6 +14,7 @@ function App() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [showUpcoming, setShowUpcoming] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -88,7 +89,25 @@ function App() {
 
   const handleEventSaved = () => {
     fetchEvents();
+    setShowEditor(false);
+    setSelectedEvent(null);
   };
+
+  const toggleShowUpcoming = () => {
+    setShowUpcoming(prev => !prev);
+  };
+
+  const filteredAndSortedEvents = events
+    .filter(event => {
+      const startDate = new Date(event.fields['Start Date']);
+      const now = new Date();
+      return showUpcoming ? startDate >= now : startDate < now;
+    })
+    .sort((a, b) => {
+      const aDate = new Date(a.fields['Start Date']);
+      const bDate = new Date(b.fields['Start Date']);
+      return aDate - bDate;
+    });
 
   if (!token || !vendorId) {
     return <Login onLogin={handleLogin} />;
@@ -100,9 +119,12 @@ function App() {
         <div className="event-header">
           {vendorName && <h2>Welcome, {vendorName}</h2>}
           <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          <button className="toggle-btn" onClick={toggleShowUpcoming}>
+            {showUpcoming ? 'Show Past Events' : 'Show Upcoming Events'}
+          </button>
         </div>
 
-        {events.map((e) => (
+        {filteredAndSortedEvents.map((e) => (
           <div
             key={e.id}
             className={`event-card ${selectedEvent?.id === e.id ? 'selected' : ''}`}
@@ -111,7 +133,7 @@ function App() {
             <strong>{e.fields['Event Title']}</strong>
             {e.fields['Start Date'] && (
               <span>
-                ({e.fields['Start Date']}
+                ({new Date(e.fields['Start Date']).toLocaleDateString()}
                 {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
               </span>
             )}
