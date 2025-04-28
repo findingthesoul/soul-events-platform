@@ -121,8 +121,8 @@ function App() {
           {vendorName && <h2>Welcome, {vendorName}</h2>}
 
           {/* Account Info Toggle */}
-          <div className="account-info-toggle" onClick={() => setShowAccountInfo(prev => !prev)}>
-            Account Info {showAccountInfo ? '▲' : '▼'}
+          <div className="account-info-toggle" onClick={openAccountInfo}>
+          Account Info
           </div>
 
           {/* Account Info Panel */}
@@ -172,14 +172,29 @@ function App() {
         </button>
       </div>
 
-      {showEditor && (
-        <EventEditorModal
-          event={selectedEvent}
-          vendorId={vendorId}
-          onClose={closeEditor}
-          onSave={handleEventSaved}
-        />
-      )}
+      {showEditor && selectedMode === 'event' && (
+  <EventEditorModal
+    event={selectedEvent}
+    vendorId={vendorId}
+    onClose={closeEditor}
+    onSave={handleEventSaved}
+  />
+)}
+
+{showEditor && selectedMode === 'account' && (
+  <div className="editor-panel">
+    <div className="editor-header">
+      <h2>Account Information</h2>
+      <button className="close-btn" onClick={closeEditor}>×</button>
+    </div>
+
+    <div className="account-info-panel">
+      <p><strong>Vendor Name:</strong> {vendorName}</p>
+      <p><strong>Vendor Email:</strong> {token}</p> {/* If you later store a real email */}
+      <button className="logout-btn" onClick={handleLogout}>Logout</button>
+    </div>
+  </div>
+)}
     </div>
   );
 }
