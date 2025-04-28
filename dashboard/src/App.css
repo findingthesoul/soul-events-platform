@@ -186,3 +186,42 @@ button {
   border: 1px solid #ccc;
   font-size: 14px;
 }
+
+.account-info-toggle {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #007bff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.account-info-toggle:hover {
+  text-decoration: underline;
+}
+
+.account-info-panel {
+  margin: 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.account-info-panel p {
+  margin: 8px 0;
+}
+
+.account-info-panel button.logout-btn {
+  margin-top: 15px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.account-info-panel button.logout-btn:hover {
+  background: #c82333;
+}

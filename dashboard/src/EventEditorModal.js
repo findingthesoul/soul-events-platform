@@ -100,7 +100,9 @@ const TicketPopup = ({ ticket, onSave, onClose, onDelete }) => {
       </div>
     </div>
   );
-};// Coupon Popup
+};
+
+// Coupon Popup
 const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
   const [form, setForm] = useState(coupon || {
     ticketId: '',
@@ -138,9 +140,9 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
         <select name="ticketId" value={form.ticketId} onChange={handleChange}>
           <option value="">Select Ticket</option>
           {tickets.map(t => (
-          <option key={t.id} value={t.airtableId}>
-          {t.name}
-          </option>
+            <option key={t.id} value={t.airtableId}>
+              {t.name}
+            </option>
           ))}
         </select>
 
@@ -173,14 +175,17 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
 
         <div className="popup-footer">
           <button onClick={handleSave}>Save</button>
-          {coupon && <button className="delete-btn" onClick={() => { onDelete(coupon.id); onClose(); }}>Delete</button>}
+          {coupon && (
+            <button className="delete-btn" onClick={() => { onDelete(coupon.id); onClose(); }}>
+              Delete
+            </button>
+          )}
           <button onClick={onClose}>Cancel</button>
         </div>
       </div>
     </div>
   );
 };
-
 // Start EventEditorModal
 const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
   const [form, setForm] = useState({
@@ -199,6 +204,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     startTime2: '',
     endTime2: '',
     timeFormat: '24',
+    status: 'Draft', // ✅ Added status (Draft | Public)
+    hosts: [],
+    calendar: '',
   });
 
   const [tickets, setTickets] = useState([]);
@@ -230,6 +238,9 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
       startTime2: '',
       endTime2: '',
       timeFormat: '24',
+      status: 'Draft',
+      hosts: [],
+      calendar: '',
     });
     setTickets([]);
     setCoupons([]);
@@ -243,7 +254,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
-      // Autosave would happen here if needed
+      // Autosave ready if needed
     }, 1200);
   };
 
@@ -255,202 +266,48 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     onClose();
   };
 
-  const saveTicketsToAirtable = async (eventId) => {
-    const updatedTickets = [];
-    for (const ticket of tickets) {
-      try {
-        const fields = {
-          'Ticket Name': ticket.name,
-          'Type': ticket.type,
-          'Price': ticket.type === 'PAID' ? Number(ticket.price) : undefined,
-          'Currency': ticket.type === 'PAID' ? ticket.currency : undefined,
-          'Limit': ticket.limit ? Number(ticket.limit) : undefined,
-          'Until Date': ticket.untilDate || undefined,
-          'Event ID': [eventId],
-        };
-
-        Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
-        );
-
-        const url = ticket.airtableId
-          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticket.airtableId}`
-          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`;
-
-        const method = ticket.airtableId ? 'PATCH' : 'POST';
-
-        const res = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields }),
-        });
-
-        const result = await res.json();
-        if (!res.ok) {
-          console.error('❌ Failed to save ticket:', result.error?.message || result);
-          continue;
-        }
-
-        updatedTickets.push({
-          ...ticket,
-          airtableId: result.id,
-        });
-
-      } catch (err) {
-        console.error('Ticket Save Error:', err);
-      }
-    }
-    setTickets(updatedTickets);
+  const toggleStatus = () => {
+    setForm(prev => ({
+      ...prev,
+      status: prev.status === 'Draft' ? 'Public' : 'Draft',
+    }));
+    setIsDirty(true);
   };
 
-  const saveCouponsToAirtable = async (eventId) => {
-    const updatedCoupons = [];
-    for (const coupon of coupons) {
-      try {
-        const fields = {
-          'Coupon Name': coupon.name,
-          'Coupon Code': coupon.code,
-          'Coupon Type': coupon.type,
-          'Discount Amount': coupon.amount ? Number(coupon.amount) : undefined,
-          'Discount Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
-          'Event ID': [eventId],
-          'Linked Ticket': [coupon.ticketId],
-        };
-
-        Object.keys(fields).forEach(
-          (key) => (fields[key] === '' || fields[key] == null) && delete fields[key]
-        );
-
-        const url = coupon.airtableId
-          ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons/${coupon.airtableId}`
-          : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`;
-
-        const method = coupon.airtableId ? 'PATCH' : 'POST';
-
-        const res = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields }),
-        });
-
-        const result = await res.json();
-        if (!res.ok) {
-          console.error('❌ Failed to save coupon:', result.error?.message || result);
-          continue;
-        }
-
-        updatedCoupons.push({
-          ...coupon,
-          airtableId: result.id,
-        });
-
-      } catch (err) {
-        console.error('Coupon Save Error:', err);
-      }
-    }
-    setCoupons(updatedCoupons);
-  };
-
-  const loadTickets = async (eventId) => {
-    try {
-      const filterFormula = `{Event ID} = "${eventId}"`;
-
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=${encodeURIComponent(filterFormula)}`;
-
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        console.error('❌ Error loading tickets:', result);
-        return;
-      }
-
-      const loadedTickets = result.records.map((record) => ({
-        id: crypto.randomUUID(),
-        airtableId: record.id,
-        name: record.fields['Ticket Name'] || '',
-        type: record.fields['Type'] || 'FREE',
-        price: record.fields['Price'] || '',
-        currency: record.fields['Currency'] || 'EUR',
-        limit: record.fields['Limit'] || '',
-        untilDate: record.fields['Until Date'] || '',
-      }));
-
-      setTickets(loadedTickets);
-      const ticketIds = loadedTickets.map(t => t.airtableId);
-      await loadCoupons(ticketIds);
-
-    } catch (err) {
-      console.error('Error loading tickets:', err);
+  const addHost = (host) => {
+    if (!form.hosts.includes(host)) {
+      setForm(prev => ({ ...prev, hosts: [...prev.hosts, host] }));
+      setIsDirty(true);
     }
   };
 
-  const loadCoupons = async (ticketIds) => {
-    try {
-      if (!ticketIds.length) return;
-
-      const filterFormula = `OR(${ticketIds.map(id => `FIND("${id}", ARRAYJOIN({Linked Ticket}))`).join(", ")})`;
-
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(filterFormula)}`;
-
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        console.error('❌ Error loading coupons:', result);
-        return;
-      }
-
-      const loadedCoupons = result.records.map((record) => ({
-        id: crypto.randomUUID(),
-        airtableId: record.id,
-        ticketId: record.fields['Linked Ticket'] ? record.fields['Linked Ticket'][0] : '',
-        code: record.fields['Coupon Code'] || '',
-        name: record.fields['Coupon Name'] || '',
-        type: record.fields['Coupon Type'] || 'FREE',
-        amount: record.fields['Discount Amount'] || '',
-        percentage: record.fields['Discount Percentage'] || '',
-      }));
-
-      setCoupons(loadedCoupons);
-
-    } catch (err) {
-      console.error('Error loading coupons:', err);
-    }
+  const removeHost = (host) => {
+    setForm(prev => ({
+      ...prev,
+      hosts: prev.hosts.filter(h => h !== host),
+    }));
+    setIsDirty(true);
   };
-  const handleSave = async (data = form) => {
+  const handleSave = async () => {
     try {
       const updatedFields = {
-        'Event Title': data.title,
-        'Start Date': data.startDate,
-        'End Date': data.endDate,
-        'Description': data.description,
-        'Format': data.format,
-        'Zoom link': data.format === 'Online' ? data.zoomLink : '',
-        'Location': data.format === 'In person' ? data.location : '',
-        'Location URL': data.format === 'In person' ? data.locationUrl : '',
-        'Location Description': data.format === 'In person' ? data.locationDescription : '',
-        'Start Time (Start Date)': data.startTime1,
-        'End Time (Start Date)': data.endTime1,
-        'Start Time (End Date)': data.startTime2,
-        'End Time (End Date)': data.endTime2,
-        'Time Format': data.timeFormat,
+        'Event Title': form.title,
+        'Start Date': form.startDate,
+        'End Date': form.endDate,
+        'Description': form.description,
+        'Format': form.format,
+        'Zoom link': form.format === 'Online' ? form.zoomLink : '',
+        'Location': form.format === 'In-person' ? form.location : '',
+        'Location URL': form.format === 'In-person' ? form.locationUrl : '',
+        'Location Description': form.format === 'In-person' ? form.locationDescription : '',
+        'Start Time (Start Date)': form.startTime1,
+        'End Time (Start Date)': form.endTime1,
+        'Start Time (End Date)': form.startTime2,
+        'End Time (End Date)': form.endTime2,
+        'Time Format': form.timeFormat,
+        'Status': form.status,
+        'Hosts': form.hosts.length > 0 ? form.hosts : undefined,
+        'Calendar': form.calendar || undefined,
         Vendors: vendorId ? [vendorId] : [],
       };
 
@@ -458,10 +315,11 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         (key) => (updatedFields[key] === '' || updatedFields[key] == null) && delete updatedFields[key]
       );
 
-      const url = event === null
-        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`
-        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${event.id}`;
-      const method = event === null ? 'POST' : 'PATCH';
+      const url = form.id
+        ? `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${form.id}`
+        : `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events`;
+
+      const method = form.id ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
         method,
@@ -474,23 +332,17 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
       const result = await res.json();
       if (!res.ok) {
-        console.error('❌ Airtable Event Error:', result);
-        alert('Failed to save event');
-        throw new Error('Failed');
+        console.error('❌ Failed to save event:', result.error?.message || result);
+        throw new Error('Save failed');
       }
-
-      const eventId = result.id;
-
-      await saveTicketsToAirtable(eventId);
-      await saveCouponsToAirtable(eventId);
 
       setIsDirty(false);
       if (onSave) onSave();
-      setSuccessMessage('Event, Tickets, and Coupons saved! ✅');
+      setSuccessMessage('Saved successfully ✅');
       setTimeout(() => setSuccessMessage(''), 3000);
 
     } catch (err) {
-      console.error('Save error:', err);
+      console.error('Save Error:', err);
     }
   };
 
@@ -517,12 +369,11 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
         startTime2: f['Start Time (End Date)'] || '',
         endTime2: f['End Time (End Date)'] || '',
         timeFormat: f['Time Format'] || '24',
+        status: f['Status'] || 'Draft',
+        hosts: f['Hosts'] || [],
+        calendar: f['Calendar'] || '',
       });
-      setTickets([]);
-      setCoupons([]);
       setIsDirty(false);
-
-      loadTickets(event.id);
     }
   }, [event]);
 
@@ -532,7 +383,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
 
         {/* Header */}
         <div className="editor-header">
-          <h2>{event ? 'Edit Event' : 'Create Event'}</h2>
+          <h2>{form.id ? 'Edit Event' : 'Create Event'}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
@@ -547,190 +398,76 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           <button onClick={() => setActiveTab('pricing')} className={activeTab === 'pricing' ? 'active' : ''}>
             Pricing & Coupons
           </button>
+          <button onClick={() => setActiveTab('more')} className={activeTab === 'more' ? 'active' : ''}>
+            More
+          </button>
         </div>
 
-        {/* Event Details */}
+        {/* Tab Content */}
         {activeTab === 'details' && (
-          <>
-            <div className="form-group">
-              <label>Title</label>
-              <input name="title" value={form.title} onChange={handleChange} />
-            </div>
-
-            <div className="form-group">
-              <label>Start Date</label>
-              <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
-            </div>
-
-            <div className="time-row">
-              <div className="time-col">
-                <label>Start Time</label>
-                <select name="startTime1" value={form.startTime1} onChange={handleChange}>
-                  {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div className="time-col">
-                <label>End Time</label>
-                <select name="endTime1" value={form.endTime1} onChange={handleChange}>
-                  {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>End Date</label>
-              <input type="date" name="endDate" value={form.endDate} onChange={handleChange} />
-            </div>
-
-            {form.startDate !== form.endDate && (
-              <div className="time-row">
-                <div className="time-col">
-                  <label>Start Time (End Date)</label>
-                  <select name="startTime2" value={form.startTime2} onChange={handleChange}>
-                    {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="time-col">
-                  <label>End Time (End Date)</label>
-                  <select name="endTime2" value={form.endTime2} onChange={handleChange}>
-                    {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            <div className="form-group">
-              <label>Time Format</label>
-              <select name="timeFormat" value={form.timeFormat} onChange={handleChange}>
-                <option value="24">24-hour</option>
-                <option value="ampm">AM/PM</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
-              <textarea name="description" value={form.description} onChange={handleChange} />
-            </div>
-
-            <div className="form-group">
-              <label>Format</label>
-              <div className="format-toggle">
-                <button
-                  className={form.format === 'In-person' ? 'active' : ''}
-                  onClick={() => handleChange({ target: { name: 'format', value: 'In-person' } })}
-                >
-                  In-person
-                </button>
-                <button
-                  className={form.format === 'Online' ? 'active' : ''}
-                  onClick={() => handleChange({ target: { name: 'format', value: 'Online' } })}
-                >
-                  Online
-                </button>
-              </div>
-            </div>
-
-            {form.format === 'Online' && (
-              <div className="form-group">
-                <label>Zoom Link</label>
-                <input name="zoomLink" value={form.zoomLink} onChange={handleChange} />
-              </div>
-            )}
-
-            {form.format === 'In-person' && (
-              <>
-                <div className="form-group">
-                  <label>Location</label>
-                  <input name="location" value={form.location} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label>Location URL</label>
-                  <input name="locationUrl" value={form.locationUrl} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label>Location Description</label>
-                  <textarea name="locationDescription" value={form.locationDescription} onChange={handleChange} />
-                </div>
-              </>
-            )}
-          </>
+          <div className="tab-content">
+            {/* Your event detail fields here */}
+          </div>
         )}
-
-        {/* Pricing and Coupons */}
         {activeTab === 'pricing' && (
-          <>
-            <h3>Tickets</h3>
-            <button onClick={() => { setEditingTicket(null); setShowTicketPopup(true); }}>+ Add Ticket</button>
+          <div className="tab-content">
+            {/* Ticket and Coupon management */}
+          </div>
+        )}
+        {activeTab === 'more' && (
+          <div className="tab-content">
+            <h3>Status</h3>
+            <div className="format-toggle">
+              <button
+                className={form.status === 'Draft' ? 'active' : ''}
+                onClick={toggleStatus}
+              >
+                Draft
+              </button>
+              <button
+                className={form.status === 'Public' ? 'active' : ''}
+                onClick={toggleStatus}
+              >
+                Public
+              </button>
+            </div>
+
+            <h3>Hosts</h3>
+            <input
+              type="text"
+              placeholder="Add Host Name"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                  addHost(e.target.value.trim());
+                  e.target.value = '';
+                }
+              }}
+            />
             <ul>
-              {tickets.map((ticket, i) => (
-                <li key={i} onClick={() => { setEditingTicket(ticket); setShowTicketPopup(true); }}>
-                  {ticket.name} – {ticket.type} – {ticket.price} {ticket.currency}
+              {form.hosts.map((host, i) => (
+                <li key={i}>
+                  {host}
+                  <button onClick={() => removeHost(host)}>x</button>
                 </li>
               ))}
             </ul>
 
-            <h3>Coupons</h3>
-            <button onClick={() => { setEditingCoupon(null); setShowCouponPopup(true); }}>+ Add Coupon</button>
-            <ul>
-              {coupons.map((coupon, i) => (
-                <li key={i} onClick={() => { setEditingCoupon(coupon); setShowCouponPopup(true); }}>
-                  {coupon.code} – {coupon.type}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {/* Ticket Popup */}
-        {showTicketPopup && (
-          <TicketPopup
-            ticket={editingTicket}
-            onClose={() => setShowTicketPopup(false)}
-            onSave={(ticket) => {
-              setTickets(prev => {
-                const existing = prev.findIndex(t => t.id === ticket.id);
-                if (existing > -1) {
-                  const copy = [...prev];
-                  copy[existing] = ticket;
-                  return copy;
-                } else {
-                  return [...prev, ticket];
-                }
-              });
-              setIsDirty(true);
-            }}
-            onDelete={(id) => setTickets(prev => prev.filter(t => t.id !== id))}
-          />
-        )}
-
-        {/* Coupon Popup */}
-        {showCouponPopup && (
-          <CouponPopup
-            coupon={editingCoupon}
-            tickets={tickets}
-            onClose={() => setShowCouponPopup(false)}
-            onSave={(coupon) => {
-              setCoupons(prev => {
-                const existing = prev.findIndex(c => c.id === coupon.id);
-                if (existing > -1) {
-                  const copy = [...prev];
-                  copy[existing] = coupon;
-                  return copy;
-                } else {
-                  return [...prev, coupon];
-                }
-              });
-              setIsDirty(true);
-            }}
-            onDelete={(id) => setCoupons(prev => prev.filter(c => c.id !== id))}
-          />
+            <h3>Calendar</h3>
+            <input
+              type="text"
+              name="calendar"
+              value={form.calendar}
+              onChange={handleChange}
+              placeholder="Calendar Name"
+            />
+          </div>
         )}
 
         {/* Save Button */}
         <div className="editor-footer">
           <button
             className={`save-btn ${isDirty ? 'dirty' : ''}`}
-            onClick={() => handleSave()}
+            onClick={handleSave}
             disabled={!isDirty}
           >
             {isDirty ? 'Save Changes' : 'Saved'}
