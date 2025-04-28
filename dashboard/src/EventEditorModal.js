@@ -400,7 +400,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
     try {
       if (!ticketIds.length) return;
 
-      const filterFormula = `OR(${ticketIds.map(id => `FIND("${id}", ARRAYJOIN({Ticket ID}))`).join(", ")})`;
+      const filterFormula = `OR(${ticketIds.map(id => `FIND("${id}", ARRAYJOIN({Linked Ticket}))`).join(", ")})`;
 
       const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(filterFormula)}`;
 
