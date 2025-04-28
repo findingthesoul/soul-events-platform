@@ -317,7 +317,7 @@ const EventEditorModal = ({ event, vendorId, onClose, onSave }) => {
           'Discount Amount': coupon.amount ? Number(coupon.amount) : undefined,
           'Discount Percentage': coupon.percentage ? Number(coupon.percentage) : undefined,
           'Event ID': [eventId],
-          'Ticket ID': [coupon.ticketId],
+          'Linked Ticket': [coupon.ticketId],
         };
 
         Object.keys(fields).forEach(
