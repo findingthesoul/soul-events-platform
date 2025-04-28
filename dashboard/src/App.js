@@ -15,6 +15,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showUpcoming, setShowUpcoming] = useState(true);
+  const [showAccountInfo, setShowAccountInfo] = useState(false); // ✅ Added
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -118,19 +119,34 @@ function App() {
       <div className="event-list">
         <div className="event-header">
           {vendorName && <h2>Welcome, {vendorName}</h2>}
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
+
+          {/* Account Info Toggle */}
+          <div className="account-info-toggle" onClick={() => setShowAccountInfo(prev => !prev)}>
+            Account Info {showAccountInfo ? '▲' : '▼'}
+          </div>
+
+          {/* Account Info Panel */}
+          {showAccountInfo && (
+            <div className="account-info-panel">
+              <p><strong>Vendor Name:</strong> {vendorName}</p>
+              <p><strong>Vendor Email:</strong> {token}</p> {/* Or a real email if you store it separately */}
+              <button className="logout-btn" onClick={handleLogout}>Logout</button>
+            </div>
+          )}
+
+          {/* View Toggle Switch */}
           <div className="view-toggle">
             <button
-            className={showUpcoming ? 'active' : ''}
-            onClick={() => setShowUpcoming(true)}
+              className={showUpcoming ? 'active' : ''}
+              onClick={() => setShowUpcoming(true)}
             >
-            Upcoming
+              Upcoming
             </button>
             <button
-            className={!showUpcoming ? 'active' : ''}
-            onClick={() => setShowUpcoming(false)}
+              className={!showUpcoming ? 'active' : ''}
+              onClick={() => setShowUpcoming(false)}
             >
-            Past
+              Past
             </button>
           </div>
         </div>

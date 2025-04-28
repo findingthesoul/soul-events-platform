@@ -139,22 +139,50 @@ button {
   margin-top: 10px;
 }
 
-.view-toggle button {
-  padding: 6px 14px;
+.view-toggle {
+  display: inline-flex;
   border: 1px solid #ccc;
-  background: #f8f8f8;
-  cursor: pointer;
-  border-radius: 20px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: #f0f0f0;
+  margin-top: 10px;
+}
+
+.view-toggle button {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
   font-size: 14px;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+  outline: none;
 }
 
 .view-toggle button.active {
   background: #007bff;
   color: white;
-  border-color: #007bff;
 }
 
-.view-toggle button:hover {
+.view-toggle button:not(.active):hover {
   background: #e0e0e0;
+}
+.account-info-toggle {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #007bff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.account-info-toggle:hover {
+  text-decoration: underline;
+}
+
+.account-info-panel {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
 }
