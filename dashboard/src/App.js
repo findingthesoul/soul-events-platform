@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Login from './Login';
-import EventEditorModal from './EventEditorModal';
+import EventEditorModal from './dashboard/EventEditor/EventEditorModal';
 import './App.css';
 
 const AIRTABLE_API_KEY = process.env.REACT_APP_AIRTABLE_API_KEY;
