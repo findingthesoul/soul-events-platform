@@ -119,9 +119,20 @@ function App() {
         <div className="event-header">
           {vendorName && <h2>Welcome, {vendorName}</h2>}
           <button className="logout-btn" onClick={handleLogout}>Logout</button>
-          <button className="toggle-btn" onClick={toggleShowUpcoming}>
-            {showUpcoming ? 'Show Past Events' : 'Show Upcoming Events'}
-          </button>
+          <div className="view-toggle">
+            <button
+            className={showUpcoming ? 'active' : ''}
+            onClick={() => setShowUpcoming(true)}
+            >
+            Upcoming
+            </button>
+            <button
+            className={!showUpcoming ? 'active' : ''}
+            onClick={() => setShowUpcoming(false)}
+            >
+            Past
+            </button>
+          </div>
         </div>
 
         {filteredAndSortedEvents.map((e) => (

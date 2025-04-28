@@ -133,3 +133,28 @@ button {
     border-bottom: 1px solid #ddd;
   }
 }
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.view-toggle button {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  cursor: pointer;
+  border-radius: 20px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.view-toggle button.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.view-toggle button:hover {
+  background: #e0e0e0;
+}
