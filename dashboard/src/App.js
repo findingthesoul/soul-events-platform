@@ -173,7 +173,7 @@ function App() {
       {/* Right side panel */}
       {showEditor && selectedMode === 'event' && (
         <EventEditorModal
-          event={selectedEvent}
+        eventId={selectedEvent?.id || null}
           vendorId={vendorId}
           onClose={closeEditor}
           onSave={handleEventSaved}
