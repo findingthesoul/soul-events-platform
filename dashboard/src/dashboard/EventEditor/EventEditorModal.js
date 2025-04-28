@@ -43,9 +43,11 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
 
   const loadEvent = async () => {
     try {
+      console.log('Loading eventId:', eventId); // ADD THIS LINE
       const data = await fetchEventById(eventId);
+      console.log('Fetched event data:', data); // ADD THIS LINE
       if (data) {
-        setEventData(data);
+        setEventData(prev => ({ ...prev, ...data })); // Small improvement
       }
     } catch (error) {
       console.error('Error loading event:', error);
