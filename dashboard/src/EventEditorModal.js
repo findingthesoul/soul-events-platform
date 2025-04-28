@@ -138,9 +138,9 @@ const CouponPopup = ({ coupon, tickets, onSave, onClose, onDelete }) => {
         <select name="ticketId" value={form.ticketId} onChange={handleChange}>
           <option value="">Select Ticket</option>
           {tickets.map(t => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
+          <option key={t.id} value={t.airtableId}>
+          {t.name}
+          </option>
           ))}
         </select>
 
