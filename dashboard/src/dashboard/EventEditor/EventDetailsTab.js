@@ -38,7 +38,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
     return startIndex >= 0 ? allTimes.slice(startIndex + 1) : allTimes;
   };
 
-  // 🛠 Auto-correct End Date if needed
+  // Auto-correct End Date if wrong
   useEffect(() => {
     if (eventData.startDate && eventData.endDate) {
       const start = new Date(eventData.startDate);
@@ -50,7 +50,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
   }, [eventData.startDate, eventData.endDate, onFieldChange]);
 
   return (
-    <div className="event-details-tab">
+    <div className="event-details-tab scrollable-panel">
 
       {/* --- Event Info --- */}
       <h3>Event Info</h3>
@@ -193,6 +193,46 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
           </button>
         </div>
       </div>
+
+      {/* --- Dynamic fields based on Format --- */}
+      {eventData.format === 'In-person' && (
+        <>
+          <h3>Location</h3>
+
+          <div className="form-group">
+            <label>Location Address</label>
+            <input
+              type="text"
+              value={eventData.location || ''}
+              onChange={(e) => onFieldChange('location', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Location Description</label>
+            <textarea
+              value={eventData.locationDescription || ''}
+              onChange={(e) => onFieldChange('locationDescription', e.target.value)}
+              rows={3}
+            />
+          </div>
+        </>
+      )}
+
+      {eventData.format === 'Online' && (
+        <>
+          <h3>Online Link</h3>
+
+          <div className="form-group">
+            <label>Zoom/Teams Link</label>
+            <input
+              type="text"
+              value={eventData.locationUrl || ''}
+              onChange={(e) => onFieldChange('locationUrl', e.target.value)}
+            />
+          </div>
+        </>
+      )}
 
       {/* --- Facilitator --- */}
       <h3>Facilitator</h3>
