@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldChange }) => {
   const isMultiDayEvent = (startDate, endDate) => {
@@ -29,9 +29,32 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
 
   const timeOptions = generateTimeOptions(eventData.timeFormat || 'ampm');
 
+  const filteredEndTimeOptions = (startTime, format) => {
+    if (!startTime) return generateTimeOptions(format);
+
+    const allTimes = generateTimeOptions(format);
+    const startIndex = allTimes.indexOf(startTime);
+
+    return startIndex >= 0 ? allTimes.slice(startIndex + 1) : allTimes;
+  };
+
+  // 🛠 Auto-correct End Date if needed
+  useEffect(() => {
+    if (eventData.startDate && eventData.endDate) {
+      const start = new Date(eventData.startDate);
+      const end = new Date(eventData.endDate);
+      if (end < start) {
+        onFieldChange('endDate', eventData.startDate);
+      }
+    }
+  }, [eventData.startDate, eventData.endDate, onFieldChange]);
+
   return (
     <div className="event-details-tab">
-      {/* Title */}
+
+      {/* --- Event Info --- */}
+      <h3>Event Info</h3>
+
       <div className="form-group">
         <label>Title</label>
         <input
@@ -41,58 +64,60 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         />
       </div>
 
-      {/* Start Date */}
-      <div className="form-group">
-        <label>Start Date</label>
-        <input
-          type="date"
-          value={eventData.startDate || ''}
-          onChange={(e) => onFieldChange('startDate', e.target.value)}
-        />
+      {/* --- Timing --- */}
+      <h3>Timing</h3>
+
+      <div className="form-row">
+        <div className="form-group half-width">
+          <label>Start Date</label>
+          <input
+            type="date"
+            value={eventData.startDate || ''}
+            onChange={(e) => onFieldChange('startDate', e.target.value)}
+          />
+        </div>
+        <div className="form-group half-width">
+          <label>End Date</label>
+          <input
+            type="date"
+            value={eventData.endDate || ''}
+            min={eventData.startDate || undefined}
+            onChange={(e) => onFieldChange('endDate', e.target.value)}
+          />
+        </div>
       </div>
 
-      {/* Start Time (Start Date) */}
-      <div className="form-group">
-        <label>Start Time</label>
-        <select
-          value={eventData.startTime || ''}
-          onChange={(e) => onFieldChange('startTime', e.target.value)}
-        >
-          <option value="">Select Start Time</option>
-          {timeOptions.map((time) => (
-            <option key={time} value={time}>{time}</option>
-          ))}
-        </select>
+      <div className="form-row">
+        <div className="form-group half-width">
+          <label>Start Time</label>
+          <select
+            value={eventData.startTime || ''}
+            onChange={(e) => onFieldChange('startTime', e.target.value)}
+          >
+            <option value="">Select Start Time</option>
+            {timeOptions.map((time) => (
+              <option key={time} value={time}>{time}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group half-width">
+          <label>End Time</label>
+          <select
+            value={eventData.endTime || ''}
+            onChange={(e) => onFieldChange('endTime', e.target.value)}
+          >
+            <option value="">Select End Time</option>
+            {filteredEndTimeOptions(eventData.startTime, eventData.timeFormat || 'ampm').map((time) => (
+              <option key={time} value={time}>{time}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* End Time (Start Date) */}
-      <div className="form-group">
-        <label>End Time</label>
-        <select
-          value={eventData.endTime || ''}
-          onChange={(e) => onFieldChange('endTime', e.target.value)}
-        >
-          <option value="">Select End Time</option>
-          {timeOptions.map((time) => (
-            <option key={time} value={time}>{time}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* End Date */}
-      <div className="form-group">
-        <label>End Date</label>
-        <input
-          type="date"
-          value={eventData.endDate || ''}
-          onChange={(e) => onFieldChange('endDate', e.target.value)}
-        />
-      </div>
-
-      {/* Multi-day times */}
       {isMultiDayEvent(eventData.startDate, eventData.endDate) && (
-        <>
-          <div className="form-group">
+        <div className="form-row">
+          <div className="form-group half-width">
             <label>Start Time (End Date)</label>
             <select
               value={eventData.startTimeEndDate || ''}
@@ -105,7 +130,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
             </select>
           </div>
 
-          <div className="form-group">
+          <div className="form-group half-width">
             <label>End Time (End Date)</label>
             <select
               value={eventData.endTimeEndDate || ''}
@@ -117,7 +142,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
               ))}
             </select>
           </div>
-        </>
+        </div>
       )}
 
       {/* Time Format Toggle */}
@@ -136,9 +161,10 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         </div>
       </div>
 
-      {/* Description */}
+      {/* --- Description --- */}
+      <h3>Description</h3>
+
       <div className="form-group">
-        <label>Description</label>
         <textarea
           value={eventData.description || ''}
           onChange={(e) => onFieldChange('description', e.target.value)}
@@ -146,9 +172,32 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         />
       </div>
 
-      {/* Facilitator */}
+      {/* --- Format --- */}
+      <h3>Format</h3>
+
       <div className="form-group">
-        <label>Facilitator</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            className={eventData.format === 'In-person' ? 'active' : ''}
+            onClick={() => onFieldChange('format', 'In-person')}
+          >
+            In-person
+          </button>
+          <button
+            type="button"
+            className={eventData.format === 'Online' ? 'active' : ''}
+            onClick={() => onFieldChange('format', 'Online')}
+          >
+            Online
+          </button>
+        </div>
+      </div>
+
+      {/* --- Facilitator --- */}
+      <h3>Facilitator</h3>
+
+      <div className="form-group">
         <select
           value={eventData.facilitators?.[0] || ''}
           onChange={(e) => onFieldChange('facilitators', [e.target.value])}
@@ -162,9 +211,10 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         </select>
       </div>
 
-      {/* Calendar */}
+      {/* --- Calendar --- */}
+      <h3>Calendar</h3>
+
       <div className="form-group">
-        <label>Calendar</label>
         <select
           value={eventData.calendar || ''}
           onChange={(e) => onFieldChange('calendar', e.target.value)}
@@ -177,6 +227,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
           ))}
         </select>
       </div>
+
     </div>
   );
 };
