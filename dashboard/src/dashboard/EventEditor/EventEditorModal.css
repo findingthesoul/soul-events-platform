@@ -1,13 +1,18 @@
 /* General Modal Layout */
 .event-editor-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
   background: #fff;
   padding: 20px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 1000px;
-  margin: 40px auto;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  position: relative;
+  overflow-y: auto;
+  border-radius: 0; /* no rounded corners */
+  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.1); /* subtle shadow on left */
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
 }
 
 /* Modal Header */
