@@ -267,6 +267,16 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           setIsSaving(false);
         }
       };
+
+      <div className="modal-footer">
+        {isSaving ? (
+          <span>Saving...</span>
+        ) : (
+          <button type="button" onClick={handleSave}>
+            Save
+          </button>
+        )}
+      </div>
   );
 };
 
