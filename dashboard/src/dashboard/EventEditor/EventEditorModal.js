@@ -17,6 +17,9 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
     status: 'Draft',
     facilitators: [],
     calendar: '',
+    zoomLink: '',
+    locationUrl: '',
+    image: '',
     tickets: [],
     coupons: [],
   });
@@ -43,9 +46,9 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
 
   const loadEvent = async () => {
     try {
-      console.log('Loading eventId:', eventId); // ADD THIS LINE
+      console.log('Loading eventId:', eventId);
       const data = await fetchEventById(eventId);
-      console.log('Fetched event data:', data); // ADD THIS LINE
+      console.log('Fetched event data:', data);
       if (data) {
         setEventData(prev => ({
           ...prev,
@@ -58,7 +61,9 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
           location: data['Location'] || '',
           locationDescription: data['Location Description'] || '',
           timeFormat: data['Time Format'] || 'ampm',
-          // you can also map tickets, vendors etc later
+          zoomLink: data['Zoom link'] || '',
+          locationUrl: data['Location URL'] || '',
+          image: data['Event Image']?.[0]?.url || '',
         }));
       }
     } catch (error) {
@@ -85,17 +90,17 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
   };
 
   const handleFieldChange = (field, value) => {
-    setEventData((prev) => ({ ...prev, [field]: value }));
+    setEventData(prev => ({ ...prev, [field]: value }));
     autoSave({ ...eventData, [field]: value });
   };
 
   const handleTicketChange = (updatedTickets) => {
-    setEventData((prev) => ({ ...prev, tickets: updatedTickets }));
+    setEventData(prev => ({ ...prev, tickets: updatedTickets }));
     autoSave({ ...eventData, tickets: updatedTickets });
   };
 
   const handleCouponChange = (updatedCoupons) => {
-    setEventData((prev) => ({ ...prev, coupons: updatedCoupons }));
+    setEventData(prev => ({ ...prev, coupons: updatedCoupons }));
     autoSave({ ...eventData, coupons: updatedCoupons });
   };
 
@@ -116,15 +121,15 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
       setIsSaving(true);
       console.log('PATCHing to Airtable with:', eventData);
       await saveEvent(eventId, eventData);
-  
+
       if (typeof onSave === 'function') {
-        onSave(); // ✅ safe usage
+        onSave();
       } else if (typeof refreshEvents === 'function') {
-        refreshEvents(); // ✅ fallback
+        refreshEvents();
       }
-  
+
       if (typeof onClose === 'function') {
-        onClose(); // ✅ closes modal
+        onClose();
       }
     } catch (error) {
       console.error('Error saving event:', error);
@@ -189,28 +194,13 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
         <h2>{eventId ? 'Edit Event' : 'New Event'}</h2>
         <button onClick={onClose}>X</button>
       </div>
-  
+
       <div className="tabs">
-        <button
-          className={activeTab === 'details' ? 'active' : ''}
-          onClick={() => setActiveTab('details')}
-        >
-          Event Details
-        </button>
-        <button
-          className={activeTab === 'pricing' ? 'active' : ''}
-          onClick={() => setActiveTab('pricing')}
-        >
-          Pricing & Coupons
-        </button>
-        <button
-          className={activeTab === 'settings' ? 'active' : ''}
-          onClick={() => setActiveTab('settings')}
-        >
-          More Settings
-        </button>
+        <button className={activeTab === 'details' ? 'active' : ''} onClick={() => setActiveTab('details')}>Event Details</button>
+        <button className={activeTab === 'pricing' ? 'active' : ''} onClick={() => setActiveTab('pricing')}>Pricing & Coupons</button>
+        <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>More Settings</button>
       </div>
-  
+
       <div className="tab-container">
         {activeTab === 'details' && (
           <EventDetailsTab
@@ -237,7 +227,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
           />
         )}
       </div>
-  
+
       {showTicketModal && (
         <TicketFormModal
           ticket={eventData.tickets[editingTicketIndex]}
@@ -250,7 +240,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
           onClose={closeTicketModal}
         />
       )}
-  
+
       {showCouponModal && (
         <CouponFormModal
           coupon={eventData.coupons[editingCouponIndex]}
@@ -263,14 +253,12 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
           onClose={closeCouponModal}
         />
       )}
-  
+
       <div className="modal-footer">
         {isSaving ? (
           <span>Saving...</span>
         ) : (
-          <button type="button" onClick={handleSave}>
-            Save
-          </button>
+          <button type="button" onClick={handleSave}>Save</button>
         )}
       </div>
     </div>
