@@ -4,10 +4,24 @@ import PricingTab from './PricingTab';
 import MoreSettingsTab from './MoreSettingsTab';
 import TicketFormModal from './TicketFormModal';
 import CouponFormModal from './CouponFormModal';
-import { fetchEventById, fetchFacilitators, fetchCalendars, saveEvent, deleteEvent, duplicateEvent } from './api';
+import {
+  fetchEventById,
+  fetchFacilitators,
+  fetchCalendars,
+  saveEvent,
+  deleteEvent,
+  duplicateEvent,
+} from './api';
 import './EventEditorModal.css';
 
-const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
+const EventEditorModal = ({
+  eventId,
+  onClose,
+  onSave,
+  pendingEventSwitch,
+  clearPendingEventSwitch,
+  openEditor,
+}) => {
   const [eventData, setEventData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [facilitatorsList, setFacilitatorsList] = useState([]);
@@ -29,36 +43,40 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
     loadCalendars();
   }, [eventId]);
 
+  useEffect(() => {
+    if (pendingEventSwitch && hasUnsavedChanges) {
+      setShowConfirm(true);
+    } else if (pendingEventSwitch && !hasUnsavedChanges) {
+      openEditor(pendingEventSwitch);
+      clearPendingEventSwitch();
+    }
+  }, [pendingEventSwitch, hasUnsavedChanges]);
+
   const loadEvent = async () => {
     try {
       const data = await fetchEventById(eventId);
-      console.log('Fetched Airtable event:', data); // optional: for debugging
-  
-      if (data) {
-        const mappedData = {
-          name: data['Event Title'] || '',
-          startDate: data['Start Date'] || '',
-          endDate: data['End Date'] || '',
-          startTime: data['Start Time (Start Date)'] || '',
-          endTime: data['End Time (Start Date)'] || '',
-          startTimeEndDate: data['Start Time (End Date)'] || '',
-          endTimeEndDate: data['End Time (End Date)'] || '',
-          timeFormat: data['Time Format'] || 'ampm',
-          description: data['Description'] || '',
-          format: data['Format'] || 'Online',
-          location: data['Location'] || '',
-          locationDescription: data['Location Description'] || '',
-          locationUrl: data['Zoom link'] || '',              // Make sure field name matches Airtable
-          facilitators: data['Facilitators'] || [],
-          calendar: data['Calendar'] || '',
-          tickets: data['Tickets'] || [],
-          coupons: data['Coupons'] || [],
-          status: data['Published'] || 'Draft',
-        };
-  
-        setEventData(mappedData);
-        setOriginalData(mappedData);
-      }
+      const mappedData = {
+        name: data['Event Title'] || '',
+        startDate: data['Start Date'] || '',
+        endDate: data['End Date'] || '',
+        startTime: data['Start Time (Start Date)'] || '',
+        endTime: data['End Time (Start Date)'] || '',
+        startTimeEndDate: data['Start Time (End Date)'] || '',
+        endTimeEndDate: data['End Time (End Date)'] || '',
+        timeFormat: data['Time Format'] || 'ampm',
+        description: data['Description'] || '',
+        format: data['Format'] || 'Online',
+        location: data['Location'] || '',
+        locationDescription: data['Location Description'] || '',
+        locationUrl: data['Zoom link'] || '',
+        facilitators: data['Facilitators'] || [],
+        calendar: data['Calendar'] || '',
+        tickets: data['Tickets'] || [],
+        coupons: data['Coupons'] || [],
+        status: data['Published'] || 'Draft',
+      };
+      setEventData(mappedData);
+      setOriginalData(mappedData);
     } catch (error) {
       console.error('Error loading event:', error);
     }
@@ -83,8 +101,10 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
   };
 
   const handleFieldChange = (field, value) => {
-    setEventData(prev => ({ ...prev, [field]: value }));
-    setHasUnsavedChanges(true);
+    const updated = { ...eventData, [field]: value };
+    setEventData(updated);
+    const isDifferent = JSON.stringify(updated) !== JSON.stringify(originalData);
+    setHasUnsavedChanges(isDifferent);
   };
 
   const handleTicketChange = (updatedTickets) => {
@@ -103,8 +123,13 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
       await saveEvent(eventId, eventData);
       setOriginalData(eventData);
       setHasUnsavedChanges(false);
-      refreshEvents();
-      if (pendingClose) onClose();
+      if (typeof onSave === 'function') onSave();
+
+      if (pendingEventSwitch) {
+        clearPendingEventSwitch();
+        openEditor(pendingEventSwitch);
+      }
+
       if (nextTab) {
         setActiveTab(nextTab);
         setNextTab(null);
@@ -114,7 +139,6 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
     } finally {
       setIsSaving(false);
       setShowConfirm(false);
-      setPendingClose(false);
     }
   };
 
@@ -152,7 +176,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
     if (confirmDelete !== 'DELETE') return;
     try {
       await deleteEvent(eventId);
-      refreshEvents();
+      if (typeof onSave === 'function') onSave();
       onClose();
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -164,30 +188,10 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
     if (!newTitle) return;
     try {
       await duplicateEvent(eventData, newTitle);
-      refreshEvents();
+      if (typeof onSave === 'function') onSave();
     } catch (error) {
       console.error('Error duplicating event:', error);
     }
-  };
-
-  const openEditTicket = (index) => {
-    setEditingTicketIndex(index);
-    setShowTicketModal(true);
-  };
-
-  const openEditCoupon = (index) => {
-    setEditingCouponIndex(index);
-    setShowCouponModal(true);
-  };
-
-  const closeTicketModal = () => {
-    setEditingTicketIndex(null);
-    setShowTicketModal(false);
-  };
-
-  const closeCouponModal = () => {
-    setEditingCouponIndex(null);
-    setShowCouponModal(false);
   };
 
   return (
@@ -218,8 +222,6 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
             coupons={eventData.coupons}
             onTicketsChange={handleTicketChange}
             onCouponsChange={handleCouponChange}
-            openEditTicket={openEditTicket}
-            openEditCoupon={openEditCoupon}
           />
         )}
         {activeTab === 'settings' && (
@@ -232,32 +234,6 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           />
         )}
       </div>
-
-      {showTicketModal && (
-        <TicketFormModal
-          ticket={eventData.tickets[editingTicketIndex]}
-          onSave={(updatedTicket) => {
-            const newTickets = [...eventData.tickets];
-            newTickets[editingTicketIndex] = updatedTicket;
-            handleTicketChange(newTickets);
-            closeTicketModal();
-          }}
-          onClose={closeTicketModal}
-        />
-      )}
-
-      {showCouponModal && (
-        <CouponFormModal
-          coupon={eventData.coupons[editingCouponIndex]}
-          onSave={(updatedCoupon) => {
-            const newCoupons = [...eventData.coupons];
-            newCoupons[editingCouponIndex] = updatedCoupon;
-            handleCouponChange(newCoupons);
-            closeCouponModal();
-          }}
-          onClose={closeCouponModal}
-        />
-      )}
 
       <div className="modal-footer">
         <button

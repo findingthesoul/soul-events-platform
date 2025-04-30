@@ -15,7 +15,9 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showUpcoming, setShowUpcoming] = useState(true);
-  const [selectedMode, setSelectedMode] = useState('event'); // 'event' or 'account'
+  const [selectedMode, setSelectedMode] = useState('event');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingEventSwitch, setPendingEventSwitch] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -79,9 +81,13 @@ function App() {
   };
 
   const openEditor = (event = null) => {
-    setSelectedEvent(event);
-    setSelectedMode('event');
-    setShowEditor(true);
+    if (hasUnsavedChanges) {
+      setPendingEventSwitch(event);
+    } else {
+      setSelectedEvent(event);
+      setSelectedMode('event');
+      setShowEditor(true);
+    }
   };
 
   const openAccountInfo = () => {
@@ -93,16 +99,14 @@ function App() {
   const closeEditor = () => {
     setShowEditor(false);
     setSelectedEvent(null);
+    setHasUnsavedChanges(false);
+    setPendingEventSwitch(null);
   };
 
   const handleEventSaved = () => {
     fetchEvents();
-    setShowEditor(false);
-    setSelectedEvent(null);
-  };
-
-  const toggleShowUpcoming = () => {
-    setShowUpcoming(prev => !prev);
+    setHasUnsavedChanges(false);
+    setPendingEventSwitch(null);
   };
 
   const filteredAndSortedEvents = events
@@ -127,23 +131,15 @@ function App() {
         <div className="event-header">
           {vendorName && <h2>Welcome, {vendorName}</h2>}
 
-          {/* Account Info Toggle */}
           <div className="account-info-toggle" onClick={openAccountInfo}>
             Account Info
           </div>
 
-          {/* View Toggle Switch */}
           <div className="view-toggle">
-            <button
-              className={showUpcoming ? 'active' : ''}
-              onClick={() => setShowUpcoming(true)}
-            >
+            <button className={showUpcoming ? 'active' : ''} onClick={() => setShowUpcoming(true)}>
               Upcoming
             </button>
-            <button
-              className={!showUpcoming ? 'active' : ''}
-              onClick={() => setShowUpcoming(false)}
-            >
+            <button className={!showUpcoming ? 'active' : ''} onClick={() => setShowUpcoming(false)}>
               Past
             </button>
           </div>
@@ -170,14 +166,17 @@ function App() {
         </button>
       </div>
 
-      {/* Right side panel */}
       {showEditor && selectedMode === 'event' && (
         <EventEditorModal
-        eventId={selectedEvent?.id || null}
-        vendorId={vendorId}
-        onClose={closeEditor}
-        onSave={handleEventSaved}
-      />
+          eventId={selectedEvent?.id || null}
+          vendorId={vendorId}
+          onClose={closeEditor}
+          onSave={handleEventSaved}
+          openEditor={openEditor}
+          setHasUnsavedChanges={setHasUnsavedChanges}
+          pendingEventSwitch={pendingEventSwitch}
+          clearPendingEventSwitch={() => setPendingEventSwitch(null)}
+        />
       )}
 
       {showEditor && selectedMode === 'account' && (
@@ -189,7 +188,7 @@ function App() {
 
           <div className="account-info-panel">
             <p><strong>Vendor Name:</strong> {vendorName}</p>
-            <p><strong>Vendor Email:</strong> {token}</p> {/* (If real email is available, replace token here) */}
+            <p><strong>Vendor Email:</strong> {token}</p>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>
