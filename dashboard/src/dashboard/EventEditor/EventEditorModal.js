@@ -114,6 +114,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
   const handleSave = async () => {
     try {
       setIsSaving(true);
+      console.log('PATCHing to Airtable with:', eventData); // <-- Add this line
       await saveEvent(eventId, eventData);
       refreshEvents();
     } catch (error) {

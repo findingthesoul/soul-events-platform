@@ -179,10 +179,10 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             type="button"
-            className={eventData.format === 'In-person' ? 'active' : ''}
-            onClick={() => onFieldChange('format', 'In-person')}
+            className={eventData.format === 'In person' ? 'active' : ''}
+            onClick={() => onFieldChange('format', 'In person')}
           >
-            In-person
+            In person
           </button>
           <button
             type="button"
