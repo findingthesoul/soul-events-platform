@@ -180,7 +180,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
         <h2>{eventId ? 'Edit Event' : 'New Event'}</h2>
         <button onClick={onClose}>X</button>
       </div>
-
+  
       <div className="tabs">
         <button
           className={activeTab === 'details' ? 'active' : ''}
@@ -201,7 +201,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           More Settings
         </button>
       </div>
-
+  
       <div className="tab-container">
         {activeTab === 'details' && (
           <EventDetailsTab
@@ -228,7 +228,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           />
         )}
       </div>
-
+  
       {showTicketModal && (
         <TicketFormModal
           ticket={eventData.tickets[editingTicketIndex]}
@@ -241,7 +241,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           onClose={closeTicketModal}
         />
       )}
-
+  
       {showCouponModal && (
         <CouponFormModal
           coupon={eventData.coupons[editingCouponIndex]}
@@ -254,21 +254,8 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           onClose={closeCouponModal}
         />
       )}
-
-      const handleSave = async () => {
-        try {
-          setIsSaving(true);
-          console.log("Sending to Airtable:", eventData); // optional
-          await saveEvent(eventId, eventData);
-          onSave(); // ← calls back to App.js to refresh and close
-        } catch (error) {
-          console.error("Error saving event:", error);
-        } finally {
-          setIsSaving(false);
-        }
-      };
-
-      <div className="modal-footer">
+  
+  <div className="modal-footer">
         {isSaving ? (
           <span>Saving...</span>
         ) : (
@@ -277,6 +264,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
           </button>
         )}
       </div>
+    </div>
   );
 };
 
