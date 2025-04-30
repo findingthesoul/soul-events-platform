@@ -32,9 +32,32 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
   const loadEvent = async () => {
     try {
       const data = await fetchEventById(eventId);
+      console.log('Fetched Airtable event:', data); // optional: for debugging
+  
       if (data) {
-        setEventData(data);
-        setOriginalData(data);
+        const mappedData = {
+          name: data['Event Title'] || '',
+          startDate: data['Start Date'] || '',
+          endDate: data['End Date'] || '',
+          startTime: data['Start Time (Start Date)'] || '',
+          endTime: data['End Time (Start Date)'] || '',
+          startTimeEndDate: data['Start Time (End Date)'] || '',
+          endTimeEndDate: data['End Time (End Date)'] || '',
+          timeFormat: data['Time Format'] || 'ampm',
+          description: data['Description'] || '',
+          format: data['Format'] || 'Online',
+          location: data['Location'] || '',
+          locationDescription: data['Location Description'] || '',
+          locationUrl: data['Zoom link'] || '',              // Make sure field name matches Airtable
+          facilitators: data['Facilitators'] || [],
+          calendar: data['Calendar'] || '',
+          tickets: data['Tickets'] || [],
+          coupons: data['Coupons'] || [],
+          status: data['Published'] || 'Draft',
+        };
+  
+        setEventData(mappedData);
+        setOriginalData(mappedData);
       }
     } catch (error) {
       console.error('Error loading event:', error);
