@@ -206,7 +206,6 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
           <EventDetailsTab
             eventData={eventData}
             facilitatorsList={facilitatorsList}
-            calendarsList={calendarsList}
             onFieldChange={handleFieldChange}
           />
         )}
@@ -222,6 +221,9 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
         )}
         {activeTab === 'settings' && (
           <MoreSettingsTab
+            eventData={eventData}
+            calendarsList={calendarsList}
+            onFieldChange={handleFieldChange} // ✅ ADD THIS
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
           />

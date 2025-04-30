@@ -105,14 +105,28 @@ export const duplicateEvent = async (eventData, newTitle) => {
 export const fetchFacilitators = async () => {
   try {
     const response = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Facilitators`,
-      { headers }
+      `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/Facilitators`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
+        },
+      }
     );
+
     const data = await response.json();
-    return data.records || [];
-  } catch (error) {
-    console.error('Error fetching facilitators:', error);
-    throw error;
+
+    if (data.error) {
+      console.error('Airtable error:', data.error);
+      return [];
+    }
+
+    return data.records.map((rec) => ({
+      id: rec.id,
+      name: rec.fields['Name'] || 'Unnamed',
+    }));
+  } catch (err) {
+    console.error('Failed to fetch facilitators:', err);
+    return [];
   }
 };
 

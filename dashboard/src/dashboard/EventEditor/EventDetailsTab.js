@@ -235,38 +235,25 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
       )}
 
       {/* --- Facilitator --- */}
-      <h3>Facilitator</h3>
+      <h3>Facilitators</h3>
 
-      <div className="form-group">
-        <select
-          value={eventData.facilitators?.[0] || ''}
-          onChange={(e) => onFieldChange('facilitators', [e.target.value])}
-        >
-          <option value="">Select Facilitator</option>
-          {facilitatorsList.map((facilitator) => (
-            <option key={facilitator.id} value={facilitator.id}>
-              {facilitator.fields?.name || 'Unnamed'}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="form-group">
+          <select
+            multiple
+            value={eventData.facilitators || []}
+            onChange={(e) => {
+              const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+              onFieldChange('facilitators', selected);
+            }}
+          >
+            {facilitatorsList.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.fields?.Name || 'Unnamed'}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* --- Calendar --- */}
-      <h3>Calendar</h3>
-
-      <div className="form-group">
-        <select
-          value={eventData.calendar || ''}
-          onChange={(e) => onFieldChange('calendar', e.target.value)}
-        >
-          <option value="">Select Calendar</option>
-          {calendarsList.map((calendar) => (
-            <option key={calendar.id} value={calendar.id}>
-              {calendar.fields?.name || 'Unnamed'}
-            </option>
-          ))}
-        </select>
-      </div>
 
     </div>
   );

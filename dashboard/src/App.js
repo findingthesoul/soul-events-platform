@@ -35,7 +35,7 @@ function App() {
 
   const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
-      const formula = `SEARCH(\"${overrideVendorId}\", ARRAYJOIN({Vendors} & \"\"))`;
+      const formula = `SEARCH("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`;
       const response = await fetch(
         `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`,
         {
