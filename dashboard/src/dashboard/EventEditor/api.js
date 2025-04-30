@@ -21,7 +21,7 @@ export const fetchEventById = async (eventId) => {
 };
 
 export const saveEvent = async (eventId, eventData) => {
-  const cleanFields = {
+  const rawFields = {
     "Event Title": eventData.name,
     "Start Date": eventData.startDate,
     "End Date": eventData.endDate,
@@ -39,8 +39,14 @@ export const saveEvent = async (eventId, eventData) => {
     "Calendar ID": eventData.calendar,
   };
 
+  // remove undefined or empty string fields
+  const cleanFields = Object.fromEntries(
+    Object.entries(rawFields).filter(([_, v]) => v !== undefined && v !== "")
+  );
+
+  console.log('Sending to Airtable:', cleanFields);
+
   try {
-    console.log('Sending to Airtable:', cleanFields);
     const response = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${eventId}`,
       {
