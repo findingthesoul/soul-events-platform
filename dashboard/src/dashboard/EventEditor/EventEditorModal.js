@@ -64,7 +64,14 @@ const EventEditorModal = ({
   const loadEvent = async () => {
     try {
       const data = await fetchEventById(eventId);
-      const mapped = {
+      console.log('🔍 Raw event data from Airtable:', data);
+  
+      if (!data) {
+        console.warn('⚠️ No data returned for event ID:', eventId);
+        return;
+      }
+  
+      const mappedData = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
         endDate: data['End Date'] || '',
@@ -80,16 +87,18 @@ const EventEditorModal = ({
         locationUrl: data['Zoom link'] || '',
         facilitators: data['Facilitators'] || [],
         calendar: data['Calendar'] || '',
-        tickets: data['Tickets'] || [],
-        coupons: data['Coupons'] || [],
-        status: data['Published'] || 'Draft'
+        tickets: Array.isArray(data['Tickets']) ? data['Tickets'] : [],
+        coupons: Array.isArray(data['Coupons']) ? data['Coupons'] : [],
+        status: data['Published'] || 'Draft',
       };
-      setEventData(mapped);
-      setOriginalData(mapped);
-      setLocalUnsaved(false);
-      if (setHasUnsavedChanges) setHasUnsavedChanges(false);
-    } catch (err) {
-      console.error('Error loading event:', err);
+  
+      if (!data['Tickets']) console.warn('⚠️ "Tickets" field is missing or not linked in Airtable.');
+      if (!data['Coupons']) console.warn('⚠️ "Coupons" field is missing or not linked in Airtable.');
+  
+      setEventData(mappedData);
+      setOriginalData(mappedData);
+    } catch (error) {
+      console.error('❌ Error loading event:', error);
     }
   };
 
