@@ -202,28 +202,6 @@ const EventEditorModal = ({
     }
   };
 
-  {showTicketModal && (
-    <TicketFormModal
-      ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
-      onSave={(updatedTicket) => {
-        const newTickets = [...(eventData.tickets || [])];
-        if (editingTicketIndex !== null) {
-          newTickets[editingTicketIndex] = updatedTicket;
-        } else {
-          newTickets.push(updatedTicket);
-        }
-        handleTicketChange(newTickets);
-        setShowTicketModal(false);
-        setEditingTicketIndex(null);
-      }}
-      onClose={() => {
-        setShowTicketModal(false);
-        setEditingTicketIndex(null);
-      }}
-    />
-  )}
-
-
   return (
     <div className="event-editor-modal">
       <div className="modal-header">
@@ -242,7 +220,14 @@ const EventEditorModal = ({
           <EventDetailsTab eventData={eventData} facilitatorsList={facilitatorsList} calendarsList={calendarsList} onFieldChange={handleFieldChange} />
         )}
         {activeTab === 'pricing' && (
-          <PricingTab tickets={eventData.tickets} coupons={eventData.coupons} onTicketsChange={handleTicketChange} onCouponsChange={handleCouponChange} />
+          <PricingTab
+          tickets={eventData.tickets}
+          coupons={eventData.coupons}
+          onTicketsChange={handleTicketChange}
+          onCouponsChange={handleCouponChange}
+          openEditTicket={openEditTicket}
+          openEditCoupon={openEditCoupon}
+        />
         )}
         {activeTab === 'settings' && (
           <MoreSettingsTab eventData={eventData} onFieldChange={handleFieldChange} calendarsList={calendarsList} />
@@ -264,6 +249,48 @@ const EventEditorModal = ({
             <button onClick={handleConfirmDiscard}>Discard Changes</button>
           </div>
         </div>
+      )}
+
+      {showTicketModal && (
+          <TicketFormModal
+            ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
+            onSave={(updatedTicket) => {
+              const newTickets = [...(eventData.tickets || [])];
+              if (editingTicketIndex !== null) {
+                newTickets[editingTicketIndex] = updatedTicket;
+              } else {
+                newTickets.push(updatedTicket);
+              }
+              handleTicketChange(newTickets);
+              setShowTicketModal(false);
+              setEditingTicketIndex(null);
+            }}
+            onClose={() => {
+              setShowTicketModal(false);
+              setEditingTicketIndex(null);
+            }}
+          />
+        )}
+       {showCouponModal && (
+        <CouponFormModal
+          coupon={editingCouponIndex !== null ? eventData.coupons[editingCouponIndex] : null}
+          availableTickets={eventData.tickets || []}  // ✅ Pass available tickets
+          onSave={(updatedCoupon) => {
+            const newCoupons = [...(eventData.coupons || [])];
+            if (editingCouponIndex !== null) {
+              newCoupons[editingCouponIndex] = updatedCoupon;
+            } else {
+              newCoupons.push(updatedCoupon);
+            }
+            handleCouponChange(newCoupons);
+            setShowCouponModal(false);
+            setEditingCouponIndex(null);
+          }}
+          onClose={() => {
+            setShowCouponModal(false);
+            setEditingCouponIndex(null);
+          }}
+        />
       )}
     </div>
   );

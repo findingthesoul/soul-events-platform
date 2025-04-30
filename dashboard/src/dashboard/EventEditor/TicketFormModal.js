@@ -28,7 +28,12 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
   };
 
   const handleSubmit = () => {
-    onSave(formData); // Pass form data back
+    const cleanTicket = {
+      ...formData,
+      price: formData.type === 'PAID' ? parseFloat(formData.price) || 0 : 0,
+      quantity: parseInt(formData.quantity) || 0,
+    };
+    onSave(cleanTicket);
   };
 
   return (
