@@ -168,15 +168,15 @@ function App() {
 
       {showEditor && selectedMode === 'event' && (
         <EventEditorModal
-          eventId={selectedEvent?.id || null}
-          vendorId={vendorId}
-          onClose={closeEditor}
-          onSave={handleEventSaved}
-          openEditor={openEditor}
-          setHasUnsavedChanges={setHasUnsavedChanges}
-          pendingEventSwitch={pendingEventSwitch}
-          clearPendingEventSwitch={() => setPendingEventSwitch(null)}
-        />
+        eventId={selectedEvent?.id || null}
+        vendorId={vendorId}
+        onClose={closeEditor}
+        onSave={handleEventSaved}
+        openEditor={openEditor}
+        pendingEventSwitch={pendingEventSwitch}
+        clearPendingEventSwitch={() => setPendingEventSwitch(null)}
+        setHasUnsavedChanges={setHasUnsavedChanges}
+      />
       )}
 
       {showEditor && selectedMode === 'account' && (

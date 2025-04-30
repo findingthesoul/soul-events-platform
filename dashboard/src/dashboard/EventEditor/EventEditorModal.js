@@ -10,7 +10,7 @@ import {
   fetchCalendars,
   saveEvent,
   deleteEvent,
-  duplicateEvent,
+  duplicateEvent
 } from './api';
 import './EventEditorModal.css';
 
@@ -21,6 +21,7 @@ const EventEditorModal = ({
   pendingEventSwitch,
   clearPendingEventSwitch,
   openEditor,
+  setHasUnsavedChanges
 }) => {
   const [eventData, setEventData] = useState({});
   const [originalData, setOriginalData] = useState({});
@@ -29,7 +30,7 @@ const EventEditorModal = ({
   const [activeTab, setActiveTab] = useState('details');
   const [nextTab, setNextTab] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasUnsavedChanges, setLocalUnsaved] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
@@ -55,7 +56,7 @@ const EventEditorModal = ({
   const loadEvent = async () => {
     try {
       const data = await fetchEventById(eventId);
-      const mappedData = {
+      const mapped = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
         endDate: data['End Date'] || '',
@@ -73,12 +74,14 @@ const EventEditorModal = ({
         calendar: data['Calendar'] || '',
         tickets: data['Tickets'] || [],
         coupons: data['Coupons'] || [],
-        status: data['Published'] || 'Draft',
+        status: data['Published'] || 'Draft'
       };
-      setEventData(mappedData);
-      setOriginalData(mappedData);
-    } catch (error) {
-      console.error('Error loading event:', error);
+      setEventData(mapped);
+      setOriginalData(mapped);
+      setLocalUnsaved(false);
+      if (setHasUnsavedChanges) setHasUnsavedChanges(false);
+    } catch (err) {
+      console.error('Error loading event:', err);
     }
   };
 
@@ -86,8 +89,8 @@ const EventEditorModal = ({
     try {
       const data = await fetchFacilitators();
       setFacilitatorsList(data);
-    } catch (error) {
-      console.error('Error loading facilitators:', error);
+    } catch (err) {
+      console.error('Error loading facilitators:', err);
     }
   };
 
@@ -95,26 +98,33 @@ const EventEditorModal = ({
     try {
       const data = await fetchCalendars();
       setCalendarsList(data);
-    } catch (error) {
-      console.error('Error loading calendars:', error);
+    } catch (err) {
+      console.error('Error loading calendars:', err);
     }
+  };
+
+  const updateUnsaved = (updated) => {
+    const changed = JSON.stringify(updated) !== JSON.stringify(originalData);
+    setLocalUnsaved(changed);
+    if (setHasUnsavedChanges) setHasUnsavedChanges(changed);
   };
 
   const handleFieldChange = (field, value) => {
     const updated = { ...eventData, [field]: value };
     setEventData(updated);
-    const isDifferent = JSON.stringify(updated) !== JSON.stringify(originalData);
-    setHasUnsavedChanges(isDifferent);
+    updateUnsaved(updated);
   };
 
   const handleTicketChange = (updatedTickets) => {
-    setEventData(prev => ({ ...prev, tickets: updatedTickets }));
-    setHasUnsavedChanges(true);
+    const updated = { ...eventData, tickets: updatedTickets };
+    setEventData(updated);
+    updateUnsaved(updated);
   };
 
   const handleCouponChange = (updatedCoupons) => {
-    setEventData(prev => ({ ...prev, coupons: updatedCoupons }));
-    setHasUnsavedChanges(true);
+    const updated = { ...eventData, coupons: updatedCoupons };
+    setEventData(updated);
+    updateUnsaved(updated);
   };
 
   const handleSave = async () => {
@@ -122,20 +132,19 @@ const EventEditorModal = ({
       setIsSaving(true);
       await saveEvent(eventId, eventData);
       setOriginalData(eventData);
-      setHasUnsavedChanges(false);
+      setLocalUnsaved(false);
+      if (setHasUnsavedChanges) setHasUnsavedChanges(false);
       if (typeof onSave === 'function') onSave();
-
       if (pendingEventSwitch) {
         clearPendingEventSwitch();
         openEditor(pendingEventSwitch);
       }
-
       if (nextTab) {
         setActiveTab(nextTab);
         setNextTab(null);
       }
-    } catch (error) {
-      console.error('Error saving event:', error);
+    } catch (err) {
+      console.error('Error saving event:', err);
     } finally {
       setIsSaving(false);
       setShowConfirm(false);
@@ -163,34 +172,16 @@ const EventEditorModal = ({
 
   const handleConfirmDiscard = () => {
     setShowConfirm(false);
-    setHasUnsavedChanges(false);
+    setLocalUnsaved(false);
+    if (setHasUnsavedChanges) setHasUnsavedChanges(false);
     if (pendingClose) onClose();
     if (nextTab) {
       setActiveTab(nextTab);
       setNextTab(null);
     }
-  };
-
-  const handleDelete = async () => {
-    const confirmDelete = prompt('Type DELETE to confirm deletion.');
-    if (confirmDelete !== 'DELETE') return;
-    try {
-      await deleteEvent(eventId);
-      if (typeof onSave === 'function') onSave();
-      onClose();
-    } catch (error) {
-      console.error('Error deleting event:', error);
-    }
-  };
-
-  const handleDuplicate = async () => {
-    const newTitle = prompt('Enter new title for duplicated event:');
-    if (!newTitle) return;
-    try {
-      await duplicateEvent(eventData, newTitle);
-      if (typeof onSave === 'function') onSave();
-    } catch (error) {
-      console.error('Error duplicating event:', error);
+    if (pendingEventSwitch) {
+      clearPendingEventSwitch();
+      openEditor(pendingEventSwitch);
     }
   };
 
@@ -198,7 +189,7 @@ const EventEditorModal = ({
     <div className="event-editor-modal">
       <div className="modal-header">
         <h2>{eventId ? 'Edit Event' : 'New Event'}</h2>
-        <button onClick={handleCloseRequest}>X</button>
+        <button onClick={handleCloseRequest}>×</button>
       </div>
 
       <div className="tabs">
@@ -209,39 +200,18 @@ const EventEditorModal = ({
 
       <div className="tab-container">
         {activeTab === 'details' && (
-          <EventDetailsTab
-            eventData={eventData}
-            facilitatorsList={facilitatorsList}
-            calendarsList={calendarsList}
-            onFieldChange={handleFieldChange}
-          />
+          <EventDetailsTab eventData={eventData} facilitatorsList={facilitatorsList} calendarsList={calendarsList} onFieldChange={handleFieldChange} />
         )}
         {activeTab === 'pricing' && (
-          <PricingTab
-            tickets={eventData.tickets}
-            coupons={eventData.coupons}
-            onTicketsChange={handleTicketChange}
-            onCouponsChange={handleCouponChange}
-          />
+          <PricingTab tickets={eventData.tickets} coupons={eventData.coupons} onTicketsChange={handleTicketChange} onCouponsChange={handleCouponChange} />
         )}
         {activeTab === 'settings' && (
-          <MoreSettingsTab
-            eventData={eventData}
-            onFieldChange={handleFieldChange}
-            calendarsList={calendarsList}
-            onDelete={handleDelete}
-            onDuplicate={handleDuplicate}
-          />
+          <MoreSettingsTab eventData={eventData} onFieldChange={handleFieldChange} calendarsList={calendarsList} />
         )}
       </div>
 
       <div className="modal-footer">
-        <button
-          type="button"
-          className={hasUnsavedChanges ? 'unsaved' : 'saved'}
-          onClick={handleSave}
-          disabled={!hasUnsavedChanges || isSaving}
-        >
+        <button type="button" className={hasUnsavedChanges ? 'unsaved' : 'saved'} onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
           {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save' : 'Saved'}
         </button>
       </div>
