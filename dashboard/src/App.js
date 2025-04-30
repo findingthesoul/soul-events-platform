@@ -174,10 +174,10 @@ function App() {
       {showEditor && selectedMode === 'event' && (
         <EventEditorModal
         eventId={selectedEvent?.id || null}
-          vendorId={vendorId}
-          onClose={closeEditor}
-          onSave={handleEventSaved}
-        />
+        vendorId={vendorId}
+        onClose={closeEditor}
+        onSave={handleEventSaved}
+      />
       )}
 
       {showEditor && selectedMode === 'account' && (

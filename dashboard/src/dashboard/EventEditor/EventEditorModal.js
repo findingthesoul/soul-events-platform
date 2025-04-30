@@ -118,13 +118,13 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
       await saveEvent(eventId, eventData);
   
       if (typeof onSave === 'function') {
-        onSave();
+        onSave(); // ✅ safe usage
       } else if (typeof refreshEvents === 'function') {
-        refreshEvents();
+        refreshEvents(); // ✅ fallback
       }
   
       if (typeof onClose === 'function') {
-        onClose();
+        onClose(); // ✅ closes modal
       }
     } catch (error) {
       console.error('Error saving event:', error);
