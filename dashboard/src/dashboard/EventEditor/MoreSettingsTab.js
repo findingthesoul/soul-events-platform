@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 
 const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, onDuplicate }) => {
@@ -6,6 +6,18 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
     value: c.id,
     label: c.fields?.Name || 'Unnamed'
   }));
+
+  const [localCalendars, setLocalCalendars] = useState(eventData.calendars || []);
+
+  useEffect(() => {
+    setLocalCalendars(eventData.calendars || []);
+  }, [eventData.calendars]);
+
+  const handleCalendarChange = (selectedOptions) => {
+    const selectedValues = selectedOptions.map(opt => opt.value);
+    setLocalCalendars(selectedValues);
+    onFieldChange('calendars', selectedValues);
+  };
 
   return (
     <div className="more-settings-tab">
@@ -15,10 +27,8 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
           isMulti
           placeholder="Select calendar(s)"
           options={calendarOptions}
-          value={calendarOptions.filter(opt => (eventData.calendars || []).includes(opt.value))}
-          onChange={(selectedOptions) =>
-            onFieldChange('calendars', selectedOptions.map(opt => opt.value))
-          }
+          value={calendarOptions.filter(opt => localCalendars.includes(opt.value))}
+          onChange={handleCalendarChange}
         />
       </div>
 
