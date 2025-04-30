@@ -35,7 +35,7 @@ export const saveEvent = async (eventId, eventData) => {
     "Location Description": eventData.locationDescription,
     "Zoom/Teams Link": eventData.locationUrl,
     "Description": eventData.description,
-    "Facilitator": eventData.facilitators,
+    "Host ID": eventData.facilitators,
     "Calendar": eventData.calendar
   };
 
