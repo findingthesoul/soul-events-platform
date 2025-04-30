@@ -255,10 +255,18 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
         />
       )}
 
-      <div className="modal-footer">
-        {isSaving ? <span>Saving...</span> : <button onClick={handleSave}>Save</button>}
-      </div>
-    </div>
+      const handleSave = async () => {
+        try {
+          setIsSaving(true);
+          console.log("Sending to Airtable:", eventData); // optional
+          await saveEvent(eventId, eventData);
+          onSave(); // ← calls back to App.js to refresh and close
+        } catch (error) {
+          console.error("Error saving event:", error);
+        } finally {
+          setIsSaving(false);
+        }
+      };
   );
 };
 
