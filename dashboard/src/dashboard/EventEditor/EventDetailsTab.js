@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldChange }) => {
+const EventDetailsTab = ({ eventData, facilitatorsList, onFieldChange }) => {
   const isMultiDayEvent = (startDate, endDate) => {
     if (!startDate || !endDate) return false;
     return new Date(startDate).toDateString() !== new Date(endDate).toDateString();
@@ -38,7 +38,6 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
     return startIndex >= 0 ? allTimes.slice(startIndex + 1) : allTimes;
   };
 
-  // Auto-correct End Date if wrong
   useEffect(() => {
     if (eventData.startDate && eventData.endDate) {
       const start = new Date(eventData.startDate);
@@ -51,8 +50,6 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
 
   return (
     <div className="event-details-tab scrollable-panel">
-
-      {/* --- Event Info --- */}
       <h3>Event Info</h3>
 
       <div className="form-group">
@@ -64,7 +61,6 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         />
       </div>
 
-      {/* --- Timing --- */}
       <h3>Timing</h3>
 
       <div className="form-row">
@@ -145,7 +141,6 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         </div>
       )}
 
-      {/* Time Format Toggle */}
       <div className="form-group">
         <label>Time Format</label>
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -161,9 +156,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         </div>
       </div>
 
-      {/* --- Description --- */}
       <h3>Description</h3>
-
       <div className="form-group">
         <textarea
           value={eventData.description || ''}
@@ -172,9 +165,7 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         />
       </div>
 
-      {/* --- Format --- */}
       <h3>Format</h3>
-
       <div className="form-group">
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
@@ -194,11 +185,9 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         </div>
       </div>
 
-      {/* --- Dynamic fields based on Format --- */}
-      {eventData.format === 'In-person' && (
+      {eventData.format === 'In person' && (
         <>
           <h3>Location</h3>
-
           <div className="form-group">
             <label>Location Address</label>
             <input
@@ -207,7 +196,6 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
               onChange={(e) => onFieldChange('location', e.target.value)}
             />
           </div>
-
           <div className="form-group">
             <label>Location Description</label>
             <textarea
@@ -216,15 +204,8 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
               rows={3}
             />
           </div>
-        </>
-      )}
-
-      {eventData.format === 'Online' && (
-        <>
-          <h3>Online Link</h3>
-
           <div className="form-group">
-            <label>Zoom/Teams Link</label>
+            <label>Location URL (Google Maps)</label>
             <input
               type="text"
               value={eventData.locationUrl || ''}
@@ -234,27 +215,37 @@ const EventDetailsTab = ({ eventData, facilitatorsList, calendarsList, onFieldCh
         </>
       )}
 
-      {/* --- Facilitator --- */}
+      {eventData.format === 'Online' && (
+        <>
+          <h3>Online Link</h3>
+          <div className="form-group">
+            <label>Zoom Link</label>
+            <input
+              type="text"
+              value={eventData.zoomLink || ''}
+              onChange={(e) => onFieldChange('zoomLink', e.target.value)}
+            />
+          </div>
+        </>
+      )}
+
       <h3>Facilitators</h3>
-
-        <div className="form-group">
-          <select
-            multiple
-            value={eventData.facilitators || []}
-            onChange={(e) => {
-              const selected = Array.from(e.target.selectedOptions, opt => opt.value);
-              onFieldChange('facilitators', selected);
-            }}
-          >
-            {facilitatorsList.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.fields?.Name || 'Unnamed'}
-              </option>
-            ))}
-          </select>
-        </div>
-
-
+      <div className="form-group">
+        <select
+          multiple
+          value={eventData.facilitators || []}
+          onChange={(e) => {
+            const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+            onFieldChange('facilitators', selected);
+          }}
+        >
+          {facilitatorsList.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name || 'Unnamed'}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
