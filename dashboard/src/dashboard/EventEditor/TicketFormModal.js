@@ -3,16 +3,23 @@ import React, { useState, useEffect } from 'react';
 const TicketFormModal = ({ ticket, onSave, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
-    price: 0,
-    type: 'PAID',
+    type: 'PAID', // or 'FREE'
+    price: '',
     currency: 'USD',
-    availableUntil: '',
+    until: '',
     quantity: '',
   });
 
   useEffect(() => {
     if (ticket) {
-      setFormData(ticket);
+      setFormData({
+        name: ticket.name || '',
+        type: ticket.type || 'PAID',
+        price: ticket.price || '',
+        currency: ticket.currency || 'USD',
+        until: ticket.until || '',
+        quantity: ticket.quantity || '',
+      });
     }
   }, [ticket]);
 
@@ -21,13 +28,13 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
   };
 
   const handleSubmit = () => {
-    onSave(formData);
+    onSave(formData); // Pass form data back
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h3>Edit Ticket</h3>
+        <h3>{ticket ? 'Edit Ticket' : 'Add Ticket'}</h3>
 
         <div className="form-group">
           <label>Ticket Name</label>
@@ -39,40 +46,44 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
         </div>
 
         <div className="form-group">
-          <label>Price</label>
-          <input
-            type="number"
-            value={formData.price}
-            onChange={(e) => handleChange('price', parseFloat(e.target.value))}
-          />
-        </div>
-
-        <div className="form-group">
           <label>Type</label>
           <select
             value={formData.type}
             onChange={(e) => handleChange('type', e.target.value)}
           >
-            <option value="PAID">Paid</option>
             <option value="FREE">Free</option>
+            <option value="PAID">Paid</option>
           </select>
         </div>
 
-        <div className="form-group">
-          <label>Currency</label>
-          <input
-            type="text"
-            value={formData.currency}
-            onChange={(e) => handleChange('currency', e.target.value.toUpperCase())}
-          />
-        </div>
+        {formData.type === 'PAID' && (
+          <>
+            <div className="form-group">
+              <label>Price</label>
+              <input
+                type="number"
+                value={formData.price}
+                onChange={(e) => handleChange('price', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Currency</label>
+              <input
+                type="text"
+                value={formData.currency}
+                onChange={(e) => handleChange('currency', e.target.value)}
+              />
+            </div>
+          </>
+        )}
 
         <div className="form-group">
           <label>Available Until</label>
           <input
             type="date"
-            value={formData.availableUntil}
-            onChange={(e) => handleChange('availableUntil', e.target.value)}
+            value={formData.until}
+            onChange={(e) => handleChange('until', e.target.value)}
           />
         </div>
 

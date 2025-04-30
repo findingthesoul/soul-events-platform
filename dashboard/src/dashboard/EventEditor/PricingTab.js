@@ -1,67 +1,53 @@
 import React from 'react';
 
-const PricingTab = ({ tickets, coupons, onTicketsChange, onCouponsChange, openEditTicket, openEditCoupon }) => {
-  const handleAddTicket = () => {
-    const newTicket = {
-      id: Date.now().toString(),
-      name: '',
-      price: 0,
-      type: 'PAID',
-      currency: 'USD',
-      availableUntil: '',
-      quantity: '',
-    };
-    onTicketsChange([...tickets, newTicket]);
-  };
-
-  const handleDeleteTicket = (index) => {
-    const updated = [...tickets];
-    updated.splice(index, 1);
-    onTicketsChange(updated);
-  };
-
-  const handleAddCoupon = () => {
-    const newCoupon = {
-      id: Date.now().toString(),
-      code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      type: 'PERCENTAGE',
-      amount: 10,
-      ticketId: '',
-      limit: '',
-    };
-    onCouponsChange([...coupons, newCoupon]);
-  };
-
-  const handleDeleteCoupon = (index) => {
-    const updated = [...coupons];
-    updated.splice(index, 1);
-    onCouponsChange(updated);
-  };
-
+const PricingTab = ({
+  tickets = [],
+  coupons = [],
+  onTicketsChange,
+  onCouponsChange,
+  openEditTicket,
+  openEditCoupon,
+  onAddTicket,
+  onAddCoupon,
+}) => {
   return (
-    <div className="pricing-tab">
+    <div className="pricing-tab scrollable-panel">
       <h3>Tickets</h3>
-      <button onClick={handleAddTicket}>Add Ticket</button>
-      <div className="tickets-list">
+      <div className="ticket-list">
+        {tickets.length === 0 && <p>No tickets yet.</p>}
         {tickets.map((ticket, index) => (
-          <div key={ticket.id} className="ticket-item">
-            <span>{ticket.name || 'Unnamed Ticket'}</span>
-            <button onClick={() => openEditTicket(index)}>Edit</button>
-            <button onClick={() => handleDeleteTicket(index)}>Delete</button>
+          <div key={index} className="ticket-item" onClick={() => openEditTicket(index)}>
+            <strong>{ticket.name || 'Unnamed Ticket'}</strong>
+            <span>
+              {ticket.type === 'PAID'
+                ? `${ticket.price || 0} ${ticket.currency}`
+                : 'FREE'}
+            </span>
           </div>
         ))}
+        <button className="add-btn" onClick={() => openEditTicket(null)}>
+          + Add Ticket
+        </button>
       </div>
 
       <h3>Coupons</h3>
-      <button onClick={handleAddCoupon}>Add Coupon</button>
-      <div className="coupons-list">
+      <div className="coupon-list">
+        {coupons.length === 0 && <p>No coupons yet.</p>}
         {coupons.map((coupon, index) => (
-          <div key={coupon.id} className="coupon-item">
-            <span>{coupon.code}</span>
-            <button onClick={() => openEditCoupon(index)}>Edit</button>
-            <button onClick={() => handleDeleteCoupon(index)}>Delete</button>
+          <div key={index} className="coupon-item" onClick={() => openEditCoupon(index)}>
+            <strong>{coupon.code || 'Unnamed Coupon'}</strong>
+            <span>
+              {coupon.type === 'PERCENTAGE'
+                ? `${coupon.amount}%`
+                : coupon.type === 'AMOUNT'
+                ? `${coupon.amount} ${coupon.currency}`
+                : 'FREE'}
+            </span>
           </div>
         ))}
+        <button className="add-btn" onClick={() => openEditCoupon(null)}>
+          + Add Coupon
+        </button>
       </div>
     </div>
   );

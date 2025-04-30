@@ -35,8 +35,16 @@ const EventEditorModal = ({
   const [pendingClose, setPendingClose] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [editingTicketIndex, setEditingTicketIndex] = useState(null);
-  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);  // ✅ This is missing
   const [editingCouponIndex, setEditingCouponIndex] = useState(null);
+  const openEditTicket = (index = null) => {
+    setEditingTicketIndex(index); 
+    setShowTicketModal(true);
+  };
+  const openEditCoupon = (index = null) => {
+    setEditingCouponIndex(index); 
+    setShowCouponModal(true);
+  };
 
   useEffect(() => {
     if (eventId) loadEvent();
@@ -184,6 +192,28 @@ const EventEditorModal = ({
       openEditor(pendingEventSwitch);
     }
   };
+
+  {showTicketModal && (
+    <TicketFormModal
+      ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
+      onSave={(updatedTicket) => {
+        const newTickets = [...(eventData.tickets || [])];
+        if (editingTicketIndex !== null) {
+          newTickets[editingTicketIndex] = updatedTicket;
+        } else {
+          newTickets.push(updatedTicket);
+        }
+        handleTicketChange(newTickets);
+        setShowTicketModal(false);
+        setEditingTicketIndex(null);
+      }}
+      onClose={() => {
+        setShowTicketModal(false);
+        setEditingTicketIndex(null);
+      }}
+    />
+  )}
+
 
   return (
     <div className="event-editor-modal">
