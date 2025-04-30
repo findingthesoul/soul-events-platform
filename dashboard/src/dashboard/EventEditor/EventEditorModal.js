@@ -8,7 +8,7 @@ import { fetchEventById, fetchFacilitators, fetchCalendars, saveEvent, deleteEve
 import { generateCouponCode } from './utils';
 import './EventEditorModal.css';
 
-const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
+const EventEditorModal = ({ eventId, onClose, refreshEvents, onSave }) => {
   const [eventData, setEventData] = useState({
     name: '',
     startDate: '',
@@ -114,9 +114,18 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      console.log('PATCHing to Airtable with:', eventData); // <-- Add this line
+      console.log('PATCHing to Airtable with:', eventData);
       await saveEvent(eventId, eventData);
-      refreshEvents();
+  
+      if (typeof onSave === 'function') {
+        onSave();
+      } else if (typeof refreshEvents === 'function') {
+        refreshEvents();
+      }
+  
+      if (typeof onClose === 'function') {
+        onClose();
+      }
     } catch (error) {
       console.error('Error saving event:', error);
     } finally {
@@ -255,7 +264,7 @@ const EventEditorModal = ({ eventId, onClose, refreshEvents }) => {
         />
       )}
   
-  <div className="modal-footer">
+      <div className="modal-footer">
         {isSaving ? (
           <span>Saving...</span>
         ) : (
