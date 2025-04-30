@@ -35,11 +35,12 @@ export const saveEvent = async (eventId, eventData) => {
     "Location Description": eventData.locationDescription,
     "Zoom/Teams Link": eventData.locationUrl,
     "Description": eventData.description,
-    "Facilitators": eventData.facilitators,
+    "Facilitator": eventData.facilitators,
     "Calendar": eventData.calendar
   };
 
   try {
+    console.log('Sending to Airtable:', cleanFields);
     const response = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${eventId}`,
       {
