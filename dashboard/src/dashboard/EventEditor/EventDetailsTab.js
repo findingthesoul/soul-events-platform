@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Select from 'react-select';
 
 const EventDetailsTab = ({ eventData, facilitatorsList, onFieldChange }) => {
   const isMultiDayEvent = (startDate, endDate) => {
@@ -47,6 +48,11 @@ const EventDetailsTab = ({ eventData, facilitatorsList, onFieldChange }) => {
       }
     }
   }, [eventData.startDate, eventData.endDate, onFieldChange]);
+
+  const facilitatorOptions = facilitatorsList.map((f) => ({
+    value: f.id,
+    label: f.name || 'Unnamed'
+  }));
 
   return (
     <div className="event-details-tab scrollable-panel">
@@ -231,20 +237,15 @@ const EventDetailsTab = ({ eventData, facilitatorsList, onFieldChange }) => {
 
       <h3>Facilitators</h3>
       <div className="form-group">
-        <select
-          multiple
-          value={eventData.facilitators || []}
-          onChange={(e) => {
-            const selected = Array.from(e.target.selectedOptions, opt => opt.value);
-            onFieldChange('facilitators', selected);
-          }}
-        >
-          {facilitatorsList.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.name || 'Unnamed'}
-            </option>
-          ))}
-        </select>
+        <Select
+          isMulti
+          placeholder="Select facilitator(s)"
+          options={facilitatorOptions}
+          value={facilitatorOptions.filter(opt => (eventData.facilitators || []).includes(opt.value))}
+          onChange={(selectedOptions) =>
+            onFieldChange('facilitators', selectedOptions.map(opt => opt.value))
+          }
+        />
       </div>
     </div>
   );
