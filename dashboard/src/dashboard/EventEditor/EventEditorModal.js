@@ -87,13 +87,13 @@ const EventEditorModal = ({
         locationUrl: data['Zoom link'] || '',
         facilitators: data['Facilitators'] || [],
         calendar: data['Calendar'] || '',
-        tickets: Array.isArray(data['Tickets']) ? data['Tickets'] : [],
-        coupons: Array.isArray(data['Coupons']) ? data['Coupons'] : [],
+        tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
+        coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
         status: data['Published'] || 'Draft',
       };
   
-      if (!data['Tickets']) console.warn('⚠️ "Tickets" field is missing or not linked in Airtable.');
-      if (!data['Coupons']) console.warn('⚠️ "Coupons" field is missing or not linked in Airtable.');
+      if (!data['Ticket ID']) console.warn('⚠️ "Tickets" field is missing or not linked in Airtable.');
+      if (!data['Coupon ID']) console.warn('⚠️ "Coupons" field is missing or not linked in Airtable.');
   
       setEventData(mappedData);
       setOriginalData(mappedData);
