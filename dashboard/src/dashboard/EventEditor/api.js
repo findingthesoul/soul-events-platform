@@ -20,13 +20,43 @@ export const fetchEventById = async (eventId) => {
   }
 };
 
-export const saveEvent = async (eventId, fields) => {
+export const saveEvent = async (eventId, eventData) => {
+  const cleanFields = {
+    "Event Title": eventData.name,
+    "Start Date": eventData.startDate,
+    "End Date": eventData.endDate,
+    "Start Time (Start Date)": eventData.startTime,
+    "End Time (Start Date)": eventData.endTime,
+    "Start Time (End Date)": eventData.startTimeEndDate,
+    "End Time (End Date)": eventData.endTimeEndDate,
+    "Time Format": eventData.timeFormat,
+    "Format": eventData.format,
+    "Location": eventData.location,
+    "Location Description": eventData.locationDescription,
+    "Zoom/Teams Link": eventData.locationUrl,
+    "Description": eventData.description,
+    "Facilitators": eventData.facilitators,
+    "Calendar": eventData.calendar
+  };
+
   try {
-    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${eventId}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ fields }),
-    });
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events/${eventId}`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ fields: cleanFields }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('Airtable PATCH failed:', result);
+      throw new Error(result.error?.message || 'Failed to update event');
+    }
+
+    return result;
   } catch (error) {
     console.error('Error saving event:', error);
     throw error;
