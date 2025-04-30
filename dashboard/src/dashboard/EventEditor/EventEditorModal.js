@@ -92,8 +92,8 @@ const EventEditorModal = ({
         status: data['Published'] || 'Draft',
       };
   
-      if (!data['Ticket ID']) console.warn('⚠️ "Tickets" field is missing or not linked in Airtable.');
-      if (!data['Coupon ID']) console.warn('⚠️ "Coupons" field is missing or not linked in Airtable.');
+      if (!data['Ticket ID']) console.warn('⚠️ "Ticket ID" field is missing or not linked in Airtable.');
+      if (!data['Coupon ID']) console.warn('⚠️ "Coupon ID" field is missing or not linked in Airtable.');
   
       setEventData(mappedData);
       setOriginalData(mappedData);
