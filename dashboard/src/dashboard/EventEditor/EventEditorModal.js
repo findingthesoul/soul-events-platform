@@ -68,7 +68,7 @@ const EventEditorModal = ({
       const data = await fetchEventById(eventId);
       console.log('🔍 Raw event data from Airtable:', data);
       console.log("🧩 Field names from Airtable:", Object.keys(data)); 
-      
+
       if (!data) {
         console.warn('⚠️ No data returned for event ID:', eventId);
         return;
@@ -91,12 +91,12 @@ const EventEditorModal = ({
         facilitators: data['Facilitators'] || [],
         calendar: data['Calendar'] || '',
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
-        coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
+        coupons: Array.isArray(data['Coupons Link']) ? data['Coupons Link'] : [],
         status: data['Published'] || 'Draft',
       };
   
       if (!data['Ticket ID']) console.warn('⚠️ "Ticket ID" field is missing or not linked in Airtable.');
-      if (!data['Coupon ID']) console.warn('⚠️ "Coupon ID" field is missing or not linked in Airtable.');
+      if (!data['Coupons Link']) console.warn('⚠️ "Coupons Link" field is missing or not linked in Airtable.');
   
       // 🔄 Fetch full ticket and coupon data
 
