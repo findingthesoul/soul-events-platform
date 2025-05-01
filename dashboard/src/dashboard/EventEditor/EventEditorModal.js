@@ -93,7 +93,10 @@ const EventEditorModal = ({
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
         status: data['Published'] || 'Draft',
       };
-    
+  
+      if (!data['Ticket ID']) console.warn('⚠️ "Ticket ID" field is missing or not linked in Airtable.');
+      if (!data['Coupon ID']) console.warn('⚠️ "Coupon ID" field is missing or not linked in Airtable.');
+  
       // 🔄 Fetch full ticket and coupon data
 
       // 🔄 Fetch full ticket and coupon data if IDs are present
@@ -118,9 +121,6 @@ const EventEditorModal = ({
       } else {
         mappedData.coupons = [];
       }
-
-      setEventData(mappedData);
-      setOriginalData(mappedData);
 
       setEventData(mappedData);
       setOriginalData(mappedData);
