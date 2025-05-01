@@ -106,7 +106,7 @@ const EventEditorModal = ({
         status: data['Published'] || 'Draft',
   
         // ✅ Convert facilitator IDs to full objects
-        facilitators: (data['Facilitators'] || []).map((id) =>
+        facilitators: (data['Host ID'] || []).map((id) =>
           allFacilitators.find((f) => f.id === id)
         ).filter(Boolean),
       };
