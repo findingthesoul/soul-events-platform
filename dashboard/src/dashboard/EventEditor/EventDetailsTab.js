@@ -241,7 +241,9 @@ const EventDetailsTab = ({ eventData, facilitatorsList, onFieldChange }) => {
           isMulti
           placeholder="Select facilitator(s)"
           options={facilitatorOptions}
-          value={facilitatorOptions.filter(opt => (eventData.facilitators || []).includes(opt.value))}
+          value={facilitatorOptions.filter(opt =>
+            (eventData.facilitators || []).some(f => (typeof f === 'string' ? f : f.id) === opt.value)
+          )}
           onChange={(selectedOptions) =>
             onFieldChange('facilitators', selectedOptions.map(opt => opt.value))
           }
