@@ -82,7 +82,10 @@ const EventEditorModal = ({
       const data = await fetchEventById(eventId);
       console.log('🔍 Raw event data from Airtable:', data);
       console.log("🧩 Field names from Airtable:", Object.keys(data));
-
+  
+      const allFacilitators = await fetchFacilitators();
+      setFacilitatorsList(allFacilitators);
+  
       const mappedData = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
@@ -97,29 +100,31 @@ const EventEditorModal = ({
         location: data['Location'] || '',
         locationDescription: data['Location Description'] || '',
         locationUrl: data['Zoom link'] || '',
-        facilitators: data['Facilitators'] || [],
-        calendar: data['Calendar'] || '',
+        calendar: data['Calendar'] || [],
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
         status: data['Published'] || 'Draft',
+  
+        // ✅ Convert facilitator IDs to full objects
+        facilitators: (data['Facilitators'] || []).map((id) =>
+          allFacilitators.find((f) => f.id === id)
+        ).filter(Boolean),
       };
-
+  
       if (mappedData.tickets.length > 0) {
         const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
-        console.log("🧾 Tickets:", ticketRecords);
         mappedData.tickets = ticketRecords;
       } else {
         mappedData.tickets = [];
       }
-
+  
       if (mappedData.coupons.length > 0) {
         const couponRecords = await fetchCouponsByIds(mappedData.coupons);
-        console.log("🏷️ Coupons:", couponRecords);
         mappedData.coupons = couponRecords;
       } else {
         mappedData.coupons = [];
       }
-
+  
       setEventData(mappedData);
       setOriginalData(mappedData);
     } catch (error) {
