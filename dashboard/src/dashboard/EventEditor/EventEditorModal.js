@@ -98,11 +98,33 @@ const EventEditorModal = ({
       if (!data['Coupon ID']) console.warn('⚠️ "Coupon ID" field is missing or not linked in Airtable.');
   
       // 🔄 Fetch full ticket and coupon data
-      const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
-      const couponRecords = await fetchCouponsByIds(mappedData.coupons);
-      mappedData.tickets = ticketRecords;
-      mappedData.coupons = couponRecords;
-  
+
+      // 🔄 Fetch full ticket and coupon data if IDs are present
+      if (Array.isArray(mappedData.tickets) && mappedData.tickets.length > 0) {
+        try {
+          const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
+          mappedData.tickets = ticketRecords;
+        } catch (err) {
+          console.warn('⚠️ Failed to fetch linked tickets:', err.message);
+        }
+      } else {
+        mappedData.tickets = [];
+      }
+
+      if (Array.isArray(mappedData.coupons) && mappedData.coupons.length > 0) {
+        try {
+          const couponRecords = await fetchCouponsByIds(mappedData.coupons);
+          mappedData.coupons = couponRecords;
+        } catch (err) {
+          console.warn('⚠️ Failed to fetch linked coupons:', err.message);
+        }
+      } else {
+        mappedData.coupons = [];
+      }
+
+      setEventData(mappedData);
+      setOriginalData(mappedData);
+
       setEventData(mappedData);
       setOriginalData(mappedData);
     } catch (error) {
