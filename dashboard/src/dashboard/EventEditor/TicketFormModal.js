@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const TicketFormModal = ({ ticket, onSave, onClose }) => {
+const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'PAID',
@@ -29,6 +29,12 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
 
   const handleSubmit = () => {
     onSave(formData);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this ticket?')) {
+      onDelete();
+    }
   };
 
   return (
@@ -98,6 +104,7 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
 
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Ticket</button>
+          {ticket && <button onClick={handleDelete} className="danger">Delete</button>}
           <button onClick={onClose}>Cancel</button>
         </div>
       </div>

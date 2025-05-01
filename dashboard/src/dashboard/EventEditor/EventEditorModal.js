@@ -50,6 +50,18 @@ const EventEditorModal = ({
     setShowCouponModal(true);
   };
 
+  const deleteTicket = (index) => {
+    const updated = [...eventData.tickets];
+    updated.splice(index, 1);
+    handleTicketChange(updated);
+  };
+
+  const deleteCoupon = (index) => {
+    const updated = [...eventData.coupons];
+    updated.splice(index, 1);
+    handleCouponChange(updated);
+  };
+
   useEffect(() => {
     if (eventId) loadEvent();
     loadFacilitators();
@@ -240,6 +252,8 @@ const EventEditorModal = ({
             onCouponsChange={handleCouponChange}
             openEditTicket={openEditTicket}
             openEditCoupon={openEditCoupon}
+            deleteTicket={deleteTicket}
+            deleteCoupon={deleteCoupon}
           />
         )}
         {activeTab === 'settings' && (

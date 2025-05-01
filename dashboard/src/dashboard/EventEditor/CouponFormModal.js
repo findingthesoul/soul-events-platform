@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const CouponFormModal = ({ coupon, onSave, onClose, availableTickets }) => {
+const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }) => {
   const [formData, setFormData] = useState({
     code: '',
     type: 'FREE',
@@ -27,6 +27,12 @@ const CouponFormModal = ({ coupon, onSave, onClose, availableTickets }) => {
 
   const handleSubmit = () => {
     onSave(formData);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Delete this coupon?')) {
+      onDelete();
+    }
   };
 
   return (
@@ -95,6 +101,7 @@ const CouponFormModal = ({ coupon, onSave, onClose, availableTickets }) => {
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Coupon</button>
           <button onClick={onClose}>Cancel</button>
+          {coupon && <button onClick={handleDelete} className="danger">Delete</button>}
         </div>
       </div>
     </div>
