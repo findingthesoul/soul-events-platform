@@ -13,12 +13,12 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
   useEffect(() => {
     if (ticket) {
       setFormData({
-        name: ticket.name || '',
-        type: ticket.type || 'PAID',
-        price: ticket.price || '',
-        currency: ticket.currency || 'USD',
-        until: ticket.until || '',
-        quantity: ticket.quantity || '',
+        name: ticket['Ticket Name'] || ticket.name || '',
+        type: ticket['Type'] || ticket.type || 'PAID',
+        price: ticket['Price'] || ticket.price || '',
+        currency: ticket['Currency'] || ticket.currency || 'USD',
+        until: ticket['Available Until'] || ticket.until || '',
+        quantity: ticket['Quantity'] || ticket.quantity || '',
       });
     }
   }, [ticket]);

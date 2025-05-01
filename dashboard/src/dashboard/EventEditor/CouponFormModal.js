@@ -12,11 +12,11 @@ const CouponFormModal = ({ coupon, onSave, onClose, availableTickets = [] }) => 
   useEffect(() => {
     if (coupon) {
       setFormData({
-        code: coupon.code || '',
-        type: coupon.type || 'PERCENTAGE',
-        amount: coupon.amount || '',
-        limit: coupon.limit || '',
-        ticketId: coupon.ticketId || '',
+        code: coupon['Coupon Code'] || coupon.code || '',
+        type: coupon['Type'] || coupon.type || 'FREE',
+        amount: coupon['Amount'] || coupon.amount || '',
+        currency: coupon['Currency'] || coupon.currency || '',
+        linkedTicket: coupon['Linked Ticket'] || coupon.linkedTicket || '',
       });
     } else {
       // Generate random code for new coupons
