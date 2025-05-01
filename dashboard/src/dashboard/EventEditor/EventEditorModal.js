@@ -67,7 +67,8 @@ const EventEditorModal = ({
     try {
       const data = await fetchEventById(eventId);
       console.log('🔍 Raw event data from Airtable:', data);
-  
+      console.log("🧩 Field names from Airtable:", Object.keys(data)); 
+      
       if (!data) {
         console.warn('⚠️ No data returned for event ID:', eventId);
         return;
