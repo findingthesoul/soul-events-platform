@@ -38,6 +38,8 @@ export const saveEvent = async (eventId, eventData) => {
     "Description": eventData.description,
     "Host ID": eventData.facilitators,
     "Calendar ID": eventData.calendar,
+    "Ticket ID": eventData.tickets || [],      // ✅ ADD THIS LINE
+    "Coupon ID": eventData.coupons || [],      // ✅ ADD THIS LINE    
   };
 
   // remove undefined or empty string fields
