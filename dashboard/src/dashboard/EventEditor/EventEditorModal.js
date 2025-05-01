@@ -10,7 +10,9 @@ import {
   fetchCalendars,
   saveEvent,
   deleteEvent,
-  duplicateEvent
+  duplicateEvent,
+  fetchTicketsByIds,
+  fetchCouponsByIds
 } from './api';
 import './EventEditorModal.css';
 
@@ -95,12 +97,19 @@ const EventEditorModal = ({
       if (!data['Ticket ID']) console.warn('⚠️ "Ticket ID" field is missing or not linked in Airtable.');
       if (!data['Coupon ID']) console.warn('⚠️ "Coupon ID" field is missing or not linked in Airtable.');
   
+      // 🔄 Fetch full ticket and coupon data
+      const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
+      const couponRecords = await fetchCouponsByIds(mappedData.coupons);
+      mappedData.tickets = ticketRecords;
+      mappedData.coupons = couponRecords;
+  
       setEventData(mappedData);
       setOriginalData(mappedData);
     } catch (error) {
       console.error('❌ Error loading event:', error);
     }
   };
+  
 
   const loadFacilitators = async () => {
     try {

@@ -6,7 +6,7 @@ const PricingTab = ({
   onTicketsChange,
   onCouponsChange,
   openEditTicket,
-  openEditCoupon
+  openEditCoupon,
 }) => {
   return (
     <div className="pricing-tab scrollable-panel">
@@ -17,7 +17,10 @@ const PricingTab = ({
       <ul>
         {tickets.map((ticket, index) => (
           <li key={index}>
-            {ticket.name || 'Unnamed Ticket'} – {ticket.price || 'Free'}
+            <strong>{ticket.name || 'Unnamed Ticket'}</strong>
+            {ticket.price && (
+              <> – {ticket.price} {ticket.currency || 'USD'}</>
+            )}
             <button onClick={() => openEditTicket(index)}>Edit</button>
           </li>
         ))}
@@ -30,7 +33,10 @@ const PricingTab = ({
       <ul>
         {coupons.map((coupon, index) => (
           <li key={index}>
-            {coupon.code || 'Unnamed Coupon'}
+            <strong>{coupon.code || 'Unnamed Coupon'}</strong>
+            {coupon.type !== 'FREE' && (
+              <> – {coupon.type === 'PERCENTAGE' ? `${coupon.amount}%` : `${coupon.amount} ${coupon.currency || ''}`}</>
+            )}
             <button onClick={() => openEditCoupon(index)}>Edit</button>
           </li>
         ))}

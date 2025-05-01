@@ -145,3 +145,25 @@ export const fetchCalendars = async () => {
     throw error;
   }
 };
+
+export const fetchTicketsByIds = async (ids = []) => {
+  if (!ids.length) return [];
+  const formula = `OR(${ids.map(id => `RECORD_ID()='${id}'`).join(',')})`;
+  const response = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets?filterByFormula=${encodeURIComponent(formula)}`,
+    { headers }
+  );
+  const data = await response.json();
+  return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+};
+
+export const fetchCouponsByIds = async (ids = []) => {
+  if (!ids.length) return [];
+  const formula = `OR(${ids.map(id => `RECORD_ID()='${id}'`).join(',')})`;
+  const response = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(formula)}`,
+    { headers }
+  );
+  const data = await response.json();
+  return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+};
