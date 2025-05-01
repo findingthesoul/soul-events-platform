@@ -36,19 +36,22 @@ export const saveEvent = async (eventId, eventData) => {
     "Location URL": eventData.locationUrl || '',
     "Zoom link": eventData.zoomLink || '',
     "Description": eventData.description,
-    "Host ID": eventData.facilitators,
-    "Calendar ID": eventData.calendar,
+    "Host ID": Array.isArray(eventData.facilitators)
+      ? eventData.facilitators.map((f) => (typeof f === 'string' ? f : f.id)).filter(Boolean)
+      : [],
+    "Calendar ID": Array.isArray(eventData.calendar)
+      ? eventData.calendar.map((c) => (typeof c === 'string' ? c : c.id)).filter(Boolean)
+      : [],
     "Ticket ID": Array.isArray(eventData.tickets)
-  ? eventData.tickets
+      ? eventData.tickets
       .map(t => typeof t === 'string' ? t : t.id)
       .filter(id => typeof id === 'string' && id.trim() !== '')
-  : [],
-
-"Coupon ID": Array.isArray(eventData.coupons)
-  ? eventData.coupons
+      : [],
+    "Coupon ID": Array.isArray(eventData.coupons)
+      ? eventData.coupons
       .map(c => typeof c === 'string' ? c : c.id)
       .filter(id => typeof id === 'string' && id.trim() !== '')
-  : [],
+      : [],
   };
 
   // remove undefined or empty string fields
