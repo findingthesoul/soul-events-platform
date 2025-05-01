@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-const CouponFormModal = ({ coupon, onSave, onClose, availableTickets = [] }) => {
+const CouponFormModal = ({ coupon, onSave, onClose, availableTickets }) => {
   const [formData, setFormData] = useState({
     code: '',
-    type: 'PERCENTAGE', // 'FREE', 'PERCENTAGE', or 'AMOUNT'
+    type: 'FREE',
     amount: '',
-    limit: '',
-    ticketId: '',
+    currency: '',
+    linkedTicket: '',
   });
 
   useEffect(() => {
@@ -18,27 +18,15 @@ const CouponFormModal = ({ coupon, onSave, onClose, availableTickets = [] }) => 
         currency: coupon['Currency'] || coupon.currency || '',
         linkedTicket: coupon['Linked Ticket'] || coupon.linkedTicket || '',
       });
-    } else {
-      // Generate random code for new coupons
-      setFormData(prev => ({ ...prev, code: generateCode() }));
     }
   }, [coupon]);
 
-  const generateCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
-    const cleanCoupon = {
-      ...formData,
-      amount: formData.type !== 'FREE' ? parseFloat(formData.amount) || 0 : 0,
-      limit: parseInt(formData.limit) || 0,
-    };
-    onSave(cleanCoupon);
+    onSave(formData);
   };
 
   return (
@@ -48,7 +36,11 @@ const CouponFormModal = ({ coupon, onSave, onClose, availableTickets = [] }) => 
 
         <div className="form-group">
           <label>Coupon Code</label>
-          <input type="text" value={formData.code} readOnly />
+          <input
+            type="text"
+            value={formData.code}
+            onChange={(e) => handleChange('code', e.target.value)}
+          />
         </div>
 
         <div className="form-group">
@@ -59,40 +51,42 @@ const CouponFormModal = ({ coupon, onSave, onClose, availableTickets = [] }) => 
           >
             <option value="FREE">Free</option>
             <option value="PERCENTAGE">Percentage</option>
-            <option value="AMOUNT">Fixed Amount</option>
+            <option value="AMOUNT">Amount</option>
           </select>
         </div>
 
         {formData.type !== 'FREE' && (
-          <div className="form-group">
-            <label>{formData.type === 'PERCENTAGE' ? 'Discount %' : 'Amount'}</label>
-            <input
-              type="number"
-              value={formData.amount}
-              onChange={(e) => handleChange('amount', e.target.value)}
-            />
-          </div>
+          <>
+            <div className="form-group">
+              <label>Amount</label>
+              <input
+                type="number"
+                value={formData.amount}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Currency</label>
+              <input
+                type="text"
+                value={formData.currency}
+                onChange={(e) => handleChange('currency', e.target.value)}
+              />
+            </div>
+          </>
         )}
 
         <div className="form-group">
-          <label>Limit Uses</label>
-          <input
-            type="number"
-            value={formData.limit}
-            onChange={(e) => handleChange('limit', e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Applies to Ticket</label>
+          <label>Linked Ticket</label>
           <select
-            value={formData.ticketId}
-            onChange={(e) => handleChange('ticketId', e.target.value)}
+            value={formData.linkedTicket}
+            onChange={(e) => handleChange('linkedTicket', e.target.value)}
           >
-            <option value="">Select Ticket</option>
+            <option value="">-- None --</option>
             {availableTickets.map((ticket, index) => (
               <option key={index} value={ticket.id || ticket.name}>
-                {ticket.name || `Ticket ${index + 1}`}
+                {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
               </option>
             ))}
           </select>

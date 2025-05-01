@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const TicketFormModal = ({ ticket, onSave, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
-    type: 'PAID', // or 'FREE'
+    type: 'PAID',
     price: '',
     currency: 'USD',
     until: '',
@@ -28,12 +28,7 @@ const TicketFormModal = ({ ticket, onSave, onClose }) => {
   };
 
   const handleSubmit = () => {
-    const cleanTicket = {
-      ...formData,
-      price: formData.type === 'PAID' ? parseFloat(formData.price) || 0 : 0,
-      quantity: parseInt(formData.quantity) || 0,
-    };
-    onSave(cleanTicket);
+    onSave(formData);
   };
 
   return (
