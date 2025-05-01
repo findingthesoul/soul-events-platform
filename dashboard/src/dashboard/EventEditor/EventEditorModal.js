@@ -37,14 +37,16 @@ const EventEditorModal = ({
   const [pendingClose, setPendingClose] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [editingTicketIndex, setEditingTicketIndex] = useState(null);
-  const [showCouponModal, setShowCouponModal] = useState(false);  // ✅ This is missing
+  const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingCouponIndex, setEditingCouponIndex] = useState(null);
+
   const openEditTicket = (index = null) => {
-    setEditingTicketIndex(index); 
+    setEditingTicketIndex(index);
     setShowTicketModal(true);
   };
+
   const openEditCoupon = (index = null) => {
-    setEditingCouponIndex(index); 
+    setEditingCouponIndex(index);
     setShowCouponModal(true);
   };
 
@@ -67,13 +69,8 @@ const EventEditorModal = ({
     try {
       const data = await fetchEventById(eventId);
       console.log('🔍 Raw event data from Airtable:', data);
-      console.log("🧩 Field names from Airtable:", Object.keys(data)); 
+      console.log("🧩 Field names from Airtable:", Object.keys(data));
 
-      if (!data) {
-        console.warn('⚠️ No data returned for event ID:', eventId);
-        return;
-      }
-  
       const mappedData = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
@@ -91,34 +88,22 @@ const EventEditorModal = ({
         facilitators: data['Facilitators'] || [],
         calendar: data['Calendar'] || '',
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
-        coupons: Array.isArray(data['Coupons Link']) ? data['Coupons Link'] : [],
+        coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
         status: data['Published'] || 'Draft',
       };
-  
-      if (!data['Ticket ID']) console.warn('⚠️ "Ticket ID" field is missing or not linked in Airtable.');
-      if (!data['Coupons Link']) console.warn('⚠️ "Coupons Link" field is missing or not linked in Airtable.');
-  
-      // 🔄 Fetch full ticket and coupon data
 
-      // 🔄 Fetch full ticket and coupon data if IDs are present
-      if (Array.isArray(mappedData.tickets) && mappedData.tickets.length > 0) {
-        try {
-          const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
-          mappedData.tickets = ticketRecords;
-        } catch (err) {
-          console.warn('⚠️ Failed to fetch linked tickets:', err.message);
-        }
+      if (mappedData.tickets.length > 0) {
+        const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
+        console.log("🧾 Tickets:", ticketRecords);
+        mappedData.tickets = ticketRecords;
       } else {
         mappedData.tickets = [];
       }
 
-      if (Array.isArray(mappedData.coupons) && mappedData.coupons.length > 0) {
-        try {
-          const couponRecords = await fetchCouponsByIds(mappedData.coupons);
-          mappedData.coupons = couponRecords;
-        } catch (err) {
-          console.warn('⚠️ Failed to fetch linked coupons:', err.message);
-        }
+      if (mappedData.coupons.length > 0) {
+        const couponRecords = await fetchCouponsByIds(mappedData.coupons);
+        console.log("🏷️ Coupons:", couponRecords);
+        mappedData.coupons = couponRecords;
       } else {
         mappedData.coupons = [];
       }
@@ -129,7 +114,6 @@ const EventEditorModal = ({
       console.error('❌ Error loading event:', error);
     }
   };
-  
 
   const loadFacilitators = async () => {
     try {
@@ -250,13 +234,13 @@ const EventEditorModal = ({
         )}
         {activeTab === 'pricing' && (
           <PricingTab
-          tickets={eventData.tickets}
-          coupons={eventData.coupons}
-          onTicketsChange={handleTicketChange}
-          onCouponsChange={handleCouponChange}
-          openEditTicket={openEditTicket}
-          openEditCoupon={openEditCoupon}
-        />
+            tickets={eventData.tickets}
+            coupons={eventData.coupons}
+            onTicketsChange={handleTicketChange}
+            onCouponsChange={handleCouponChange}
+            openEditTicket={openEditTicket}
+            openEditCoupon={openEditCoupon}
+          />
         )}
         {activeTab === 'settings' && (
           <MoreSettingsTab eventData={eventData} onFieldChange={handleFieldChange} calendarsList={calendarsList} />
@@ -281,29 +265,30 @@ const EventEditorModal = ({
       )}
 
       {showTicketModal && (
-          <TicketFormModal
-            ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
-            onSave={(updatedTicket) => {
-              const newTickets = [...(eventData.tickets || [])];
-              if (editingTicketIndex !== null) {
-                newTickets[editingTicketIndex] = updatedTicket;
-              } else {
-                newTickets.push(updatedTicket);
-              }
-              handleTicketChange(newTickets);
-              setShowTicketModal(false);
-              setEditingTicketIndex(null);
-            }}
-            onClose={() => {
-              setShowTicketModal(false);
-              setEditingTicketIndex(null);
-            }}
-          />
-        )}
-       {showCouponModal && (
+        <TicketFormModal
+          ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
+          onSave={(updatedTicket) => {
+            const newTickets = [...(eventData.tickets || [])];
+            if (editingTicketIndex !== null) {
+              newTickets[editingTicketIndex] = updatedTicket;
+            } else {
+              newTickets.push(updatedTicket);
+            }
+            handleTicketChange(newTickets);
+            setShowTicketModal(false);
+            setEditingTicketIndex(null);
+          }}
+          onClose={() => {
+            setShowTicketModal(false);
+            setEditingTicketIndex(null);
+          }}
+        />
+      )}
+
+      {showCouponModal && (
         <CouponFormModal
           coupon={editingCouponIndex !== null ? eventData.coupons[editingCouponIndex] : null}
-          availableTickets={eventData.tickets || []}  // ✅ Pass available tickets
+          availableTickets={eventData.tickets || []}
           onSave={(updatedCoupon) => {
             const newCoupons = [...(eventData.coupons || [])];
             if (editingCouponIndex !== null) {

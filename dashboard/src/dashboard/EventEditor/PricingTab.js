@@ -17,7 +17,7 @@ const PricingTab = ({
       <ul>
         {tickets.map((ticket, index) => (
           <li key={index}>
-            <strong>{ticket.name || 'Unnamed Ticket'}</strong>
+            <strong>{ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}</strong>
             {ticket.price && (
               <> – {ticket.price} {ticket.currency || 'USD'}</>
             )}
@@ -33,7 +33,7 @@ const PricingTab = ({
       <ul>
         {coupons.map((coupon, index) => (
           <li key={index}>
-            <strong>{coupon.code || 'Unnamed Coupon'}</strong>
+            <strong>{coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}</strong>
             {coupon.type !== 'FREE' && (
               <> – {coupon.type === 'PERCENTAGE' ? `${coupon.amount}%` : `${coupon.amount} ${coupon.currency || ''}`}</>
             )}
