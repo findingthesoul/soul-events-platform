@@ -39,11 +39,16 @@ export const saveEvent = async (eventId, eventData) => {
     "Host ID": eventData.facilitators,
     "Calendar ID": eventData.calendar,
     "Ticket ID": Array.isArray(eventData.tickets)
-      ? eventData.tickets.map(t => typeof t === 'string' ? t : t.id)
-      : [],
-    "Coupon ID": Array.isArray(eventData.coupons)
-      ? eventData.coupons.map(c => typeof c === 'string' ? c : c.id)
-      : [],
+  ? eventData.tickets
+      .map(t => typeof t === 'string' ? t : t.id)
+      .filter(id => typeof id === 'string' && id.trim() !== '')
+  : [],
+
+"Coupon ID": Array.isArray(eventData.coupons)
+  ? eventData.coupons
+      .map(c => typeof c === 'string' ? c : c.id)
+      .filter(id => typeof id === 'string' && id.trim() !== '')
+  : [],
   };
 
   // remove undefined or empty string fields
