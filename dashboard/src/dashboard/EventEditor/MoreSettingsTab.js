@@ -2,34 +2,69 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 
 const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, onDuplicate }) => {
-  const calendarOptions = calendarsList.map((c) => ({
+  const calendarOptions = calendarsList.map(c => ({
+    label: c.fields?.Name || 'Unnamed',
     value: c.id,
-    label: c.fields?.Name || 'Unnamed'
   }));
 
-  const [localCalendars, setLocalCalendars] = useState(eventData.calendars || []);
+  const [localCalendars, setLocalCalendars] = useState(eventData.calendar || []);
 
   useEffect(() => {
-    setLocalCalendars(eventData.calendars || []);
-  }, [eventData.calendars]);
+    setLocalCalendars(eventData.calendar || []);
+  }, [eventData.calendar]);
 
   const handleCalendarChange = (selectedOptions) => {
     const selectedValues = selectedOptions.map(opt => opt.value);
     setLocalCalendars(selectedValues);
-    onFieldChange('calendars', selectedValues);
+    onFieldChange('calendar', selectedValues);
   };
 
   return (
-    <div className="more-settings-tab">
+    <>
+      <h3>Status</h3>
+      <div className="form-group">
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            className={eventData.status === 'Draft' ? 'active' : ''}
+            onClick={() => onFieldChange('status', 'Draft')}
+          >
+            Draft
+          </button>
+          <button
+            type="button"
+            className={eventData.status === 'Published' ? 'active' : ''}
+            onClick={() => onFieldChange('status', 'Published')}
+          >
+            Published
+          </button>
+        </div>
+      </div>
+
       <h3>Calendars</h3>
       <div className="form-group">
         <Select
           isMulti
           placeholder="Select calendar(s)"
           options={calendarOptions}
-          value={calendarOptions.filter(opt => localCalendars.includes(opt.value))}
+          value={calendarOptions.filter(opt => (eventData.calendar || []).includes(opt.value))}
           onChange={handleCalendarChange}
         />
+      </div>
+
+      <h3>Front-End Language</h3>
+      <div className="form-group">
+        <label>Select Language</label>
+        <select
+          value={eventData.frontendLanguage || ''}
+          onChange={(e) => onFieldChange('frontendLanguage', e.target.value)}
+        >
+          <option value="">-- Select --</option>
+          <option value="ENG">English</option>
+          <option value="ES">Spanish</option>
+          <option value="DE">German</option>
+          <option value="NL">Dutch</option>
+        </select>
       </div>
 
       <h3>Danger Zone</h3>
@@ -41,7 +76,7 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
           Duplicate Event
         </button>
       </div>
-    </div>
+    </>
   );
 };
 
