@@ -12,7 +12,7 @@ import {
   deleteEvent,
   duplicateEvent,
   fetchTicketsByIds,
-  fetchCouponsByIds
+  fetchCouponsByIds,
 } from './api';
 import './EventEditorModal.css';
 
@@ -23,7 +23,7 @@ const EventEditorModal = ({
   pendingEventSwitch,
   clearPendingEventSwitch,
   openEditor,
-  setHasUnsavedChanges
+  setHasUnsavedChanges,
 }) => {
   const [eventData, setEventData] = useState({});
   const [originalData, setOriginalData] = useState({});
@@ -64,8 +64,6 @@ const EventEditorModal = ({
 
   useEffect(() => {
     if (eventId) loadEvent();
-    loadFacilitators();
-    loadCalendars();
   }, [eventId]);
 
   useEffect(() => {
@@ -80,18 +78,14 @@ const EventEditorModal = ({
   const loadEvent = async () => {
     try {
       const data = await fetchEventById(eventId);
-      console.log('🔍 Raw event data from Airtable:', data);
-      console.log("🧩 Field names from Airtable:", Object.keys(data));
-  
       const allFacilitators = await fetchFacilitators();
-      setFacilitatorsList(allFacilitators);
-  
       const allCalendars = await fetchCalendars();
+      setFacilitatorsList(allFacilitators);
       setCalendarsList(allCalendars);
-  
+
       const rawCalendarIds = Array.isArray(data['Calendar ID']) ? data['Calendar ID'] : [data['Calendar ID']];
       const rawFacilitatorIds = Array.isArray(data['Host ID']) ? data['Host ID'] : [data['Host ID']];
-  
+
       const mappedData = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
@@ -108,55 +102,24 @@ const EventEditorModal = ({
         locationUrl: data['Zoom link'] || '',
         status: data['Published'] || 'Draft',
         frontendLanguage: data['Language'] || '',
-  
-        facilitators: rawFacilitatorIds
-          .map(id => allFacilitators.find(f => f.id === id))
-          .filter(Boolean),
-  
-        calendar: rawCalendarIds
-          .map(id => allCalendars.find(c => c.id === id))
-          .filter(Boolean),
-  
+        facilitators: rawFacilitatorIds.map(id => allFacilitators.find(f => f.id === id)).filter(Boolean),
+        calendar: rawCalendarIds.map(id => allCalendars.find(c => c.id === id)).filter(Boolean),
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
       };
-  
+
       if (mappedData.tickets.length > 0) {
-        const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
-        mappedData.tickets = ticketRecords;
-      } else {
-        mappedData.tickets = [];
+        mappedData.tickets = await fetchTicketsByIds(mappedData.tickets);
       }
-  
+
       if (mappedData.coupons.length > 0) {
-        const couponRecords = await fetchCouponsByIds(mappedData.coupons);
-        mappedData.coupons = couponRecords;
-      } else {
-        mappedData.coupons = [];
+        mappedData.coupons = await fetchCouponsByIds(mappedData.coupons);
       }
-  
+
       setEventData(mappedData);
       setOriginalData(mappedData);
     } catch (error) {
       console.error('❌ Error loading event:', error);
-    }
-  };
-
-  const loadFacilitators = async () => {
-    try {
-      const data = await fetchFacilitators();
-      setFacilitatorsList(data);
-    } catch (err) {
-      console.error('Error loading facilitators:', err);
-    }
-  };
-
-  const loadCalendars = async () => {
-    try {
-      const data = await fetchCalendars();
-      setCalendarsList(data);
-    } catch (err) {
-      console.error('Error loading calendars:', err);
     }
   };
 
@@ -276,6 +239,13 @@ const EventEditorModal = ({
             eventData={eventData}
             onFieldChange={handleFieldChange}
             calendarsList={calendarsList}
+            onDelete={() => {
+              if (window.confirm('Delete this event?')) deleteEvent(eventId).then(onClose);
+            }}
+            onDuplicate={() => {
+              const title = prompt('New title?');
+              if (title) duplicateEvent(eventData, title).then(() => alert('Duplicated'));
+            }}
           />
         )}
       </div>

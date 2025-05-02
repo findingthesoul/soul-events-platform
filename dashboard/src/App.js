@@ -28,30 +28,22 @@ function App() {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
-
-      setTimeout(() => {
-        fetchEvents(storedToken, storedVendorId);
-      }, 100);
+      fetchEvents(storedToken, storedVendorId);
     }
   }, []);
 
   const fetchEvents = async (overrideToken = token, overrideVendorId = vendorId) => {
     try {
-      const formula = `SEARCH("${overrideVendorId}", ARRAYJOIN({Vendors} & ""))`;
+      const formula = `SEARCH(\"${overrideVendorId}\", ARRAYJOIN({Vendors} & \"\"))`;
       const response = await fetch(
         `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`,
         {
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-          },
+          headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` },
         }
       );
       const data = await response.json();
-      if (data.error) {
-        console.error("Airtable fetch error:", data.error.message);
-        return;
-      }
-      setEvents(data.records || []);
+      if (!data.error) setEvents(data.records || []);
+      else console.error("Airtable fetch error:", data.error.message);
     } catch (err) {
       console.error('Failed to fetch events:', err);
     }
@@ -64,10 +56,7 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('vendorId', vendorId);
     localStorage.setItem('vendorName', vendorName);
-
-    setTimeout(() => {
-      fetchEvents(token, vendorId);
-    }, 100);
+    fetchEvents(token, vendorId);
   };
 
   const handleLogout = () => {
@@ -112,71 +101,45 @@ function App() {
   const filteredAndSortedEvents = events
     .filter(event => {
       const startDate = new Date(event.fields['Start Date']);
-      const now = new Date();
-      return showUpcoming ? startDate >= now : startDate < now;
+      return showUpcoming ? startDate >= new Date() : startDate < new Date();
     })
-    .sort((a, b) => {
-      const aDate = new Date(a.fields['Start Date']);
-      const bDate = new Date(b.fields['Start Date']);
-      return aDate - bDate;
-    });
+    .sort((a, b) => new Date(a.fields['Start Date']) - new Date(b.fields['Start Date']));
 
-  if (!token || !vendorId) {
-    return <Login onLogin={handleLogin} />;
-  }
+  if (!token || !vendorId) return <Login onLogin={handleLogin} />;
 
   return (
     <div className="app-container">
       <div className="event-list">
         <div className="event-header">
           {vendorName && <h2>Welcome, {vendorName}</h2>}
-
-          <div className="account-info-toggle" onClick={openAccountInfo}>
-            Account Info
-          </div>
-
+          <div className="account-info-toggle" onClick={openAccountInfo}>Account Info</div>
           <div className="view-toggle">
-            <button className={showUpcoming ? 'active' : ''} onClick={() => setShowUpcoming(true)}>
-              Upcoming
-            </button>
-            <button className={!showUpcoming ? 'active' : ''} onClick={() => setShowUpcoming(false)}>
-              Past
-            </button>
+            <button className={showUpcoming ? 'active' : ''} onClick={() => setShowUpcoming(true)}>Upcoming</button>
+            <button className={!showUpcoming ? 'active' : ''} onClick={() => setShowUpcoming(false)}>Past</button>
           </div>
         </div>
 
         {filteredAndSortedEvents.map((e) => (
-          <div
-            key={e.id}
-            className={`event-card ${selectedEvent?.id === e.id ? 'selected' : ''}`}
-            onClick={() => openEditor(e)}
-          >
+          <div key={e.id} className={`event-card ${selectedEvent?.id === e.id ? 'selected' : ''}`} onClick={() => openEditor(e)}>
             <strong>{e.fields['Event Title']}</strong>
-            {e.fields['Start Date'] && (
-              <span>
-                ({new Date(e.fields['Start Date']).toLocaleDateString()}
-                {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})
-              </span>
-            )}
+            {e.fields['Start Date'] && <span>({new Date(e.fields['Start Date']).toLocaleDateString()} {e.fields['Location'] ? ` @ ${e.fields['Location']}` : ''})</span>}
           </div>
         ))}
 
-        <button className="add-event-btn" onClick={() => openEditor(null)}>
-          + Create Event
-        </button>
+        <button className="add-event-btn" onClick={() => openEditor(null)}>+ Create Event</button>
       </div>
 
       {showEditor && selectedMode === 'event' && (
         <EventEditorModal
-        eventId={selectedEvent?.id || null}
-        vendorId={vendorId}
-        onClose={closeEditor}
-        onSave={handleEventSaved}
-        openEditor={openEditor}
-        pendingEventSwitch={pendingEventSwitch}
-        clearPendingEventSwitch={() => setPendingEventSwitch(null)}
-        setHasUnsavedChanges={setHasUnsavedChanges}
-      />
+          eventId={selectedEvent?.id || null}
+          vendorId={vendorId}
+          onClose={closeEditor}
+          onSave={handleEventSaved}
+          openEditor={openEditor}
+          pendingEventSwitch={pendingEventSwitch}
+          clearPendingEventSwitch={() => setPendingEventSwitch(null)}
+          setHasUnsavedChanges={setHasUnsavedChanges}
+        />
       )}
 
       {showEditor && selectedMode === 'account' && (
@@ -185,7 +148,6 @@ function App() {
             <h2>Account Information</h2>
             <button className="close-btn" onClick={closeEditor}>×</button>
           </div>
-
           <div className="account-info-panel">
             <p><strong>Vendor Name:</strong> {vendorName}</p>
             <p><strong>Vendor Email:</strong> {token}</p>
