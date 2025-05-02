@@ -7,15 +7,19 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
     value: c.id,
   }));
 
-  const [localCalendars, setLocalCalendars] = useState(eventData.calendar || []);
-
-  useEffect(() => {
-    setLocalCalendars(eventData.calendar || []);
-  }, [eventData.calendar]);
+  const selectedCalendars = (eventData.calendar || []).map((cal) => {
+    if (typeof cal === 'string') {
+      const match = calendarOptions.find(opt => opt.value === cal);
+      return match || { label: cal, value: cal };
+    }
+    return {
+      label: cal.fields?.Name || 'Unnamed',
+      value: cal.id,
+    };
+  });
 
   const handleCalendarChange = (selectedOptions) => {
     const selectedValues = selectedOptions.map(opt => opt.value);
-    setLocalCalendars(selectedValues);
     onFieldChange('calendar', selectedValues);
   };
 
@@ -43,19 +47,12 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
 
       <h3>Calendars</h3>
       <div className="form-group">
-              <Select
+        <Select
           isMulti
           placeholder="Select calendar(s)"
           options={calendarOptions}
-          value={calendarOptions.filter(opt =>
-            (eventData.calendar || []).some(cal => cal.id === opt.value)
-          )}
-          onChange={(selectedOptions) =>
-            onFieldChange('calendar', selectedOptions.map(opt => ({
-              id: opt.value,
-              name: opt.label
-            })))
-          }
+          value={selectedCalendars}
+          onChange={handleCalendarChange}
         />
       </div>
 

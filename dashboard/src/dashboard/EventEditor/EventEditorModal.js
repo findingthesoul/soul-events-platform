@@ -82,13 +82,19 @@ const EventEditorModal = ({
       const data = await fetchEventById(eventId);
       console.log('🔍 Raw event data from Airtable:', data);
       console.log("🧩 Field names from Airtable:", Object.keys(data));
-
+  
       const allFacilitators = await fetchFacilitators();
       setFacilitatorsList(allFacilitators);
-
+  
       const allCalendars = await fetchCalendars();
       setCalendarsList(allCalendars);
-
+  
+      // ✅ Safely normalize calendar
+      const rawCalendarIds = Array.isArray(data['Calendar']) ? data['Calendar'] : (data['Calendar'] ? [data['Calendar']] : []);
+      const mappedCalendars = rawCalendarIds
+        .map((id) => allCalendars.find((c) => c.id === id))
+        .filter(Boolean);
+  
       const mappedData = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
@@ -105,26 +111,28 @@ const EventEditorModal = ({
         locationUrl: data['Zoom link'] || '',
         status: data['Published'] || 'Draft',
         frontendLanguage: data['Language'] || 'English',
-        facilitators: (data['Host ID'] || []).map((id) => allFacilitators.find((f) => f.id === id)).filter(Boolean),
-        calendar: (data['Calendar'] || []).map((id) => allCalendars.find((c) => c.id === id)).filter(Boolean),
+        facilitators: (data['Host ID'] || [])
+          .map((id) => allFacilitators.find((f) => f.id === id))
+          .filter(Boolean),
+        calendar: mappedCalendars,
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
       };
-
+  
       if (mappedData.tickets.length > 0) {
         const ticketRecords = await fetchTicketsByIds(mappedData.tickets);
         mappedData.tickets = ticketRecords;
       } else {
         mappedData.tickets = [];
       }
-
+  
       if (mappedData.coupons.length > 0) {
         const couponRecords = await fetchCouponsByIds(mappedData.coupons);
         mappedData.coupons = couponRecords;
       } else {
         mappedData.coupons = [];
       }
-
+  
       setEventData(mappedData);
       setOriginalData(mappedData);
     } catch (error) {
