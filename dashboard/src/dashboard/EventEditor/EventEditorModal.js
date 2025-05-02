@@ -89,11 +89,8 @@ const EventEditorModal = ({
       const allCalendars = await fetchCalendars();
       setCalendarsList(allCalendars);
   
-      // ✅ Safely normalize calendar
-      const rawCalendarIds = Array.isArray(data['Calendar']) ? data['Calendar'] : (data['Calendar'] ? [data['Calendar']] : []);
-      const mappedCalendars = rawCalendarIds
-        .map((id) => allCalendars.find((c) => c.id === id))
-        .filter(Boolean);
+      const rawCalendarIds = Array.isArray(data['Calendar ID']) ? data['Calendar ID'] : [data['Calendar ID']];
+      const rawFacilitatorIds = Array.isArray(data['Host ID']) ? data['Host ID'] : [data['Host ID']];
   
       const mappedData = {
         name: data['Event Title'] || '',
@@ -110,11 +107,16 @@ const EventEditorModal = ({
         locationDescription: data['Location Description'] || '',
         locationUrl: data['Zoom link'] || '',
         status: data['Published'] || 'Draft',
-        frontendLanguage: data['Language'] || 'English',
-        facilitators: (data['Host ID'] || [])
-          .map((id) => allFacilitators.find((f) => f.id === id))
+        frontendLanguage: data['Language'] || '',
+  
+        facilitators: rawFacilitatorIds
+          .map(id => allFacilitators.find(f => f.id === id))
           .filter(Boolean),
-        calendar: mappedCalendars,
+  
+        calendar: rawCalendarIds
+          .map(id => allCalendars.find(c => c.id === id))
+          .filter(Boolean),
+  
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
       };
