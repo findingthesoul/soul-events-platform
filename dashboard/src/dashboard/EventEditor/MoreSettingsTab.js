@@ -43,12 +43,19 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
 
       <h3>Calendars</h3>
       <div className="form-group">
-        <Select
+              <Select
           isMulti
           placeholder="Select calendar(s)"
           options={calendarOptions}
-          value={calendarOptions.filter(opt => (eventData.calendar || []).includes(opt.value))}
-          onChange={handleCalendarChange}
+          value={calendarOptions.filter(opt =>
+            (eventData.calendar || []).some(cal => cal.id === opt.value)
+          )}
+          onChange={(selectedOptions) =>
+            onFieldChange('calendar', selectedOptions.map(opt => ({
+              id: opt.value,
+              name: opt.label
+            })))
+          }
         />
       </div>
 
