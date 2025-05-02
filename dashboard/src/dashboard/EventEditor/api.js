@@ -36,7 +36,6 @@ export const saveEvent = async (eventId, eventData) => {
     "Location URL": eventData.locationUrl || '',
     "Zoom link": eventData.zoomLink || '',
     "Description": eventData.description,
-    "Language": eventData.frontendLanguage,
     "Host ID": Array.isArray(eventData.facilitators)
       ? eventData.facilitators.map((f) => (typeof f === 'string' ? f : f.id)).filter(Boolean)
       : [],

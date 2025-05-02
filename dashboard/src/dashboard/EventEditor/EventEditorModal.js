@@ -104,7 +104,6 @@ const EventEditorModal = ({
         locationDescription: data['Location Description'] || '',
         locationUrl: data['Zoom link'] || '',
         status: data['Published'] || 'Draft',
-        frontendLanguage: data['Language'] || 'English',
         facilitators: (data['Host ID'] || []).map((id) =>
           allFacilitators.find((f) => f.id === id)
         ).filter(Boolean),
