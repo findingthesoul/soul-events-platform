@@ -104,12 +104,9 @@ const EventEditorModal = ({
         locationDescription: data['Location Description'] || '',
         locationUrl: data['Zoom link'] || '',
         status: data['Published'] || 'Draft',
-        facilitators: (data['Host ID'] || []).map((id) =>
-          allFacilitators.find((f) => f.id === id)
-        ).filter(Boolean),
-        calendar: (data['Calendar'] || []).map((id) =>
-          allCalendars.find((c) => c.id === id)
-        ).filter(Boolean),
+        frontendLanguage: data['Language'] || 'English',
+        facilitators: (data['Host ID'] || []).map((id) => allFacilitators.find((f) => f.id === id)).filter(Boolean),
+        calendar: (data['Calendar'] || []).map((id) => allCalendars.find((c) => c.id === id)).filter(Boolean),
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
       };
@@ -237,7 +234,101 @@ const EventEditorModal = ({
 
   return (
     <div className="event-editor-modal">
-      {/* The rest of the component remains the same */}
+      <div className="modal-header">
+        <h2>{eventId ? 'Edit Event' : 'New Event'}</h2>
+        <button onClick={handleCloseRequest}>×</button>
+      </div>
+
+      <div className="tabs">
+        <button className={activeTab === 'details' ? 'active' : ''} onClick={() => handleTabSwitch('details')}>Event Details</button>
+        <button className={activeTab === 'pricing' ? 'active' : ''} onClick={() => handleTabSwitch('pricing')}>Pricing & Coupons</button>
+        <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => handleTabSwitch('settings')}>More Settings</button>
+      </div>
+
+      <div className="tab-container">
+        {activeTab === 'details' && (
+          <EventDetailsTab eventData={eventData} facilitatorsList={facilitatorsList} calendarsList={calendarsList} onFieldChange={handleFieldChange} />
+        )}
+        {activeTab === 'pricing' && (
+          <PricingTab
+            tickets={eventData.tickets}
+            coupons={eventData.coupons}
+            onTicketsChange={handleTicketChange}
+            onCouponsChange={handleCouponChange}
+            openEditTicket={openEditTicket}
+            openEditCoupon={openEditCoupon}
+            deleteTicket={deleteTicket}
+            deleteCoupon={deleteCoupon}
+          />
+        )}
+        {activeTab === 'settings' && (
+          <MoreSettingsTab
+            eventData={eventData}
+            onFieldChange={handleFieldChange}
+            calendarsList={calendarsList}
+          />
+        )}
+      </div>
+
+      <div className="modal-footer">
+        <button type="button" className={hasUnsavedChanges ? 'unsaved' : 'saved'} onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
+          {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save' : 'Saved'}
+        </button>
+      </div>
+
+      {showConfirm && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <p>You have unsaved changes. What would you like to do?</p>
+            <button onClick={handleSave}>Save Changes</button>
+            <button onClick={() => setShowConfirm(false)}>Cancel</button>
+            <button onClick={handleConfirmDiscard}>Discard Changes</button>
+          </div>
+        </div>
+      )}
+
+      {showTicketModal && (
+        <TicketFormModal
+          ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
+          onSave={(updatedTicket) => {
+            const newTickets = [...(eventData.tickets || [])];
+            if (editingTicketIndex !== null) {
+              newTickets[editingTicketIndex] = updatedTicket;
+            } else {
+              newTickets.push(updatedTicket);
+            }
+            handleTicketChange(newTickets);
+            setShowTicketModal(false);
+            setEditingTicketIndex(null);
+          }}
+          onClose={() => {
+            setShowTicketModal(false);
+            setEditingTicketIndex(null);
+          }}
+        />
+      )}
+
+      {showCouponModal && (
+        <CouponFormModal
+          coupon={editingCouponIndex !== null ? eventData.coupons[editingCouponIndex] : null}
+          availableTickets={eventData.tickets || []}
+          onSave={(updatedCoupon) => {
+            const newCoupons = [...(eventData.coupons || [])];
+            if (editingCouponIndex !== null) {
+              newCoupons[editingCouponIndex] = updatedCoupon;
+            } else {
+              newCoupons.push(updatedCoupon);
+            }
+            handleCouponChange(newCoupons);
+            setShowCouponModal(false);
+            setEditingCouponIndex(null);
+          }}
+          onClose={() => {
+            setShowCouponModal(false);
+            setEditingCouponIndex(null);
+          }}
+        />
+      )}
     </div>
   );
 };
