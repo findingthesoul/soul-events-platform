@@ -90,6 +90,7 @@ export const saveEvent = async (eventId, eventData) => {
 
 export const saveTickets = async (tickets = []) => {
   if (!tickets.length) return;
+
   const createOrUpdate = tickets.map((t, index) => {
     const fields = {
       "Ticket Name": t.name || t["Ticket Name"] || '',
@@ -103,16 +104,20 @@ export const saveTickets = async (tickets = []) => {
     return t.id ? { id: t.id, fields } : { fields };
   });
 
+  // 🔍 Inspect outgoing payload before sending
+  console.log('🔍 Sending ticket data to Airtable:', createOrUpdate);
+
   try {
     const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({ records: createOrUpdate }),
     });
+
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error saving tickets:', error);
+    console.error('❌ Error saving tickets:', error);
     throw error;
   }
 };
