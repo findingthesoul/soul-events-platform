@@ -10,7 +10,7 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
   const selectedCalendars = (eventData.calendar || []).map((cal) => {
     if (typeof cal === 'string') {
       const match = calendarOptions.find(opt => opt.value === cal);
-      return match || { label: cal, value: cal };
+      return match || { label: 'Unnamed', value: cal };
     }
     return {
       label: cal.fields?.Name || 'Unnamed',
