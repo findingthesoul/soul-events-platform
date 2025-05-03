@@ -42,6 +42,7 @@ export const saveEvent = async (eventId, eventData) => {
     "Time Zone": eventData.timeZone || 'Europe/Amsterdam',
     "Calendar Visible": eventData.calendarVisible === true,
     "Test Mode": eventData.testMode === true,
+    "Published": eventData.status || 'Draft',
     "Tags": eventData.tags || '',
     "Slug": eventData.slug?.trim() || '',
     "Host ID": Array.isArray(eventData.facilitators)
@@ -52,17 +53,16 @@ export const saveEvent = async (eventId, eventData) => {
       : [],
     "Ticket ID": Array.isArray(eventData.tickets)
       ? eventData.tickets
-      .map(t => typeof t === 'string' ? t : t.id)
-      .filter(id => typeof id === 'string' && id.trim() !== '')
+          .map(t => typeof t === 'string' ? t : t.id)
+          .filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
     "Coupon ID": Array.isArray(eventData.coupons)
       ? eventData.coupons
-      .map(c => typeof c === 'string' ? c : c.id)
-      .filter(id => typeof id === 'string' && id.trim() !== '')
+          .map(c => typeof c === 'string' ? c : c.id)
+          .filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
   };
 
-  // remove undefined or empty string fields
   const cleanFields = Object.fromEntries(
     Object.entries(rawFields).filter(([_, v]) => v !== undefined && v !== "")
   );
