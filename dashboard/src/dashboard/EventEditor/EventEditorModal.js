@@ -170,6 +170,8 @@ const EventEditorModal = ({
         eventData.slug = generatedSlug;
       }
 
+      console.log('🔄 Saving Event:', eventData);
+
       await saveEvent(eventId, eventData);
       await saveTickets(eventData.tickets);
       await saveCoupons(eventData.coupons);
