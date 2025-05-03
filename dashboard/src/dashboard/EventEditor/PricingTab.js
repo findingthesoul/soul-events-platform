@@ -21,21 +21,11 @@ const PricingTab = ({
 
     onTicketsChange(reordered);
 
-    const updates = reordered.map((ticket, index) => ({
-      id: ticket.id,
-      fields: { 'Sort Order': index + 1 },
-    }));
     try {
-      await updateTicketOrderInAirtable(updates);
+      await updateTicketOrderInAirtable(reordered);
     } catch (err) {
       console.error('Failed to update sort order:', err);
     }
-  };
-
-  const handleCouponDelete = (index) => {
-    const updated = [...coupons];
-    updated.splice(index, 1);
-    onCouponsChange(updated);
   };
 
   const copyToClipboard = (text) => {
@@ -52,25 +42,18 @@ const PricingTab = ({
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="ticketList">
           {(provided) => (
-            <div
-              className="item-list"
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
+            <div className="item-list" ref={provided.innerRef} {...provided.droppableProps}>
               {tickets.map((ticket, index) => (
                 <Draggable key={ticket.id || index} draggableId={ticket.id || `ticket-${index}`} index={index}>
                   {(provided) => (
                     <div
-                      className="item-card"
+                      className="item-card ticket-item"
                       ref={provided.innerRef}
-                      {...provided.draggableProps}
                     >
                       <span
                         className="drag-icon"
                         {...provided.dragHandleProps}
-                      >
-                        ⋮⋮
-                      </span>
+                      >⋮⋮</span>
                       <span
                         className="item-name clickable"
                         onClick={() => openEditTicket(index)}
@@ -93,24 +76,27 @@ const PricingTab = ({
       </div>
 
       <div className="item-list">
-        {coupons.map((coupon, index) => (
-          <div key={index} className="item-card">
-            <span className="item-name">
-              <span className="clickable" onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}>
-                {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
-              </span>{' '}
-              ({
-                (() => {
-                  const ticket = availableTickets.find(
-                    t => t.id === coupon['Linked Ticket'] || t.id === coupon.linkedTicket
-                  );
-                  return ticket?.['Ticket Name'] || ticket?.name || 'No Ticket';
-                })()
-              })
-            </span>
-            <button onClick={() => openEditCoupon(index)} className="edit-btn">Edit</button>
-          </div>
-        ))}
+        {coupons.map((coupon, index) => {
+          const linkedTicket = availableTickets.find(
+            t => t.id === coupon['Linked Ticket'] || t.id === coupon.linkedTicket
+          );
+          return (
+            <div key={index} className="item-card coupon-item">
+              <span className="item-name">
+                <span
+                  className="clickable bold"
+                  onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}
+                >
+                  {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
+                </span>
+                <span className="linked-ticket">
+                  {' '}({linkedTicket?.['Ticket Name'] || linkedTicket?.name || 'No Ticket'})
+                </span>
+              </span>
+              <span className="edit-hint clickable" onClick={() => openEditCoupon(index)}>Edit</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
