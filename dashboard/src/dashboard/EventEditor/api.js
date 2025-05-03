@@ -39,9 +39,9 @@ export const saveEvent = async (eventId, eventData) => {
     "Facilitation Language": eventData.facilitationLanguage || 'English',
     "Page Language": eventData.frontendLanguage || 'ENG',
     "Time Zone": eventData.timeZone || 'Europe/Amsterdam',
-    "Calendar Visible": eventData.calendarVisible === true,
-    "Test Mode": eventData.testMode === true,
-    "Published": eventData.status || 'Draft',
+    "Calendar Visible": !!eventData.calendarVisible,
+    "Test Mode": !!eventData.testMode,
+    "Published": !!(eventData.status === 'Published'),
     "Tags": eventData.tags || '',
     "Slug": eventData.slug?.trim() || '',
     "Host ID": Array.isArray(eventData.facilitators)
