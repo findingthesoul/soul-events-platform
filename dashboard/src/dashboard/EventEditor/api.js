@@ -91,7 +91,10 @@ export const saveEvent = async (eventId, eventData) => {
 export const saveTickets = async (tickets = []) => {
   if (!tickets.length) return;
 
-  const createOrUpdate = tickets.map((t, index) => {
+  const updates = [];
+  const creates = [];
+
+  tickets.forEach((t, index) => {
     const fields = {
       "Ticket Name": t.name || t["Ticket Name"] || '',
       "Currency": t.currency || '',
@@ -101,21 +104,43 @@ export const saveTickets = async (tickets = []) => {
       "Until Date": t.untilDate || '',
       "Sort Order": index + 1,
     };
-    return t.id ? { id: t.id, fields } : { fields };
+
+    if (t.id) {
+      updates.push({ id: t.id, fields });
+    } else {
+      creates.push({ fields });
+    }
   });
 
-  // 🔍 Inspect outgoing payload before sending
-  console.log('🔍 Sending ticket data to Airtable:', createOrUpdate);
-
   try {
-    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ records: createOrUpdate }),
-    });
+    // First update existing tickets
+    if (updates.length) {
+      const patchResponse = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ records: updates }),
+        }
+      );
+      const patchResult = await patchResponse.json();
+      if (!patchResponse.ok) throw new Error(JSON.stringify(patchResult));
+    }
 
-    const data = await response.json();
-    return data;
+    // Then create new tickets
+    if (creates.length) {
+      const postResponse = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ records: creates }),
+        }
+      );
+      const postResult = await postResponse.json();
+      if (!postResponse.ok) throw new Error(JSON.stringify(postResult));
+    }
+
   } catch (error) {
     console.error('❌ Error saving tickets:', error);
     throw error;
