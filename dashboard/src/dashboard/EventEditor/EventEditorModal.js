@@ -62,6 +62,17 @@ const EventEditorModal = ({
     handleCouponChange(updated);
   };
 
+  const generateSlug = (title = '') => {
+    const cleanTitle = title
+      .toLowerCase()
+      .replace(/\s+/g, '-') // spaces to dashes
+      .replace(/[^\w-]+/g, '') // remove non-word chars
+      .substring(0, 30); // limit length if needed
+  
+    const randomPart = Math.random().toString(16).substring(2, 8); // 6-char hex
+    return `${cleanTitle}-${randomPart}`;
+  };
+
   useEffect(() => {
     if (eventId) loadEvent();
   }, [eventId]);
@@ -101,7 +112,13 @@ const EventEditorModal = ({
         locationDescription: data['Location Description'] || '',
         locationUrl: data['Zoom link'] || '',
         status: data['Published'] || 'Draft',
-        frontendLanguage: data['Language'] || '',
+        facilitationLanguage: data['Facilitation Language'] || 'English',
+        frontendLanguage: data['Page Language'] || 'ENG',
+        timeZone: data['Time Zone'] || 'Europe/Amsterdam',
+        calendarVisible: data['Calendar Visible'] === true,
+        testMode: data['Test Mode'] === true,
+        tags: data['Tags'] || '',
+        slug: data['Slug'] || '',
         facilitators: rawFacilitatorIds.map(id => allFacilitators.find(f => f.id === id)).filter(Boolean),
         calendar: rawCalendarIds.map(id => allCalendars.find(c => c.id === id)).filter(Boolean),
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
@@ -150,6 +167,13 @@ const EventEditorModal = ({
   const handleSave = async () => {
     try {
       setIsSaving(true);
+  
+      // ✅ Auto-generate slug if missing
+      if (!eventData.slug || eventData.slug.trim() === '') {
+        const generatedSlug = generateSlug(eventData.name);
+        eventData.slug = generatedSlug;
+      }
+  
       await saveEvent(eventId, eventData);
       setOriginalData(eventData);
       setLocalUnsaved(false);

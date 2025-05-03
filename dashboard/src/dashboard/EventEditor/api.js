@@ -37,6 +37,13 @@ export const saveEvent = async (eventId, eventData) => {
     "Zoom link": eventData.zoomLink || '',
     "Description": eventData.description,
     "Language": eventData.frontendLanguage,
+    "Facilitation Language": eventData.facilitationLanguage || 'English',
+    "Page Language": eventData.frontendLanguage || 'ENG',
+    "Time Zone": eventData.timeZone || 'Europe/Amsterdam',
+    "Calendar Visible": eventData.calendarVisible === true,
+    "Test Mode": eventData.testMode === true,
+    "Tags": eventData.tags || '',
+    "Slug": eventData.slug?.trim() || '',
     "Host ID": Array.isArray(eventData.facilitators)
       ? eventData.facilitators.map((f) => (typeof f === 'string' ? f : f.id)).filter(Boolean)
       : [],
