@@ -173,7 +173,9 @@ export const fetchTicketsByIds = async (ids = []) => {
     { headers }
   );
   const data = await response.json();
-  return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+  return data.records
+    .map(rec => ({ id: rec.id, ...rec.fields }))
+    .sort((a, b) => (a['Sort Order'] || 0) - (b['Sort Order'] || 0));
 };
 
 export const fetchCouponsByIds = async (ids = []) => {
@@ -185,4 +187,28 @@ export const fetchCouponsByIds = async (ids = []) => {
   );
   const data = await response.json();
   return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+};
+export const updateTicketOrderInAirtable = async (tickets) => {
+  const updates = tickets.map((ticket, index) => ({
+    id: ticket.id,
+    fields: {
+      'Sort Order': index + 1,
+    },
+  }));
+
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ records: updates }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('❌ Error updating ticket sort order:', error);
+    throw error;
+  }
 };

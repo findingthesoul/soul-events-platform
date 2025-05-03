@@ -1,4 +1,7 @@
 import React from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import './PricingTab.css';
+import { updateTicketOrderInAirtable } from './api';
 
 const PricingTab = ({
   tickets = [],
@@ -7,58 +10,93 @@ const PricingTab = ({
   onCouponsChange,
   openEditTicket,
   openEditCoupon,
-  deleteTicket,
-  deleteCoupon
 }) => {
-  return (
-    <div className="pricing-tab scrollable-panel">
-      <h3>🎫 Tickets</h3>
-      <button type="button" onClick={() => openEditTicket(null)}>
-        + Add Ticket
-      </button>
-      <ul className="item-list">
-        {tickets.map((ticket, index) => (
-          <li key={index} className="item-card">
-            <div className="item-title">{ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}</div>
-            <div className="item-details">
-              <span className="badge">{ticket['Type'] || ticket.type || 'FREE'}</span>
-              {ticket['Type'] === 'PAID' && (
-                <span>
-                  {ticket['Price'] || ticket.price || 0} {ticket['Currency'] || ticket.currency || 'USD'}
-                </span>
-              )}
-              {ticket['Available Until'] && <span>• Until {ticket['Available Until']}</span>}
-              {ticket['Quantity'] && <span>• {ticket['Quantity']} total</span>}
-            </div>
-            <div className="item-actions">
-              <button onClick={() => openEditTicket(index)}>✏️ Edit</button>
-              <button onClick={() => deleteTicket(index)} className="danger">🗑 Delete</button>
-            </div>
-          </li>
-        ))}
-      </ul>
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
 
-      <h3>🏷 Coupons</h3>
-      <button type="button" onClick={() => openEditCoupon(null)}>
-        + Add Coupon
-      </button>
-      <ul className="item-list">
+    const reordered = Array.from(tickets);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+
+    onTicketsChange(reordered);
+
+    // Save new order to Airtable
+    const updates = reordered.map((ticket, index) => ({
+      id: ticket.id,
+      fields: { 'Sort Order': index + 1 },
+    }));
+    try {
+      await updateTicketOrderInAirtable(updates);
+    } catch (err) {
+      console.error('Failed to update sort order:', err);
+    }
+  };
+
+  const handleCouponDelete = (index) => {
+    const updated = [...coupons];
+    updated.splice(index, 1);
+    onCouponsChange(updated);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  return (
+    <div className="pricing-tab">
+      <div className="section-header">
+        <h3>Tickets</h3>
+        <button className="add-btn" onClick={() => openEditTicket(null)}>+ New Ticket</button>
+      </div>
+
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="ticketList">
+          {(provided) => (
+            <div
+              className="item-list"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {tickets.map((ticket, index) => (
+                <Draggable key={ticket.id || index} draggableId={ticket.id || `ticket-${index}`} index={index}>
+                  {(provided) => (
+                    <div
+                      className="item-card"
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                    >
+                      <span className="drag-icon">⋮⋮</span>
+                      <span className="item-name">{ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}</span>
+                      <button onClick={() => openEditTicket(index)} className="edit-btn">Edit</button>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      <div className="section-header">
+        <h3>Coupons</h3>
+        <button className="add-btn" onClick={() => openEditCoupon(null)}>+ New Coupon</button>
+      </div>
+
+      <div className="item-list">
         {coupons.map((coupon, index) => (
-          <li key={index} className="item-card">
-            <div className="item-title">{coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}</div>
-            <div className="item-details">
-              <span className="badge">{coupon['Type'] || coupon.type || 'FREE'}</span>
-              {coupon['Type'] === 'PERCENTAGE' && <span>• {coupon['Amount']}%</span>}
-              {coupon['Type'] === 'AMOUNT' && <span>• {coupon['Amount']} {coupon['Currency']}</span>}
-              {coupon['Linked Ticket'] && <span>• for {coupon['Linked Ticket']}</span>}
-            </div>
-            <div className="item-actions">
-              <button onClick={() => openEditCoupon(index)}>✏️ Edit</button>
-              <button onClick={() => deleteCoupon(index)} className="danger">🗑 Delete</button>
-            </div>
-          </li>
+          <div key={index} className="item-card">
+            <span className="item-name">
+              <span className="clickable" onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}>
+                {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
+              </span>{' '}
+              ({coupon['Linked Ticket'] || coupon.linkedTicket || 'No Ticket'})
+            </span>
+            <button onClick={() => openEditCoupon(index)} className="edit-btn">Edit</button>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };

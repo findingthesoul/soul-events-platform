@@ -9,6 +9,11 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
     linkedTicket: '',
   });
 
+  const generateCouponCode = (length = 8) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+  };
+
   useEffect(() => {
     if (coupon) {
       setFormData({
@@ -18,6 +23,8 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
         currency: coupon['Currency'] || coupon.currency || '',
         linkedTicket: coupon['Linked Ticket'] || coupon.linkedTicket || '',
       });
+    } else {
+      setFormData((prev) => ({ ...prev, code: generateCouponCode() }));
     }
   }, [coupon]);
 
