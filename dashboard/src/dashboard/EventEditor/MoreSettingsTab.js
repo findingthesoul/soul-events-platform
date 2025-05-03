@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
+import StatusVisibilitySection from './StatusVisibilitySection';
 
 const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, onDuplicate }) => {
   const calendarOptions = calendarsList.map(c => ({
@@ -7,46 +8,21 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
     value: c.id,
   }));
 
-  const selectedCalendars = (eventData.calendar || []).map((cal) => {
-    if (typeof cal === 'string') {
-      const match = calendarsList.find(c => c.id === cal);
-      return {
-        label: match?.fields?.['Calendar Name'] || 'Unnamed',
-        value: cal,
-      };
-    }
-    return {
-      label: cal.fields?.['Calendar Name'] || 'Unnamed',
-      value: cal.id,
-    };
-  });
+  const [localCalendars, setLocalCalendars] = useState(eventData.calendar || []);
+
+  useEffect(() => {
+    setLocalCalendars(eventData.calendar || []);
+  }, [eventData.calendar]);
 
   const handleCalendarChange = (selectedOptions) => {
     const selectedValues = selectedOptions.map(opt => opt.value);
+    setLocalCalendars(selectedValues);
     onFieldChange('calendar', selectedValues);
   };
 
   return (
     <>
-      <h3>Status</h3>
-      <div className="form-group">
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            type="button"
-            className={eventData.status === 'Draft' ? 'active' : ''}
-            onClick={() => onFieldChange('status', 'Draft')}
-          >
-            Draft
-          </button>
-          <button
-            type="button"
-            className={eventData.status === 'Published' ? 'active' : ''}
-            onClick={() => onFieldChange('status', 'Published')}
-          >
-            Published
-          </button>
-        </div>
-      </div>
+      <StatusVisibilitySection eventData={eventData} onFieldChange={onFieldChange} />
 
       <h3>Calendars</h3>
       <div className="form-group">
@@ -54,26 +30,26 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
           isMulti
           placeholder="Select calendar(s)"
           options={calendarOptions}
-          value={selectedCalendars}
+          value={(eventData.calendar || []).map((cal) => {
+            if (typeof cal === 'string') {
+              const match = calendarsList.find(c => c.id === cal);
+              return {
+                label: match?.fields?.['Calendar Name'] || 'Unnamed',
+                value: cal,
+              };
+            }
+            return {
+              label: cal.fields?.['Calendar Name'] || 'Unnamed',
+              value: cal.id,
+            };
+          })}
           onChange={handleCalendarChange}
         />
       </div>
 
-      <h3>Page Language</h3>
+      <h3>Language Settings</h3>
       <div className="form-group">
-        <select
-          value={eventData.frontendLanguage || 'ENG'}
-          onChange={(e) => onFieldChange('frontendLanguage', e.target.value)}
-        >
-          <option value="ENG">English</option>
-          <option value="ES">Spanish</option>
-          <option value="DE">German</option>
-          <option value="NL">Dutch</option>
-        </select>
-      </div>
-
-      <h3>Facilitation Language</h3>
-      <div className="form-group">
+        <label>Facilitation Language</label>
         <select
           value={eventData.facilitationLanguage || 'English'}
           onChange={(e) => onFieldChange('facilitationLanguage', e.target.value)}
@@ -85,58 +61,17 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
         </select>
       </div>
 
-      <h3>Time Zone</h3>
       <div className="form-group">
-        <input
-          type="text"
-          placeholder="e.g. Europe/Amsterdam"
-          value={eventData.timeZone || ''}
-          onChange={(e) => onFieldChange('timeZone', e.target.value)}
-        />
-      </div>
-
-      <h3>Calendar Visibility</h3>
-      <div className="form-group">
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={eventData.calendarVisibility || false}
-            onChange={(e) => onFieldChange('calendarVisibility', e.target.checked)}
-          />
-          <span className="slider round"></span>
-        </label>
-      </div>
-
-      <h3>Test Mode</h3>
-      <div className="form-group">
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={eventData.testMode || false}
-            onChange={(e) => onFieldChange('testMode', e.target.checked)}
-          />
-          <span className="slider round"></span>
-        </label>
-      </div>
-
-      <h3>Tags</h3>
-      <div className="form-group">
-        <input
-          type="text"
-          placeholder="Comma-separated tags"
-          value={eventData.tags || ''}
-          onChange={(e) => onFieldChange('tags', e.target.value)}
-        />
-      </div>
-
-      <h3>Slug</h3>
-      <div className="form-group">
-        <input
-          type="text"
-          placeholder="friendly-url-path"
-          value={eventData.slug || ''}
-          onChange={(e) => onFieldChange('slug', e.target.value)}
-        />
+        <label>Page Language</label>
+        <select
+          value={eventData.frontendLanguage || 'ENG'}
+          onChange={(e) => onFieldChange('frontendLanguage', e.target.value)}
+        >
+          <option value="ENG">English</option>
+          <option value="ES">Spanish</option>
+          <option value="NL">Dutch</option>
+          <option value="DE">German</option>
+        </select>
       </div>
 
       <h3>Danger Zone</h3>
