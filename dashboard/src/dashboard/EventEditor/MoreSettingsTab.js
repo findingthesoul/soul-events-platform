@@ -13,7 +13,7 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
       return match || { label: 'Unnamed', value: cal };
     }
     return {
-      label: cal.fields?.Name || 'Unnamed',
+      label: cal.fields?.['Calendar Name'] || 'Unnamed',
       value: cal.id,
     };
   });
@@ -46,15 +46,32 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
       </div>
 
       <h3>Calendars</h3>
-      <div className="form-group">
-        <Select
-          isMulti
-          placeholder="Select calendar(s)"
-          options={calendarOptions}
-          value={selectedCalendars}
-          onChange={handleCalendarChange}
-        />
-      </div>
+        <div className="form-group">
+          <Select
+            isMulti
+            placeholder="Select calendar(s)"
+            options={calendarsList.map(c => ({
+              label: c.fields?.['Calendar Name'] || 'Unnamed',
+              value: c.id,
+            }))}
+            value={(eventData.calendar || []).map((cal) => {
+              if (typeof cal === 'string') {
+                const match = calendarsList.find(c => c.id === cal);
+                return {
+                  label: match?.fields?.['Calendar Name'] || 'Unnamed',
+                  value: cal,
+                };
+              }
+              return {
+                label: cal.fields?.['Calendar Name'] || 'Unnamed',
+                value: cal.id,
+              };
+            })}
+            onChange={(selectedOptions) =>
+              onFieldChange('calendar', selectedOptions.map(opt => opt.value))
+            }
+          />
+        </div>
 
       <h3>Front-End Language</h3>
       <div className="form-group">
