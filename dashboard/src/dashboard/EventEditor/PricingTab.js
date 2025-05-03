@@ -10,6 +10,7 @@ const PricingTab = ({
   onCouponsChange,
   openEditTicket,
   openEditCoupon,
+  availableTickets = [],
 }) => {
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
@@ -20,7 +21,6 @@ const PricingTab = ({
 
     onTicketsChange(reordered);
 
-    // Save new order to Airtable
     const updates = reordered.map((ticket, index) => ({
       id: ticket.id,
       fields: { 'Sort Order': index + 1 },
@@ -64,11 +64,19 @@ const PricingTab = ({
                       className="item-card"
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      {...provided.dragHandleProps}
                     >
-                      <span className="drag-icon">⋮⋮</span>
-                      <span className="item-name">{ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}</span>
-                      <button onClick={() => openEditTicket(index)} className="edit-btn">Edit</button>
+                      <span
+                        className="drag-icon"
+                        {...provided.dragHandleProps}
+                      >
+                        ⋮⋮
+                      </span>
+                      <span
+                        className="item-name clickable"
+                        onClick={() => openEditTicket(index)}
+                      >
+                        {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
+                      </span>
                     </div>
                   )}
                 </Draggable>
@@ -91,7 +99,14 @@ const PricingTab = ({
               <span className="clickable" onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}>
                 {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
               </span>{' '}
-              ({coupon['Linked Ticket'] || coupon.linkedTicket || 'No Ticket'})
+              ({
+                (() => {
+                  const ticket = availableTickets.find(
+                    t => t.id === coupon['Linked Ticket'] || t.id === coupon.linkedTicket
+                  );
+                  return ticket?.['Ticket Name'] || ticket?.name || 'No Ticket';
+                })()
+              })
             </span>
             <button onClick={() => openEditCoupon(index)} className="edit-btn">Edit</button>
           </div>
