@@ -9,6 +9,8 @@ import {
   fetchFacilitators,
   fetchCalendars,
   saveEvent,
+  saveTickets,
+  saveCoupons,
   deleteEvent,
   duplicateEvent,
   fetchTicketsByIds,
@@ -162,11 +164,16 @@ const EventEditorModal = ({
   const handleSave = async () => {
     try {
       setIsSaving(true);
+
       if (!eventData.slug || eventData.slug.trim() === '') {
         const generatedSlug = generateSlug(eventData.name);
         eventData.slug = generatedSlug;
       }
+
       await saveEvent(eventId, eventData);
+      await saveTickets(eventData.tickets);
+      await saveCoupons(eventData.coupons);
+
       setOriginalData(eventData);
       setLocalUnsaved(false);
       if (setHasUnsavedChanges) setHasUnsavedChanges(false);

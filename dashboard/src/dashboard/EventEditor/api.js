@@ -45,22 +45,24 @@ export const saveEvent = async (eventId, eventData) => {
     "Tags": eventData.tags || '',
     "Slug": eventData.slug?.trim() || '',
     "Host ID": Array.isArray(eventData.facilitators)
-      ? eventData.facilitators.map(f => (typeof f === 'string' ? f : f.id)).filter(Boolean)
+      ? eventData.facilitators.map((f) => (typeof f === 'string' ? f : f.id)).filter(Boolean)
       : [],
     "Calendar ID": Array.isArray(eventData.calendar)
-      ? eventData.calendar.map(c => (typeof c === 'string' ? c : c.id)).filter(Boolean)
+      ? eventData.calendar.map((c) => (typeof c === 'string' ? c : c.id)).filter(Boolean)
       : [],
     "Ticket ID": Array.isArray(eventData.tickets)
-      ? eventData.tickets.map(t => (typeof t === 'string' ? t : t.id)).filter(id => typeof id === 'string' && id.trim() !== '')
+      ? eventData.tickets.map(t => t.id).filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
     "Coupon ID": Array.isArray(eventData.coupons)
-      ? eventData.coupons.map(c => (typeof c === 'string' ? c : c.id)).filter(id => typeof id === 'string' && id.trim() !== '')
+      ? eventData.coupons.map(c => c.id).filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
   };
 
   const cleanFields = Object.fromEntries(
-    Object.entries(rawFields).filter(([_, v]) => v !== undefined && v !== '')
+    Object.entries(rawFields).filter(([_, v]) => v !== undefined && v !== "")
   );
+
+  console.log('Sending to Airtable:', cleanFields);
 
   try {
     const response = await fetch(
@@ -87,60 +89,57 @@ export const saveEvent = async (eventId, eventData) => {
 };
 
 export const saveTickets = async (tickets = []) => {
-  const updates = tickets
-    .filter(t => t.id)
-    .map(ticket => ({
-      id: ticket.id,
-      fields: {
-        'Ticket Name': ticket['Ticket Name'] || ticket.name,
-        'Price': ticket['Price'] || ticket.price || 0,
-        'Currency': ticket['Currency'] || ticket.currency || 'EUR',
-        'Available Until': ticket['Available Until'] || ticket.untilDate || null,
-        'Quantity Limit': ticket['Quantity Limit'] || ticket.limit || null,
-        'Sort Order': ticket['Sort Order'] || ticket.sortOrder || null,
-      },
-    }));
+  if (!tickets.length) return;
+  const createOrUpdate = tickets.map((t, index) => {
+    const fields = {
+      "Ticket Name": t.name || t["Ticket Name"] || '',
+      "Currency": t.currency || '',
+      "Type": t.type || 'FREE',
+      "Price": parseFloat(t.price || t.amount || 0),
+      "Limit": t.limit || null,
+      "Until Date": t.untilDate || '',
+      "Sort Order": index + 1,
+    };
+    return t.id ? { id: t.id, fields } : { fields };
+  });
 
   try {
-    const response = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
-      {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ records: updates }),
-      }
-    );
-    const result = await response.json();
-    if (!response.ok) {
-      console.error('❌ Error saving tickets:', result);
-      throw new Error(result.error?.message || 'Ticket update failed');
-    }
-    return result;
+    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ records: createOrUpdate }),
+    });
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error('❌ Error saving ticket data:', error);
+    console.error('Error saving tickets:', error);
     throw error;
   }
 };
 
-export const updateTicketOrderInAirtable = async (tickets) => {
-  const updates = tickets.map((ticket, index) => ({
-    id: ticket.id,
-    fields: { 'Sort Order': index + 1 },
-  }));
+export const saveCoupons = async (coupons = []) => {
+  if (!coupons.length) return;
+  const createOrUpdate = coupons.map((c) => {
+    const fields = {
+      "Coupon Code": c.code,
+      "Type": c.type || 'FREE',
+      "Amount": c.amount || '',
+      "Currency": c.currency || '',
+      "Linked Ticket": c.linkedTicket || '',
+    };
+    return c.id ? { id: c.id, fields } : { fields };
+  });
 
   try {
-    const response = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
-      {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ records: updates }),
-      }
-    );
-    const result = await response.json();
-    return result;
+    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ records: createOrUpdate }),
+    });
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error('❌ Error updating ticket sort order:', error);
+    console.error('Error saving coupons:', error);
     throw error;
   }
 };
@@ -183,13 +182,9 @@ export const fetchFacilitators = async () => {
       { headers }
     );
     const data = await response.json();
-    if (data.error) {
-      console.error('Airtable error:', data.error);
-      return [];
-    }
-    return data.records.map((rec) => ({ id: rec.id, name: rec.fields['Name'] || 'Unnamed' }));
-  } catch (err) {
-    console.error('Failed to fetch facilitators:', err);
+    return data.records.map(rec => ({ id: rec.id, name: rec.fields['Name'] || 'Unnamed' }));
+  } catch (error) {
+    console.error('Error fetching facilitators:', error);
     return [];
   }
 };
@@ -230,4 +225,27 @@ export const fetchCouponsByIds = async (ids = []) => {
   );
   const data = await response.json();
   return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+};
+
+export const updateTicketOrderInAirtable = async (tickets) => {
+  const updates = tickets.map((ticket, index) => ({
+    id: ticket.id,
+    fields: { 'Sort Order': index + 1 },
+  }));
+
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ records: updates }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('❌ Error updating ticket sort order:', error);
+    throw error;
+  }
 };
