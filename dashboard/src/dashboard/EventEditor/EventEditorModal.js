@@ -63,13 +63,8 @@ const EventEditorModal = ({
   };
 
   const generateSlug = (title = '') => {
-    const cleanTitle = title
-      .toLowerCase()
-      .replace(/\s+/g, '-') // spaces to dashes
-      .replace(/[^\w-]+/g, '') // remove non-word chars
-      .substring(0, 30); // limit length if needed
-  
-    const randomPart = Math.random().toString(16).substring(2, 8); // 6-char hex
+    const cleanTitle = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').substring(0, 30);
+    const randomPart = Math.random().toString(16).substring(2, 8);
     return `${cleanTitle}-${randomPart}`;
   };
 
@@ -111,7 +106,7 @@ const EventEditorModal = ({
         location: data['Location'] || '',
         locationDescription: data['Location Description'] || '',
         locationUrl: data['Zoom link'] || '',
-        status: data['Published'] || 'Draft',
+        status: data['Published'] ? 'Published' : 'Draft',
         facilitationLanguage: data['Facilitation Language'] || 'English',
         frontendLanguage: data['Page Language'] || 'ENG',
         timeZone: data['Time Zone'] || 'Europe/Amsterdam',
@@ -167,13 +162,10 @@ const EventEditorModal = ({
   const handleSave = async () => {
     try {
       setIsSaving(true);
-  
-      // ✅ Auto-generate slug if missing
       if (!eventData.slug || eventData.slug.trim() === '') {
         const generatedSlug = generateSlug(eventData.name);
         eventData.slug = generatedSlug;
       }
-  
       await saveEvent(eventId, eventData);
       setOriginalData(eventData);
       setLocalUnsaved(false);

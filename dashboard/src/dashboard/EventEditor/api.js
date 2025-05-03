@@ -45,28 +45,22 @@ export const saveEvent = async (eventId, eventData) => {
     "Tags": eventData.tags || '',
     "Slug": eventData.slug?.trim() || '',
     "Host ID": Array.isArray(eventData.facilitators)
-      ? eventData.facilitators.map((f) => (typeof f === 'string' ? f : f.id)).filter(Boolean)
+      ? eventData.facilitators.map(f => (typeof f === 'string' ? f : f.id)).filter(Boolean)
       : [],
     "Calendar ID": Array.isArray(eventData.calendar)
-      ? eventData.calendar.map((c) => (typeof c === 'string' ? c : c.id)).filter(Boolean)
+      ? eventData.calendar.map(c => (typeof c === 'string' ? c : c.id)).filter(Boolean)
       : [],
     "Ticket ID": Array.isArray(eventData.tickets)
-      ? eventData.tickets
-          .map(t => typeof t === 'string' ? t : t.id)
-          .filter(id => typeof id === 'string' && id.trim() !== '')
+      ? eventData.tickets.map(t => (typeof t === 'string' ? t : t.id)).filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
     "Coupon ID": Array.isArray(eventData.coupons)
-      ? eventData.coupons
-          .map(c => typeof c === 'string' ? c : c.id)
-          .filter(id => typeof id === 'string' && id.trim() !== '')
+      ? eventData.coupons.map(c => (typeof c === 'string' ? c : c.id)).filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
   };
 
   const cleanFields = Object.fromEntries(
-    Object.entries(rawFields).filter(([_, v]) => v !== undefined && v !== "")
+    Object.entries(rawFields).filter(([_, v]) => v !== undefined && v !== '')
   );
-
-  console.log('Sending to Airtable:', cleanFields);
 
   try {
     const response = await fetch(
@@ -88,6 +82,65 @@ export const saveEvent = async (eventId, eventData) => {
     return result;
   } catch (error) {
     console.error('Error saving event:', error);
+    throw error;
+  }
+};
+
+export const saveTickets = async (tickets = []) => {
+  const updates = tickets
+    .filter(t => t.id)
+    .map(ticket => ({
+      id: ticket.id,
+      fields: {
+        'Ticket Name': ticket['Ticket Name'] || ticket.name,
+        'Price': ticket['Price'] || ticket.price || 0,
+        'Currency': ticket['Currency'] || ticket.currency || 'EUR',
+        'Available Until': ticket['Available Until'] || ticket.untilDate || null,
+        'Quantity Limit': ticket['Quantity Limit'] || ticket.limit || null,
+        'Sort Order': ticket['Sort Order'] || ticket.sortOrder || null,
+      },
+    }));
+
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ records: updates }),
+      }
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      console.error('❌ Error saving tickets:', result);
+      throw new Error(result.error?.message || 'Ticket update failed');
+    }
+    return result;
+  } catch (error) {
+    console.error('❌ Error saving ticket data:', error);
+    throw error;
+  }
+};
+
+export const updateTicketOrderInAirtable = async (tickets) => {
+  const updates = tickets.map((ticket, index) => ({
+    id: ticket.id,
+    fields: { 'Sort Order': index + 1 },
+  }));
+
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ records: updates }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('❌ Error updating ticket sort order:', error);
     throw error;
   }
 };
@@ -126,25 +179,15 @@ export const duplicateEvent = async (eventData, newTitle) => {
 export const fetchFacilitators = async () => {
   try {
     const response = await fetch(
-      `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/Facilitators`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
-        },
-      }
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Facilitators`,
+      { headers }
     );
-
     const data = await response.json();
-
     if (data.error) {
       console.error('Airtable error:', data.error);
       return [];
     }
-
-    return data.records.map((rec) => ({
-      id: rec.id,
-      name: rec.fields['Name'] || 'Unnamed',
-    }));
+    return data.records.map((rec) => ({ id: rec.id, name: rec.fields['Name'] || 'Unnamed' }));
   } catch (err) {
     console.error('Failed to fetch facilitators:', err);
     return [];
@@ -187,28 +230,4 @@ export const fetchCouponsByIds = async (ids = []) => {
   );
   const data = await response.json();
   return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
-};
-export const updateTicketOrderInAirtable = async (tickets) => {
-  const updates = tickets.map((ticket, index) => ({
-    id: ticket.id,
-    fields: {
-      'Sort Order': index + 1,
-    },
-  }));
-
-  try {
-    const response = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
-      {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ records: updates }),
-      }
-    );
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('❌ Error updating ticket sort order:', error);
-    throw error;
-  }
 };
