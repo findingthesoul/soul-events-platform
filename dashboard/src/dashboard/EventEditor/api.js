@@ -36,7 +36,6 @@ export const saveEvent = async (eventId, eventData) => {
     "Location URL": eventData.locationUrl || '',
     "Zoom link": eventData.zoomLink || '',
     "Description": eventData.description,
-    "Language": eventData.frontendLanguage,
     "Facilitation Language": eventData.facilitationLanguage || 'English',
     "Page Language": eventData.frontendLanguage || 'ENG',
     "Time Zone": eventData.timeZone || 'Europe/Amsterdam',
