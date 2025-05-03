@@ -98,13 +98,18 @@ export const saveTickets = async (tickets = []) => {
       "Type": t.type || 'FREE',
       "Price": parseFloat(t.price || t.amount || 0),
       "Limit": t.limit || null,
-      "Until Date": t.untilDate || '',
       "Sort Order": index + 1,
     };
+
+    // ✅ Only include Until Date if it's non-empty
+    if (t.untilDate && t.untilDate.trim() !== '') {
+      fields["Until Date"] = t.untilDate;
+    }
+
     return t.id ? { id: t.id, fields } : { fields };
   });
 
-  console.log("📦 Full ticket payload to Airtable:", JSON.stringify({ records: createOrUpdate }, null, 2));
+  console.log("📦 Ticket payload to Airtable:", JSON.stringify({ records: createOrUpdate }, null, 2));
 
   try {
     const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
@@ -117,7 +122,7 @@ export const saveTickets = async (tickets = []) => {
 
     if (!response.ok) {
       console.error('❌ Airtable error response:', data);
-      throw new Error(data.error?.message || 'Failed to save tickets');
+      throw new Error(JSON.stringify(data));
     }
 
     return data;
