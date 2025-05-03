@@ -1,4 +1,4 @@
-// Utility: Generate a random 6-character alphanumeric coupon code
+// console.log(updateTicketOrderInAirtable);// Utility: Generate a random 6-character alphanumeric coupon code
 export const generateCouponCode = () => {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 };
