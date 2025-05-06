@@ -85,20 +85,20 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
         )}
 
         <div className="form-group">
-          <label>Available Until</label>
+          <label>Limit</label>
           <input
-            type="date"
-            value={formData.until}
-            onChange={(e) => handleChange('until', e.target.value)}
+            type="number"
+            value={formData.limit || ''}
+            onChange={(e) => handleChange('limit', parseInt(e.target.value) || '')}
           />
         </div>
 
         <div className="form-group">
-          <label>Quantity</label>
+          <label>Until Date</label>
           <input
-            type="number"
-            value={formData.quantity}
-            onChange={(e) => handleChange('quantity', e.target.value)}
+            type="date"
+            value={formData.untilDate || ''}
+            onChange={(e) => handleChange('untilDate', e.target.value)}
           />
         </div>
 
