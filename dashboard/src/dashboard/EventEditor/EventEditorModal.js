@@ -173,7 +173,7 @@ const EventEditorModal = ({
       console.log('🔄 Saving Event:', eventData);
 
       await saveEvent(eventId, eventData);
-      await saveTickets(eventData.tickets);
+      await saveTickets(eventData.tickets, eventId);
       await saveCoupons(eventData.coupons);
 
       setOriginalData(eventData);

@@ -88,7 +88,7 @@ export const saveEvent = async (eventId, eventData) => {
   }
 };
 
-export const saveTickets = async (tickets = []) => {
+export const saveTickets = async (tickets = [], eventId) => {
   const updates = [];
   const creates = [];
 
@@ -98,9 +98,10 @@ export const saveTickets = async (tickets = []) => {
       "Currency": t.currency || '',
       "Type": t.type || 'FREE',
       "Price": parseFloat(t.price || t.amount || 0),
-      "Limit": t.limit || null,
+      "Limit": t.limit !== undefined ? t.limit : null,
       "Until Date": t.untilDate || null,
       "Sort Order": index + 1,
+      "Event ID": [eventId] // 👈 Make sure to wrap in array for linked records
     };
 
     if (t.id) {
