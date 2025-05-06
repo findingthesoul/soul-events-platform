@@ -63,6 +63,7 @@ export const saveEvent = async (eventId, eventData) => {
   );
 
   console.log('Sending to Airtable:', cleanFields);
+  
 
   try {
     const response = await fetch(
@@ -150,28 +151,69 @@ export const saveTickets = async (tickets = [], eventId) => {
 
 export const saveCoupons = async (coupons = []) => {
   if (!coupons.length) return;
-  const createOrUpdate = coupons.map((c) => {
+
+  const updates = [];
+  const creates = [];
+
+  coupons.forEach((c, index) => {
     const fields = {
-      "Coupon Code": c.code,
-      "Type": c.type || 'FREE',
-      "Amount": c.amount || '',
+      "Coupon Code": c.code || c["Coupon Code"] || '',
+      "Type": c.type || c["Type"] || 'FREE',
+      "Amount": parseFloat(c.amount || 0),
       "Currency": c.currency || '',
-      "Linked Ticket": c.linkedTicket || '',
+      "Linked Ticket": typeof c.linkedTicket === 'string' ? c.linkedTicket : c.linkedTicket?.id || '',
     };
-    return c.id ? { id: c.id, fields } : { fields };
+
+    if (fields["Type"] === 'FREE') {
+      delete fields.Amount;
+      delete fields.Currency;
+    }
+
+    if (c.id) {
+      updates.push({ id: c.id, fields });
+    } else {
+      creates.push({ fields });
+    }
   });
 
+  console.log('🧾 Coupons to update:', updates);
+  console.log('🧾 Coupons to create:', creates);
+
   try {
-    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ records: createOrUpdate }),
-    });
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error saving coupons:', error);
-    throw error;
+    if (updates.length) {
+      const updateResponse = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`,
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ records: updates }),
+        }
+      );
+      const updateResult = await updateResponse.json();
+      if (!updateResponse.ok) {
+        console.error('❌ Airtable coupon update error:', updateResult);
+        throw new Error(JSON.stringify(updateResult));
+      }
+    }
+
+    if (creates.length) {
+      const createResponse = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ records: creates }),
+        }
+      );
+      const createResult = await createResponse.json();
+      if (!createResponse.ok) {
+        console.error('❌ Airtable coupon creation error:', createResult);
+        throw new Error(JSON.stringify(createResult));
+      }
+    }
+  } catch (err) {
+    console.error('❌ Error saving coupons:', err);
+    throw err;
   }
 };
 
