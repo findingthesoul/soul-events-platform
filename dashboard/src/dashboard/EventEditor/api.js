@@ -91,7 +91,10 @@ export const saveEvent = async (eventId, eventData) => {
 export const saveTickets = async (tickets = []) => {
   if (!tickets.length) return;
 
-  const createOrUpdate = tickets.map((t, index) => {
+  const toUpdate = [];
+  const toCreate = [];
+
+  tickets.forEach((t, index) => {
     const fields = {
       "Ticket Name": t.name || t["Ticket Name"] || '',
       "Currency": t.currency || '',
@@ -101,31 +104,41 @@ export const saveTickets = async (tickets = []) => {
       "Sort Order": index + 1,
     };
 
-    // ✅ Only include Until Date if it's non-empty
     if (t.untilDate && t.untilDate.trim() !== '') {
       fields["Until Date"] = t.untilDate;
     }
 
-    return t.id ? { id: t.id, fields } : { fields };
+    const record = { fields };
+    if (t.id) {
+      record.id = t.id;
+      toUpdate.push(record);
+    } else {
+      toCreate.push(record);
+    }
   });
 
-  console.log("📦 Ticket payload to Airtable:", JSON.stringify({ records: createOrUpdate }, null, 2));
-
   try {
-    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ records: createOrUpdate }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('❌ Airtable error response:', data);
-      throw new Error(JSON.stringify(data));
+    if (toUpdate.length) {
+      console.log("🔄 Updating tickets in Airtable:", toUpdate);
+      const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ records: toUpdate }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(JSON.stringify(data));
     }
 
-    return data;
+    if (toCreate.length) {
+      console.log("➕ Creating tickets in Airtable:", toCreate);
+      const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ records: toCreate }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(JSON.stringify(data));
+    }
   } catch (error) {
     console.error('❌ Error saving tickets:', error);
     throw error;
