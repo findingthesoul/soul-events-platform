@@ -89,10 +89,8 @@ export const saveEvent = async (eventId, eventData) => {
 };
 
 export const saveTickets = async (tickets = []) => {
-  if (!tickets.length) return;
-
-  const toUpdate = [];
-  const toCreate = [];
+  const updates = [];
+  const creates = [];
 
   tickets.forEach((t, index) => {
     const fields = {
@@ -101,47 +99,51 @@ export const saveTickets = async (tickets = []) => {
       "Type": t.type || 'FREE',
       "Price": parseFloat(t.price || t.amount || 0),
       "Limit": t.limit || null,
+      "Until Date": t.untilDate || null,
       "Sort Order": index + 1,
     };
 
-    if (t.untilDate && t.untilDate.trim() !== '') {
-      fields["Until Date"] = t.untilDate;
-    }
-
-    const record = { fields };
     if (t.id) {
-      record.id = t.id;
-      toUpdate.push(record);
+      updates.push({ id: t.id, fields });
     } else {
-      toCreate.push(record);
+      creates.push({ fields });
     }
   });
 
-  try {
-    if (toUpdate.length) {
-      console.log("🔄 Updating tickets in Airtable:", toUpdate);
-      const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
+  // PATCH existing
+  if (updates.length) {
+    console.log('🔄 Updating tickets in Airtable:', updates);
+    const patchRes = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+      {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ records: toUpdate }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(JSON.stringify(data));
+        body: JSON.stringify({ records: updates }),
+      }
+    );
+    const patchData = await patchRes.json();
+    if (!patchRes.ok) {
+      console.error('❌ Airtable error on PATCH:', patchData);
+      throw new Error(JSON.stringify(patchData));
     }
+  }
 
-    if (toCreate.length) {
-      console.log("➕ Creating tickets in Airtable:", toCreate);
-      const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
+  // POST new
+  if (creates.length) {
+    console.log('➕ Creating tickets in Airtable:', creates);
+    const postRes = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`,
+      {
         method: 'POST',
         headers,
-        body: JSON.stringify({ records: toCreate }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(JSON.stringify(data));
+        body: JSON.stringify({ records: creates }),
+      }
+    );
+    const postData = await postRes.json();
+    if (!postRes.ok) {
+      console.error('❌ Airtable error on POST:', postData);
+      throw new Error(JSON.stringify(postData));
     }
-  } catch (error) {
-    console.error('❌ Error saving tickets:', error);
-    throw error;
   }
 };
 
