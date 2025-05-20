@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DeleteConfirmModal from './DeleteConfirmModal'; // ✅ Add this import
 
 const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
   const [formData, setFormData] = useState({
@@ -13,7 +14,6 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
   });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   useEffect(() => {
     if (ticket) {
@@ -36,16 +36,6 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
 
   const handleSubmit = () => {
     onSave(formData);
-  };
-
-  const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = () => {
-    if (deleteConfirmText === 'DELETE') {
-      onDelete();
-    }
   };
 
   return (
@@ -115,34 +105,25 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
 
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Ticket</button>
-          {ticket && !showDeleteConfirm && (
-            <button onClick={handleDelete} className="danger">Delete</button>
+          {ticket && (
+            <button onClick={() => setShowDeleteConfirm(true)} className="danger">
+              Delete
+            </button>
           )}
           <button onClick={onClose}>Cancel</button>
         </div>
-
-        {showDeleteConfirm && (
-          <div className="delete-confirm">
-            <p>Type <strong>DELETE</strong> to confirm deletion:</p>
-            <input
-              type="text"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-            />
-            <div className="modal-actions">
-              <button
-                className="danger"
-                onClick={confirmDelete}
-                disabled={deleteConfirmText !== 'DELETE'}
-                style={{ backgroundColor: deleteConfirmText === 'DELETE' ? 'blue' : '#ccc', color: 'white' }}
-              >
-                Confirm Delete
-              </button>
-              <button onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {showDeleteConfirm && (
+        <DeleteConfirmModal
+          onConfirm={() => {
+            onDelete();
+            setShowDeleteConfirm(false);
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+          itemType="ticket"
+        />
+      )}
     </div>
   );
 };
