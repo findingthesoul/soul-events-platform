@@ -1,142 +1,107 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import './PricingTab.css';
+import { updateTicketOrderInAirtable } from './api';
 
-const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    type: 'PAID',
-    price: '',
-    currency: 'USD',
-    until: '',
-    quantity: '',
-    limit: '',
-    untilDate: ''
-  });
+const PricingTab = ({
+  tickets = [],
+  coupons = [],
+  onTicketsChange,
+  onCouponsChange,
+  openEditTicket,
+  openEditCoupon,
+  deleteTicket,
+  deleteCoupon,
+  availableTickets = [],
+}) => {
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteInput, setDeleteInput] = useState('');
+    const reordered = Array.from(tickets);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
 
-  useEffect(() => {
-    if (ticket) {
-      setFormData({
-        name: ticket['Ticket Name'] || ticket.name || '',
-        type: ticket['Type'] || ticket.type || 'PAID',
-        price: ticket['Price'] || ticket.price || '',
-        currency: ticket['Currency'] || ticket.currency || 'USD',
-        until: ticket['Available Until'] || ticket.until || '',
-        quantity: ticket['Quantity'] || ticket.quantity || '',
-        limit: ticket['Limit'] || ticket.limit || '',
-        untilDate: ticket['Until Date'] || ticket.untilDate || '',
-      });
+    onTicketsChange(reordered);
+
+    try {
+      await updateTicketOrderInAirtable(reordered);
+    } catch (err) {
+      console.error('Failed to update sort order:', err);
     }
-  }, [ticket]);
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    onSave(formData);
-  };
-
-  const confirmDelete = () => {
-    if (deleteInput === 'DELETE') {
-      onDelete();
-    }
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>{ticket ? 'Edit Ticket' : 'Add Ticket'}</h3>
+    <div className="pricing-tab">
+      <div className="section-header">
+        <h3>Tickets</h3>
+        <button className="add-btn" onClick={() => openEditTicket(null)}>+ New Ticket</button>
+      </div>
 
-        <div className="form-group">
-          <label>Ticket Name</label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Type</label>
-          <select
-            value={formData.type}
-            onChange={(e) => handleChange('type', e.target.value)}
-          >
-            <option value="FREE">Free</option>
-            <option value="PAID">Paid</option>
-          </select>
-        </div>
-
-        {formData.type === 'PAID' && (
-          <>
-            <div className="form-group">
-              <label>Price</label>
-              <input
-                type="number"
-                value={formData.price}
-                onChange={(e) => handleChange('price', e.target.value)}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Currency</label>
-              <input
-                type="text"
-                value={formData.currency}
-                onChange={(e) => handleChange('currency', e.target.value)}
-              />
-            </div>
-          </>
-        )}
-
-        <div className="form-group">
-          <label>Limit</label>
-          <input
-            type="number"
-            value={formData.limit || ''}
-            onChange={(e) => handleChange('limit', parseInt(e.target.value) || '')}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Until Date</label>
-          <input
-            type="date"
-            value={formData.untilDate || ''}
-            onChange={(e) => handleChange('untilDate', e.target.value)}
-          />
-        </div>
-
-        <div className="modal-actions">
-          <button onClick={handleSubmit}>Save Ticket</button>
-          {ticket && !showDeleteConfirm && (
-            <button onClick={() => setShowDeleteConfirm(true)} className="danger">Delete</button>
-          )}
-          {ticket && showDeleteConfirm && (
-            <div className="delete-confirm">
-              <p>Type DELETE to confirm:</p>
-              <input
-                type="text"
-                value={deleteInput}
-                onChange={(e) => setDeleteInput(e.target.value)}
-              />
-              <button
-                className="danger"
-                onClick={confirmDelete}
-                disabled={deleteInput !== 'DELETE'}
-                style={{ backgroundColor: deleteInput === 'DELETE' ? '#3498db' : '#ccc' }}
-              >
-                Confirm Delete
-              </button>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="ticketList">
+          {(provided) => (
+            <div className="item-list" ref={provided.innerRef} {...provided.droppableProps}>
+              {tickets.map((ticket, index) => (
+                <Draggable key={ticket.id || index} draggableId={ticket.id || `ticket-${index}`} index={index}>
+                  {(provided) => (
+                    <div
+                      className="item-card ticket-item"
+                      ref={provided.innerRef}
+                    >
+                      <span
+                        className="drag-icon"
+                        {...provided.dragHandleProps}
+                      >⋮⋮</span>
+                      <span
+                        className="item-name clickable"
+                        onClick={() => openEditTicket(index)}
+                      >
+                        {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
+                      </span>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </div>
           )}
-          <button onClick={onClose}>Cancel</button>
-        </div>
+        </Droppable>
+      </DragDropContext>
+
+      <div className="section-header">
+        <h3>Coupons</h3>
+        <button className="add-btn" onClick={() => openEditCoupon(null)}>+ New Coupon</button>
+      </div>
+
+      <div className="item-list">
+        {coupons.map((coupon, index) => {
+          const linkedTicket = availableTickets.find(
+            t => t.id === coupon['Linked Ticket'] || t.id === coupon.linkedTicket
+          );
+          return (
+            <div key={index} className="item-card coupon-item">
+              <span className="item-name">
+                <span
+                  className="clickable bold"
+                  onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}
+                >
+                  {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
+                </span>
+                <span className="linked-ticket">
+                  {' '}({linkedTicket?.['Ticket Name'] || linkedTicket?.name || 'No Ticket'})
+                </span>
+              </span>
+              <span className="edit-hint clickable" onClick={() => openEditCoupon(index)}>Edit</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
 
-export default TicketFormModal;
+export default PricingTab;
