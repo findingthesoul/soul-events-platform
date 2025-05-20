@@ -79,10 +79,6 @@ const PricingTab = ({
                       >
                         {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
                       </span>
-                      <span
-                        className="delete-hint clickable"
-                        onClick={() => confirmDelete(index)}
-                      >🗑</span>
                     </div>
                   )}
                 </Draggable>
