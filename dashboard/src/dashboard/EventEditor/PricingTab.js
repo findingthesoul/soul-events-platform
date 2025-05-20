@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './PricingTab.css';
 import { updateTicketOrderInAirtable } from './api';
+import { ClipboardCopy, Trash2 } from 'lucide-react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
 const PricingTab = ({
@@ -15,8 +16,8 @@ const PricingTab = ({
   deleteCoupon,
   availableTickets = [],
 }) => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
+  const [copiedCode, setCopiedCode] = useState(null);
+  const [deleteIndex, setDeleteIndex] = useState(null);
 
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
@@ -36,19 +37,8 @@ const PricingTab = ({
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  };
-
-  const confirmDelete = (index) => {
-    setPendingDeleteIndex(index);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (pendingDeleteIndex !== null) {
-      deleteTicket(pendingDeleteIndex);
-      setPendingDeleteIndex(null);
-      setShowDeleteModal(false);
-    }
+    setCopiedCode(text);
+    setTimeout(() => setCopiedCode(null), 1500);
   };
 
   return (
@@ -69,14 +59,8 @@ const PricingTab = ({
                       className="item-card ticket-item"
                       ref={provided.innerRef}
                     >
-                      <span
-                        className="drag-icon"
-                        {...provided.dragHandleProps}
-                      >⋮⋮</span>
-                      <span
-                        className="item-name clickable"
-                        onClick={() => openEditTicket(index)}
-                      >
+                      <span className="drag-icon" {...provided.dragHandleProps}>⋮⋮</span>
+                      <span className="item-name clickable" onClick={() => openEditTicket(index)}>
                         {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
                       </span>
                     </div>
@@ -96,32 +80,38 @@ const PricingTab = ({
 
       <div className="item-list">
         {coupons.map((coupon, index) => {
+          const code = coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon';
           const linkedTicket = availableTickets.find(
             t => t.id === coupon['Linked Ticket'] || t.id === coupon.linkedTicket
           );
           return (
             <div key={index} className="item-card coupon-item">
-              <span className="item-name">
-                <span
-                  className="clickable bold"
-                  onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}
-                >
-                  {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
-                </span>
+              <span className="item-name clickable" onClick={() => openEditCoupon(index)}>
+                {code}{' '}
                 <span className="linked-ticket">
-                  {' '}({linkedTicket?.['Ticket Name'] || linkedTicket?.name || 'No Ticket'})
+                  ({linkedTicket?.['Ticket Name'] || linkedTicket?.name || 'No Ticket'})
                 </span>
               </span>
-              <span className="edit-hint clickable" onClick={() => openEditCoupon(index)}>Edit</span>
+              <span
+                className="copy-icon"
+                onClick={() => copyToClipboard(code)}
+                title="Copy code"
+              >
+                <ClipboardCopy size={16} color={copiedCode === code ? 'green' : 'gray'} />
+              </span>
             </div>
           );
         })}
       </div>
 
-      {showDeleteModal && (
+      {deleteIndex !== null && (
         <DeleteConfirmModal
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
+          onCancel={() => setDeleteIndex(null)}
+          onConfirm={() => {
+            deleteTicket(deleteIndex);
+            setDeleteIndex(null);
+          }}
+          itemType="ticket"
         />
       )}
     </div>
