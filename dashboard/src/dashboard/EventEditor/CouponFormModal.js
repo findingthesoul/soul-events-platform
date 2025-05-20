@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }) => {
   const [formData, setFormData] = useState({
     code: '',
     type: 'FREE',
     amount: '',
-    currency: '',
     linkedTicket: '',
   });
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   const generateCouponCode = (length = 8) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -20,7 +23,6 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
         code: coupon['Coupon Code'] || coupon.code || '',
         type: coupon['Type'] || coupon.type || 'FREE',
         amount: coupon['Amount'] || coupon.amount || '',
-        currency: coupon['Currency'] || coupon.currency || '',
         linkedTicket: coupon['Linked Ticket'] || coupon.linkedTicket || '',
       });
     } else {
@@ -36,8 +38,12 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
     onSave(formData);
   };
 
-  const handleDelete = () => {
-    if (window.confirm('Delete this coupon?')) {
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmText === 'DELETE') {
       onDelete();
     }
   };
@@ -57,40 +63,6 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
         </div>
 
         <div className="form-group">
-          <label>Type</label>
-          <select
-            value={formData.type}
-            onChange={(e) => handleChange('type', e.target.value)}
-          >
-            <option value="FREE">Free</option>
-            <option value="PERCENTAGE">Percentage</option>
-            <option value="AMOUNT">Amount</option>
-          </select>
-        </div>
-
-        {formData.type !== 'FREE' && (
-          <>
-            <div className="form-group">
-              <label>Amount</label>
-              <input
-                type="number"
-                value={formData.amount}
-                onChange={(e) => handleChange('amount', e.target.value)}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Currency</label>
-              <input
-                type="text"
-                value={formData.currency}
-                onChange={(e) => handleChange('currency', e.target.value)}
-              />
-            </div>
-          </>
-        )}
-
-        <div className="form-group">
           <label>Linked Ticket</label>
           <select
             value={formData.linkedTicket}
@@ -105,11 +77,42 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
           </select>
         </div>
 
+        <div className="form-group">
+          <label>Type</label>
+          <select
+            value={formData.type}
+            onChange={(e) => handleChange('type', e.target.value)}
+          >
+            <option value="FREE">Free</option>
+            <option value="PERCENTAGE">Percentage</option>
+            <option value="AMOUNT">Amount</option>
+          </select>
+        </div>
+
+        {formData.type !== 'FREE' && (
+          <div className="form-group">
+            <label>Amount ({formData.type === 'PERCENTAGE' ? '%' : availableTickets.find(t => t.id === formData.linkedTicket)?.currency || 'currency'})</label>
+            <input
+              type="number"
+              value={formData.amount}
+              onChange={(e) => handleChange('amount', e.target.value)}
+            />
+          </div>
+        )}
+
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Coupon</button>
           <button onClick={onClose}>Cancel</button>
-          {coupon && <button onClick={handleDelete} className="danger">Delete</button>}
+          {coupon && <button onClick={handleDeleteClick} className="danger">Delete</button>}
         </div>
+
+        {showDeleteConfirm && (
+          <DeleteConfirmModal
+            itemType="coupon"
+            onConfirm={confirmDelete}
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
+        )}
       </div>
     </div>
   );
