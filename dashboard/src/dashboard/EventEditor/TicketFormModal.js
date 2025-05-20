@@ -38,7 +38,7 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
     onSave(formData);
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
 
@@ -115,26 +115,34 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
 
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Ticket</button>
-          {ticket && !showDeleteConfirm && (
-            <button onClick={handleDelete} className="danger">Delete</button>
-          )}
           <button onClick={onClose}>Cancel</button>
+          {ticket && (
+            <button onClick={handleDeleteClick} className="danger">
+              Delete
+            </button>
+          )}
         </div>
 
         {showDeleteConfirm && (
           <div className="delete-confirm">
-            <p>Type <strong>DELETE</strong> to confirm deletion:</p>
+            <p>
+              To confirm deletion of this ticket, please type <strong>DELETE</strong>:
+            </p>
             <input
               type="text"
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE"
             />
             <div className="modal-actions">
               <button
-                className="danger"
                 onClick={confirmDelete}
                 disabled={deleteConfirmText !== 'DELETE'}
-                style={{ backgroundColor: deleteConfirmText === 'DELETE' ? 'blue' : '#ccc', color: 'white' }}
+                className="danger"
+                style={{
+                  backgroundColor: deleteConfirmText === 'DELETE' ? 'blue' : '#ccc',
+                  color: 'white',
+                }}
               >
                 Confirm Delete
               </button>
