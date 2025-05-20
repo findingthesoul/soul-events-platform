@@ -207,6 +207,12 @@ const EventEditorModal = ({
 
   const handleTabSwitch = (tabName) => {
     if (tabName === activeTab) return;
+
+    setShowTicketModal(false);
+    setShowCouponModal(false);
+    setEditingTicketIndex(null);
+    setEditingCouponIndex(null);
+
     if (hasUnsavedChanges) {
       setNextTab(tabName);
       setShowConfirm(true);
@@ -257,6 +263,7 @@ const EventEditorModal = ({
             openEditCoupon={openEditCoupon}
             deleteTicket={deleteTicket}
             deleteCoupon={deleteCoupon}
+            availableTickets={eventData.tickets || []}
           />
         )}
         {activeTab === 'settings' && (
@@ -309,6 +316,15 @@ const EventEditorModal = ({
           onClose={() => {
             setShowTicketModal(false);
             setEditingTicketIndex(null);
+          }}
+          onDelete={() => {
+            if (editingTicketIndex !== null) {
+              const newTickets = [...eventData.tickets];
+              newTickets.splice(editingTicketIndex, 1);
+              handleTicketChange(newTickets);
+              setShowTicketModal(false);
+              setEditingTicketIndex(null);
+            }
           }}
         />
       )}
