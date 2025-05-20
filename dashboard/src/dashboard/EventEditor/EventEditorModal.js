@@ -132,6 +132,8 @@ const EventEditorModal = ({
 
       setEventData(mappedData);
       setOriginalData(mappedData);
+      setEditingTicketIndex(null);
+      setShowTicketModal(false);
     } catch (error) {
       console.error('❌ Error loading event:', error);
     }
@@ -207,12 +209,6 @@ const EventEditorModal = ({
 
   const handleTabSwitch = (tabName) => {
     if (tabName === activeTab) return;
-
-    setShowTicketModal(false);
-    setShowCouponModal(false);
-    setEditingTicketIndex(null);
-    setEditingCouponIndex(null);
-
     if (hasUnsavedChanges) {
       setNextTab(tabName);
       setShowConfirm(true);
@@ -319,9 +315,7 @@ const EventEditorModal = ({
           }}
           onDelete={() => {
             if (editingTicketIndex !== null) {
-              const newTickets = [...eventData.tickets];
-              newTickets.splice(editingTicketIndex, 1);
-              handleTicketChange(newTickets);
+              deleteTicket(editingTicketIndex);
               setShowTicketModal(false);
               setEditingTicketIndex(null);
             }
