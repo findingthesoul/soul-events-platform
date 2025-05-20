@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './PricingTab.css';
 import { updateTicketOrderInAirtable } from './api';
-import DeleteConfirmModal from './DeleteConfirmModal';
 
 const PricingTab = ({
   tickets = [],
@@ -11,11 +10,10 @@ const PricingTab = ({
   onCouponsChange,
   openEditTicket,
   openEditCoupon,
+  deleteTicket,
+  deleteCoupon,
   availableTickets = [],
 }) => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState({ type: '', index: null });
-
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
 
@@ -36,25 +34,6 @@ const PricingTab = ({
     navigator.clipboard.writeText(text);
   };
 
-  const handleDeleteClick = (type, index) => {
-    setDeleteTarget({ type, index });
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = () => {
-    if (deleteTarget.type === 'ticket') {
-      const updated = [...tickets];
-      updated.splice(deleteTarget.index, 1);
-      onTicketsChange(updated);
-    } else if (deleteTarget.type === 'coupon') {
-      const updated = [...coupons];
-      updated.splice(deleteTarget.index, 1);
-      onCouponsChange(updated);
-    }
-    setShowDeleteModal(false);
-    setDeleteTarget({ type: '', index: null });
-  };
-
   return (
     <div className="pricing-tab">
       <div className="section-header">
@@ -73,11 +52,16 @@ const PricingTab = ({
                       className="item-card ticket-item"
                       ref={provided.innerRef}
                     >
-                      <span className="drag-icon" {...provided.dragHandleProps}>⋮⋮</span>
-                      <span className="item-name clickable" onClick={() => openEditTicket(index)}>
+                      <span
+                        className="drag-icon"
+                        {...provided.dragHandleProps}
+                      >⋮⋮</span>
+                      <span
+                        className="item-name clickable"
+                        onClick={() => openEditTicket(index)}
+                      >
                         {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
                       </span>
-                      <span className="edit-hint danger clickable" onClick={() => handleDeleteClick('ticket', index)}>Delete</span>
                     </div>
                   )}
                 </Draggable>
@@ -101,7 +85,10 @@ const PricingTab = ({
           return (
             <div key={index} className="item-card coupon-item">
               <span className="item-name">
-                <span className="clickable bold" onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}>
+                <span
+                  className="clickable bold"
+                  onClick={() => copyToClipboard(coupon['Coupon Code'] || coupon.code)}
+                >
                   {coupon['Coupon Code'] || coupon.code || 'Unnamed Coupon'}
                 </span>
                 <span className="linked-ticket">
@@ -109,19 +96,10 @@ const PricingTab = ({
                 </span>
               </span>
               <span className="edit-hint clickable" onClick={() => openEditCoupon(index)}>Edit</span>
-              <span className="edit-hint danger clickable" onClick={() => handleDeleteClick('coupon', index)}>Delete</span>
             </div>
           );
         })}
       </div>
-
-      {showDeleteModal && (
-        <DeleteConfirmModal
-          itemType={deleteTarget.type}
-          onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
-        />
-      )}
     </div>
   );
 };
