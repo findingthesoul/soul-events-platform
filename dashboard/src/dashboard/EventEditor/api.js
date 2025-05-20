@@ -95,7 +95,7 @@ export const saveTickets = async (tickets = [], eventId) => {
       "Currency": t.currency || '',
       "Type": t.type || 'FREE',
       "Price": parseFloat(t.price || t.amount || 0),
-      "Limit": t.limit !== undefined ? t.limit : null,
+      "Limit": t.limit !== undefined && t.limit !== '' ? Number(t.limit) : null,
       "Until Date": t.untilDate || null,
       "Sort Order": index + 1,
       "Event ID": [eventId]
