@@ -43,6 +43,21 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
     return ticket?.Currency || ticket?.currency || '';
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirmText === 'DELETE') {
+      onDelete();
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setDeleteConfirmText('');
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -104,16 +119,36 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
           <button onClick={handleSubmit}>Save Coupon</button>
           <button onClick={onClose}>Cancel</button>
           {coupon && (
-            <button onClick={() => setShowDeleteConfirm(true)} className="danger">Delete</button>
+            <button onClick={handleDeleteClick} className="danger">Delete</button>
           )}
         </div>
 
         {showDeleteConfirm && (
-          <DeleteConfirmModal
-            itemType="coupon"
-            onConfirm={onDelete}
-            onCancel={() => setShowDeleteConfirm(false)}
-          />
+          <div className="delete-confirm">
+            <p>
+              To confirm deletion of this coupon, please type <strong>DELETE</strong>:
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE"
+            />
+            <div className="modal-actions">
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleteConfirmText !== 'DELETE'}
+                className="danger"
+                style={{
+                  backgroundColor: deleteConfirmText === 'DELETE' ? 'blue' : '#ccc',
+                  color: 'white',
+                }}
+              >
+                Confirm Delete
+              </button>
+              <button onClick={handleDeleteCancel}>Cancel</button>
+            </div>
+          </div>
         )}
       </div>
     </div>
