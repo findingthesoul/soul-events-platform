@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './PricingTab.css';
 import { updateTicketOrderInAirtable } from './api';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 const PricingTab = ({
   tickets = [],
@@ -14,6 +15,9 @@ const PricingTab = ({
   deleteCoupon,
   availableTickets = [],
 }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
+
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
 
@@ -32,6 +36,19 @@ const PricingTab = ({
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const confirmDelete = (index) => {
+    setPendingDeleteIndex(index);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (pendingDeleteIndex !== null) {
+      deleteTicket(pendingDeleteIndex);
+      setPendingDeleteIndex(null);
+      setShowDeleteModal(false);
+    }
   };
 
   return (
@@ -62,6 +79,10 @@ const PricingTab = ({
                       >
                         {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
                       </span>
+                      <span
+                        className="delete-hint clickable"
+                        onClick={() => confirmDelete(index)}
+                      >🗑</span>
                     </div>
                   )}
                 </Draggable>
@@ -100,6 +121,13 @@ const PricingTab = ({
           );
         })}
       </div>
+
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   );
 };
