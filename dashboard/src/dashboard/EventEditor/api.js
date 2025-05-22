@@ -151,6 +151,7 @@ export const saveCoupons = async (coupons = []) => {
     .map((c) => ({
       id: c.id,
       fields: {
+        "Coupon Name": c.name || '',
         "Coupon Code": c.code || '',
         "Coupon Type": c.type || 'FREE',
         "Amount": parseFloat(c.amount || 0),
@@ -162,6 +163,7 @@ export const saveCoupons = async (coupons = []) => {
     .filter(c => !c.id)
     .map((c) => ({
       fields: {
+        "Coupon Name": c.name || '',
         "Coupon Code": c.code || '',
         "Coupon Type": c.type || 'FREE',
         "Amount": parseFloat(c.amount || 0),

@@ -20,6 +20,7 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
   useEffect(() => {
     if (coupon) {
       setFormData({
+        name: coupon['Coupon Name'] || coupon.name || '',
         code: coupon['Coupon Code'] || coupon.code || '',
         type: coupon['Coupon Type'] || coupon.type || 'FREE',
         amount: coupon['Amount'] || coupon.amount || '',
@@ -47,6 +48,15 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
     <div className="modal-overlay">
       <div className="modal-content">
         <h3>{coupon ? 'Edit Coupon' : 'Add Coupon'}</h3>
+
+        <div className="form-group">
+          <label>Coupon Name</label>
+          <input
+            type="text"
+            value={formData.name || ''}
+            onChange={(e) => handleChange('name', e.target.value)}
+          />
+        </div>
 
         <div className="form-group">
           <label>Coupon Code</label>
