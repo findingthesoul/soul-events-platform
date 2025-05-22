@@ -154,7 +154,7 @@ export const saveCoupons = async (coupons = []) => {
         "Coupon Code": c.code || '',
         "Coupon Type": c.type || 'FREE',
         "Amount": parseFloat(c.amount || 0),
-        "Linked Ticket": c.linkedTicket || '',
+        "Linked Ticket": c.linkedTicket ? [c.linkedTicket] : [],
       },
     }));
 
@@ -165,7 +165,7 @@ export const saveCoupons = async (coupons = []) => {
         "Coupon Code": c.code || '',
         "Coupon Type": c.type || 'FREE',
         "Amount": parseFloat(c.amount || 0),
-        "Linked Ticket": c.linkedTicket || '',
+        "Linked Ticket": c.linkedTicket ? [c.linkedTicket] : [],
       },
     }));
 
