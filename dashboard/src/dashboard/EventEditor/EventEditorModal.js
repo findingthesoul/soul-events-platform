@@ -126,8 +126,15 @@ const EventEditorModal = ({
         mappedData.tickets = await fetchTicketsByIds(mappedData.tickets);
       }
 
-      if (mappedData.coupons.length > 0) {
-        mappedData.coupons = await fetchCouponsByIds(mappedData.coupons);
+      if (Array.isArray(mappedData.coupons)) {
+        const validCouponIds = mappedData.coupons
+          .map(id => typeof id === 'string' ? id.trim() : '')
+          .filter(Boolean);
+        if (validCouponIds.length > 0) {
+          mappedData.coupons = await fetchCouponsByIds(validCouponIds);
+        } else {
+          mappedData.coupons = [];
+        }
       }
 
       setEventData(mappedData);
