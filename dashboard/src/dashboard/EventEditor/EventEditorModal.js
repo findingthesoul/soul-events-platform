@@ -121,6 +121,7 @@ const EventEditorModal = ({
         calendar: rawCalendarIds.map(id => allCalendars.find(c => c.id === id)).filter(Boolean),
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
+        console.log('🧾 Raw Coupon IDs:', data['Coupon ID']);
       };
   
       // ✅ Fetch full ticket data
