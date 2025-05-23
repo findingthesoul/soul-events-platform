@@ -84,7 +84,8 @@ const EventEditorModal = ({
   }, [pendingEventSwitch, hasUnsavedChanges]);
 
   const loadEvent = async () => {
-    console.log('🔍 loadEvent() triggered with eventId:', eventId); // 👈 Add this line
+    console.log('🔍 loadEvent() triggered with eventId:', eventId);
+  
     try {
       const data = await fetchEventById(eventId);
       const allFacilitators = await fetchFacilitators();
@@ -121,10 +122,10 @@ const EventEditorModal = ({
         calendar: rawCalendarIds.map(id => allCalendars.find(c => c.id === id)).filter(Boolean),
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
-        console.log('🧾 Raw Coupon IDs:', data['Coupon ID']);
       };
   
-      // ✅ Fetch full ticket data
+      console.log('🧾 Raw Coupon IDs:', data['Coupon ID']);
+  
       if (mappedData.tickets.length > 0) {
         const validTicketIds = mappedData.tickets
           .map(id => typeof id === 'string' ? id.trim() : '')
@@ -132,11 +133,11 @@ const EventEditorModal = ({
         mappedData.tickets = await fetchTicketsByIds(validTicketIds);
       }
   
-      // ✅ Fetch full coupon data
       if (mappedData.coupons.length > 0) {
         const validCouponIds = mappedData.coupons
           .map(id => typeof id === 'string' ? id.trim() : '')
           .filter(Boolean);
+        console.log('📤 Fetching coupons with IDs:', validCouponIds);
         mappedData.coupons = await fetchCouponsByIds(validCouponIds);
         console.log('✅ Loaded coupons:', mappedData.coupons);
       }
