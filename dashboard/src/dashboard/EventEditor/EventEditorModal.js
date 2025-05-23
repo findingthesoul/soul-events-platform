@@ -84,6 +84,7 @@ const EventEditorModal = ({
   }, [pendingEventSwitch, hasUnsavedChanges]);
 
   const loadEvent = async () => {
+    console.log('🔍 loadEvent() triggered with eventId:', eventId); // 👈 Add this line
     try {
       const data = await fetchEventById(eventId);
       const allFacilitators = await fetchFacilitators();
