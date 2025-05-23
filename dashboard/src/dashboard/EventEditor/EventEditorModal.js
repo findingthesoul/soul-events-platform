@@ -90,10 +90,10 @@ const EventEditorModal = ({
       const allCalendars = await fetchCalendars();
       setFacilitatorsList(allFacilitators);
       setCalendarsList(allCalendars);
-
+  
       const rawCalendarIds = Array.isArray(data['Calendar ID']) ? data['Calendar ID'] : [data['Calendar ID']];
       const rawFacilitatorIds = Array.isArray(data['Host ID']) ? data['Host ID'] : [data['Host ID']];
-
+  
       const mappedData = {
         name: data['Event Title'] || '',
         startDate: data['Start Date'] || '',
@@ -121,26 +121,26 @@ const EventEditorModal = ({
         tickets: Array.isArray(data['Ticket ID']) ? data['Ticket ID'] : [],
         coupons: Array.isArray(data['Coupon ID']) ? data['Coupon ID'] : [],
       };
-
+  
+      // ✅ Fetch full ticket data
       if (mappedData.tickets.length > 0) {
-        mappedData.tickets = await fetchTicketsByIds(mappedData.tickets);
+        const validTicketIds = mappedData.tickets
+          .map(id => typeof id === 'string' ? id.trim() : '')
+          .filter(Boolean);
+        mappedData.tickets = await fetchTicketsByIds(validTicketIds);
       }
-
-      if (Array.isArray(mappedData.coupons)) {
+  
+      // ✅ Fetch full coupon data
+      if (mappedData.coupons.length > 0) {
         const validCouponIds = mappedData.coupons
           .map(id => typeof id === 'string' ? id.trim() : '')
           .filter(Boolean);
-        if (validCouponIds.length > 0) {
-          mappedData.coupons = await fetchCouponsByIds(validCouponIds);
-        } else {
-          mappedData.coupons = [];
-        }
+        mappedData.coupons = await fetchCouponsByIds(validCouponIds);
+        console.log('✅ Loaded coupons:', mappedData.coupons);
       }
-
+  
       setEventData(mappedData);
       setOriginalData(mappedData);
-      setEditingTicketIndex(null);
-      setShowTicketModal(false);
     } catch (error) {
       console.error('❌ Error loading event:', error);
     }
