@@ -294,7 +294,14 @@ export const fetchCouponsByIds = async (ids = []) => {
     { headers }
   );
   const data = await response.json();
-  return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+  return data.records.map(rec => ({
+    id: rec.id,
+    code: rec.fields['Coupon Code'] || '',
+    name: rec.fields['Coupon Name'] || '',
+    type: rec.fields['Coupon Type'] || 'FREE',
+    amount: rec.fields['Amount'] || 0,
+    linkedTicket: Array.isArray(rec.fields['Linked Ticket']) ? rec.fields['Linked Ticket'][0] : '',
+  }));
 };
 
 export const updateTicketOrderInAirtable = async (tickets) => {
