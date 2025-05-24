@@ -186,7 +186,7 @@ const EventEditorModal = ({
 
       await saveTickets(eventData.tickets, eventId);
 
-      const createdCoupons = await saveCoupons(eventData.coupons);
+      const createdCoupons = await saveCoupons(eventData.coupons, eventId);
       const allCoupons = [...(eventData.coupons || [])];
 
       createdCoupons?.forEach((created) => {

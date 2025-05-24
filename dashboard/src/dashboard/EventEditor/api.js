@@ -143,33 +143,35 @@ export const saveTickets = async (tickets = [], eventId) => {
   }
 };
 
-export const saveCoupons = async (coupons = []) => {
+export const saveCoupons = async (coupons = [], eventId) => {
   if (!coupons.length) return;
 
   const updates = coupons
-    .filter(c => c.id)
-    .map((c) => ({
-      id: c.id,
-      fields: {
-        "Coupon Name": c.name || '',
-        "Coupon Code": c.code || '',
-        "Coupon Type": c.type || 'FREE',
-        "Amount": parseFloat(c.amount || 0),
-        "Linked Ticket": c.linkedTicket ? [c.linkedTicket] : [],
-      },
-    }));
+  .filter(c => c.id)
+  .map((c) => ({
+    id: c.id,
+    fields: {
+      "Coupon Name": c.name || '',
+      "Coupon Code": c.code || '',
+      "Coupon Type": c.type || 'FREE',
+      "Amount": parseFloat(c.amount || 0),
+      "Linked Ticket": c.linkedTicket ? [c.linkedTicket] : [],
+      "Event ID": eventId ? [eventId] : [],
+    },
+  }));
 
-  const creates = coupons
-    .filter(c => !c.id)
-    .map((c) => ({
-      fields: {
-        "Coupon Name": c.name || '',
-        "Coupon Code": c.code || '',
-        "Coupon Type": c.type || 'FREE',
-        "Amount": parseFloat(c.amount || 0),
-        "Linked Ticket": c.linkedTicket ? [c.linkedTicket] : [],
-      },
-    }));
+const creates = coupons
+  .filter(c => !c.id)
+  .map((c) => ({
+    fields: {
+      "Coupon Name": c.name || '',
+      "Coupon Code": c.code || '',
+      "Coupon Type": c.type || 'FREE',
+      "Amount": parseFloat(c.amount || 0),
+      "Linked Ticket": c.linkedTicket ? [c.linkedTicket] : [],
+      "Event ID": eventId ? [eventId] : [],
+    },
+  }));
 
   console.log('🧾 Coupons to update:', updates);
   console.log('🧾 Coupons to create:', creates);
