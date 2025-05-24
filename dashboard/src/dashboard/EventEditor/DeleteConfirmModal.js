@@ -23,7 +23,18 @@ const DeleteConfirmModal = ({ onConfirm, onCancel, itemType = 'item' }) => {
             onClick={onConfirm}
             disabled={input !== 'DELETE'}
             className="danger"
+            style={{
+              backgroundColor: input === 'DELETE' ? 'blue' : '#ccc',
+              color: 'white',
+              cursor: input === 'DELETE' ? 'pointer' : 'not-allowed',
+              border: 'none',
+              padding: '0.5em 1em',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s ease',
+            }}
           >
+            Delete
+          </button>
             Delete
           </button>
         </div>
