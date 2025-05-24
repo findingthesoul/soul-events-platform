@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import { createTicket } from './api';
 
 const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAirtable }) => {
   const [formData, setFormData] = useState({

@@ -299,6 +299,34 @@ export const fetchCouponsByIds = async (ids = []) => {
   return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
 };
 
+export const createTicket = async (ticket, eventId, sortOrder = 1) => {
+  const fields = {
+    "Ticket Name": ticket.name || '',
+    "Currency": ticket.currency || '',
+    "Type": ticket.type || 'FREE',
+    "Price": parseFloat(ticket.price || 0),
+    "Limit": ticket.limit !== undefined && ticket.limit !== '' ? Number(ticket.limit) : null,
+    "Until Date": ticket.untilDate || null,
+    "Sort Order": sortOrder,
+    "Event ID": [eventId],
+  };
+
+  const res = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ records: [{ fields }] }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error('❌ Error creating ticket:', data);
+    throw new Error(data.error?.message || 'Failed to create ticket');
+  }
+
+  return data.records?.[0];
+};
+
+
 export const updateTicketOrderInAirtable = async (tickets) => {
   const updates = tickets.map((ticket, index) => ({
     id: ticket.id,

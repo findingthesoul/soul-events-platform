@@ -4,6 +4,7 @@ import PricingTab from './PricingTab';
 import MoreSettingsTab from './MoreSettingsTab';
 import TicketFormModal from './TicketFormModal';
 import CouponFormModal from './CouponFormModal';
+import { createTicket } from './api';
 import {
   fetchEventById,
   fetchFacilitators,
