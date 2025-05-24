@@ -128,16 +128,12 @@ const EventEditorModal = ({
       console.log('🧾 Raw Coupon IDs:', data['Coupon ID']);
 
       if (mappedData.tickets.length > 0) {
-        const validTicketIds = mappedData.tickets
-          .map(id => typeof id === 'string' ? id.trim() : '')
-          .filter(Boolean);
+        const validTicketIds = mappedData.tickets.map(id => typeof id === 'string' ? id.trim() : '').filter(Boolean);
         mappedData.tickets = await fetchTicketsByIds(validTicketIds);
       }
 
       if (mappedData.coupons.length > 0) {
-        const validCouponIds = mappedData.coupons
-          .map(id => typeof id === 'string' ? id.trim() : '')
-          .filter(Boolean);
+        const validCouponIds = mappedData.coupons.map(id => typeof id === 'string' ? id.trim() : '').filter(Boolean);
         console.log('📤 Fetching coupons with IDs:', validCouponIds);
         mappedData.coupons = await fetchCouponsByIds(validCouponIds);
         console.log('✅ Loaded coupons:', mappedData.coupons);

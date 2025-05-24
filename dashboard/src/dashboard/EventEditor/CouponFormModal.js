@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
-const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }) => {
+const CouponFormModal = ({
+  coupon,
+  onSave,
+  onClose,
+  onDelete,
+  availableTickets,
+  saveNewCouponToAirtable,
+}) => {
   const [formData, setFormData] = useState({
+    name: '',
     code: '',
     type: 'FREE',
     amount: '',
@@ -27,7 +35,10 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
         linkedTicket: coupon['Linked Ticket'] || coupon.linkedTicket || '',
       });
     } else {
-      setFormData((prev) => ({ ...prev, code: generateCouponCode() }));
+      setFormData((prev) => ({
+        ...prev,
+        code: generateCouponCode(),
+      }));
     }
   }, [coupon]);
 
@@ -35,13 +46,22 @@ const CouponFormModal = ({ coupon, onSave, onClose, onDelete, availableTickets }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    onSave(formData);
-  };
-
   const linkedTicketCurrency = () => {
     const ticket = availableTickets.find(t => t.id === formData.linkedTicket);
     return ticket?.Currency || ticket?.currency || '';
+  };
+
+  const handleSubmit = async () => {
+    if (!coupon && typeof saveNewCouponToAirtable === 'function') {
+      try {
+        const newCoupon = await saveNewCouponToAirtable(formData);
+        onSave(newCoupon); // Save to state
+      } catch (err) {
+        console.error('❌ Failed to create new coupon in Airtable:', err);
+      }
+    } else {
+      onSave(formData); // Local edit only
+    }
   };
 
   return (
