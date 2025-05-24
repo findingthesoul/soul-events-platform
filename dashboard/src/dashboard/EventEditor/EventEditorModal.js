@@ -336,10 +336,10 @@ const EventEditorModal = ({
         <button onClick={handleCloseRequest}>×</button>
       </div>
 
-      <div className="tabs">
-        <button className={activeTab === 'details' ? 'active' : ''} onClick={() => handleTabSwitch('details')}>Event Details</button>
-        <button className={activeTab === 'pricing' ? 'active' : ''} onClick={() => handleTabSwitch('pricing')}>Pricing & Coupons</button>
-        <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => handleTabSwitch('settings')}>More Settings</button>
+      <div className="tab-header">
+        <button className={`tab-button ${activeTab === 'details' ? 'active' : ''}`} onClick={() => handleTabSwitch('details')}>Details</button>
+        <button className={`tab-button ${activeTab === 'pricing' ? 'active' : ''}`} onClick={() => handleTabSwitch('pricing')}>Pricing</button>
+        <button className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => handleTabSwitch('settings')}>Settings</button>
       </div>
 
       <div className="tab-container">

@@ -454,3 +454,32 @@ button.saved {
   font-weight: normal;
   cursor: default;
 }
+.tab-header {
+  display: flex;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 1em;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 1em;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.3s, color 0.3s;
+  color: #777;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  border-bottom: 2px solid #007BFF; /* Blue underline */
+  color: #007BFF;
+  font-weight: 600;
+  background-color: #f9f9f9;
+}
