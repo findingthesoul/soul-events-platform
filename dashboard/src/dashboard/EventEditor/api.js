@@ -317,7 +317,6 @@ export const fetchTicketsByIds = async (ids = []) => {
 
 export const fetchCouponsByIds = async (ids = []) => {
   if (!ids.length) return [];
-
   const formula = `OR(${ids.map(id => `RECORD_ID()='${id}'`).join(',')})`;
   const response = await fetch(
     `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons?filterByFormula=${encodeURIComponent(formula)}`,
@@ -325,9 +324,16 @@ export const fetchCouponsByIds = async (ids = []) => {
   );
   const data = await response.json();
 
-  console.log("🧾 Airtable coupons data:", data); // 👈 Add this line
+  console.log('🧾 Airtable coupons data:', data); // Add this to verify structure
 
-  return data.records.map(rec => ({ id: rec.id, ...rec.fields }));
+  return data.records.map(rec => ({
+    id: rec.id,
+    name: rec.fields['Coupon Name'],
+    code: rec.fields['Coupon Code'],
+    type: rec.fields['Coupon Type'],
+    amount: rec.fields['Amount'],
+    linkedTicket: rec.fields['Linked Ticket']?.[0] || '',
+  }));
 };
 
 export const updateTicketOrderInAirtable = async (tickets) => {
