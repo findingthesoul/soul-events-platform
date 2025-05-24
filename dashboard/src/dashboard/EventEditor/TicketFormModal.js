@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import { createTicket } from './api';
 
 const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAirtable }) => {
   const [formData, setFormData] = useState({
@@ -8,8 +7,6 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAir
     type: 'PAID',
     price: '',
     currency: 'USD',
-    until: '',
-    quantity: '',
     limit: '',
     untilDate: '',
   });
@@ -23,8 +20,6 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAir
         type: ticket['Type'] || ticket.type || 'PAID',
         price: ticket['Price'] || ticket.price || '',
         currency: ticket['Currency'] || ticket.currency || 'USD',
-        until: ticket['Available Until'] || ticket.until || '',
-        quantity: ticket['Quantity'] || ticket.quantity || '',
         limit: ticket['Limit'] || ticket.limit || '',
         untilDate: ticket['Until Date'] || ticket.untilDate || '',
       });
@@ -55,19 +50,12 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAir
 
         <div className="form-group">
           <label>Ticket Name</label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-          />
+          <input type="text" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} />
         </div>
 
         <div className="form-group">
           <label>Type</label>
-          <select
-            value={formData.type}
-            onChange={(e) => handleChange('type', e.target.value)}
-          >
+          <select value={formData.type} onChange={(e) => handleChange('type', e.target.value)}>
             <option value="FREE">Free</option>
             <option value="PAID">Paid</option>
           </select>
@@ -77,60 +65,45 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAir
           <>
             <div className="form-group">
               <label>Price</label>
-              <input
-                type="number"
-                value={formData.price}
-                onChange={(e) => handleChange('price', e.target.value)}
-              />
+              <input type="number" value={formData.price} onChange={(e) => handleChange('price', e.target.value)} />
             </div>
 
             <div className="form-group">
               <label>Currency</label>
-              <input
-                type="text"
-                value={formData.currency}
-                onChange={(e) => handleChange('currency', e.target.value)}
-              />
+              <input type="text" value={formData.currency} onChange={(e) => handleChange('currency', e.target.value)} />
             </div>
           </>
         )}
 
         <div className="form-group">
           <label>Limit</label>
-          <input
-            type="number"
-            value={formData.limit || ''}
-            onChange={(e) => handleChange('limit', parseInt(e.target.value) || '')}
-          />
+          <input type="number" value={formData.limit || ''} onChange={(e) => handleChange('limit', e.target.value)} />
         </div>
 
         <div className="form-group">
           <label>Until Date</label>
-          <input
-            type="date"
-            value={formData.untilDate || ''}
-            onChange={(e) => handleChange('untilDate', e.target.value)}
-          />
+          <input type="date" value={formData.untilDate || ''} onChange={(e) => handleChange('untilDate', e.target.value)} />
         </div>
 
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Ticket</button>
           <button onClick={onClose}>Cancel</button>
           {ticket && (
-            <button onClick={() => setShowDeleteConfirm(true)} className="danger">
-              Delete
-            </button>
+            <button onClick={() => setShowDeleteConfirm(true)} className="danger">Delete</button>
           )}
         </div>
-      </div>
 
-      {showDeleteConfirm && (
-        <DeleteConfirmModal
-          onCancel={() => setShowDeleteConfirm(false)}
-          onConfirm={onDelete}
-          itemType="ticket"
-        />
-      )}
+        {showDeleteConfirm && (
+          <DeleteConfirmModal
+            itemType="ticket"
+            onConfirm={() => {
+              onDelete();
+              setShowDeleteConfirm(false);
+            }}
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -14,12 +14,11 @@ const CouponFormModal = ({
     code: '',
     type: 'FREE',
     discount: '',
-    amount: '',           // quantity of uses
+    amount: '',
     linkedTicket: '',
   });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   const generateCouponCode = (length = 8) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -146,32 +145,11 @@ const CouponFormModal = ({
           <DeleteConfirmModal
             itemType="coupon"
             onConfirm={() => {
-              if (deleteConfirmText === 'DELETE') onDelete();
-            }}
-            onCancel={() => {
+              onDelete();
               setShowDeleteConfirm(false);
-              setDeleteConfirmText('');
             }}
-          >
-            <input
-              type="text"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="Type DELETE"
-            />
-            <div className="modal-actions">
-              <button
-                className="danger"
-                disabled={deleteConfirmText !== 'DELETE'}
-                onClick={() => {
-                  if (deleteConfirmText === 'DELETE') onDelete();
-                }}
-              >
-                Confirm Delete
-              </button>
-              <button onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-            </div>
-          </DeleteConfirmModal>
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
         )}
       </div>
     </div>
