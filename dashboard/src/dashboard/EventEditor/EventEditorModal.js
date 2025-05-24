@@ -13,6 +13,7 @@ import {
   saveCoupons,
   deleteEvent,
   duplicateEvent,
+  deleteTicket as deleteTicketFromAirtable,
   fetchTicketsByIds,
   fetchCouponsByIds,
   createTicket,
@@ -81,14 +82,15 @@ const EventEditorModal = ({
         }
       }
     }
-  
-    // Delete ticket from Airtable
-    try {
-      await deleteTicket(ticketId);
-    } catch (err) {
-      console.error(`❌ Failed to delete ticket:`, err);
-      return;
-    }
+
+   // Delete ticket from Airtable
+      try {
+        console.log('🧨 Deleting ticket from Airtable:', ticketId);
+        await deleteTicketFromAirtable(ticketId);
+      } catch (err) {
+        console.error(`❌ Failed to delete ticket:`, err);
+        return;
+      }
   
     // Update local state
     const updatedTickets = [...eventData.tickets];
