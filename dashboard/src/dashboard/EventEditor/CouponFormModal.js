@@ -52,15 +52,20 @@ const CouponFormModal = ({
   };
 
   const handleSubmit = async () => {
+    const fullCoupon = {
+      ...(coupon || {}),   // preserve existing values (like id)
+      ...formData          // overwrite with edited fields
+    };
+  
     if (!coupon && typeof saveNewCouponToAirtable === 'function') {
       try {
-        const newCoupon = await saveNewCouponToAirtable(formData);
-        onSave(newCoupon); // Save to state
+        const newCoupon = await saveNewCouponToAirtable(fullCoupon);
+        onSave(newCoupon); // save with id
       } catch (err) {
         console.error('❌ Failed to create new coupon in Airtable:', err);
       }
     } else {
-      onSave(formData); // Local edit only
+      onSave(fullCoupon); // ensure we keep ID and all fields
     }
   };
 
