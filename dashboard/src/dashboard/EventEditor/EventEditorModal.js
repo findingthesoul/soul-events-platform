@@ -15,6 +15,7 @@ import {
   duplicateEvent,
   fetchTicketsByIds,
   fetchCouponsByIds,
+  createTicket,
 } from './api';
 import './EventEditorModal.css';
 
@@ -320,12 +321,15 @@ const EventEditorModal = ({
       {showTicketModal && (
         <TicketFormModal
           ticket={editingTicketIndex !== null ? eventData.tickets[editingTicketIndex] : null}
-          onSave={(updatedTicket) => {
+          onSave={async (updatedTicket) => {
             const newTickets = [...(eventData.tickets || [])];
             if (editingTicketIndex !== null) {
               newTickets[editingTicketIndex] = updatedTicket;
             } else {
-              newTickets.push(updatedTicket);
+              const created = await createTicket(updatedTicket, eventId);
+              if (created?.id) {
+                newTickets.push({ ...updatedTicket, id: created.id });
+              }
             }
             handleTicketChange(newTickets);
             setShowTicketModal(false);

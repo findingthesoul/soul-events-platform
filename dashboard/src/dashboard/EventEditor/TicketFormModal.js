@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
-const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
+const TicketFormModal = ({ ticket, onSave, onClose, onDelete, saveNewTicketToAirtable }) => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'PAID',
@@ -34,8 +34,17 @@ const TicketFormModal = ({ ticket, onSave, onClose, onDelete }) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    onSave(formData);
+  const handleSubmit = async () => {
+    if (!ticket && typeof saveNewTicketToAirtable === 'function') {
+      try {
+        const newTicket = await saveNewTicketToAirtable(formData);
+        onSave(newTicket);
+      } catch (err) {
+        console.error('❌ Failed to create new ticket in Airtable:', err);
+      }
+    } else {
+      onSave(formData);
+    }
   };
 
   return (
