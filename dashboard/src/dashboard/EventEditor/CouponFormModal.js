@@ -53,19 +53,21 @@ const CouponFormModal = ({
 
   const handleSubmit = async () => {
     const fullCoupon = {
-      ...(coupon || {}),   // preserve existing values (like id)
-      ...formData          // overwrite with edited fields
+      ...(coupon || {}),
+      ...formData
     };
+  
+    console.log('📤 Submitting full coupon:', fullCoupon); // ← Add this line
   
     if (!coupon && typeof saveNewCouponToAirtable === 'function') {
       try {
         const newCoupon = await saveNewCouponToAirtable(fullCoupon);
-        onSave(newCoupon); // save with id
+        onSave(newCoupon);
       } catch (err) {
         console.error('❌ Failed to create new coupon in Airtable:', err);
       }
     } else {
-      onSave(fullCoupon); // ensure we keep ID and all fields
+      onSave(fullCoupon);
     }
   };
 
