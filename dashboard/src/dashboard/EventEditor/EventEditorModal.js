@@ -100,6 +100,8 @@ const EventEditorModal = ({
   
     handleTicketChange(updatedTickets);
     handleCouponChange(updatedCoupons);
+
+    if (typeof onSave === 'function') onSave(); // 👈 refreshes the parent list
   
     // Trigger event list refresh
     if (typeof onSave === 'function') onSave();
