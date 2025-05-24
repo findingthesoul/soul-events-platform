@@ -192,6 +192,7 @@ export const saveCoupons = async (coupons = []) => {
     }
 
     if (creates.length) {
+      // Create new coupons
       const createResponse = await fetch(
         `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons`,
         {
@@ -201,10 +202,17 @@ export const saveCoupons = async (coupons = []) => {
         }
       );
       const createResult = await createResponse.json();
+    
       if (!createResponse.ok) {
         console.error('❌ Airtable coupon creation error:', createResult);
         throw new Error(JSON.stringify(createResult));
       }
+    
+      // ✅ Return IDs so caller can link them
+      return createResult.records.map(r => ({
+        id: r.id,
+        ...r.fields,
+      }));
     }
 
     console.log("✅ Coupons saved successfully.");
