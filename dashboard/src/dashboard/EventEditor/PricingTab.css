@@ -25,14 +25,6 @@
     font-size: 0.9rem;
   }
   
-  .item-list {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    gap: 0.4em; /* Use gap instead of margin for consistent spacing */
-  }
   
   .item-card {
     padding: 12px 16px;
@@ -107,24 +99,30 @@
     text-decoration: underline;
   }
 
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  /* Shared style for all ticket items */
   .item-card.ticket-item {
     display: flex;
     align-items: center;
-    padding: 0.75em;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    padding: 0.75em 1em;
+    border-top: 1px solid #ddd;
     background-color: #fff;
-    margin-bottom: 0em;
-    transition: box-shadow 0.2s ease;
-  }
-  
-  
-  .item-card.ticket-item:active {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .drag-icon {
-    margin-right: 0.5em;
     cursor: grab;
-    font-size: 1.2em;
+  }
+  
+  /* Remove top border from the first item */
+  .item-card.ticket-item:first-child {
+    border-top: none;
+  }
+  
+  /* Optional: style active drag */
+  .item-card.ticket-item:active {
+    background-color: #f7f7f7;
   }
