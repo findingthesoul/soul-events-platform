@@ -105,3 +105,24 @@
   .edit-btn:hover {
     text-decoration: underline;
   }
+
+  .item-card.ticket-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75em;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #fff;
+    margin-bottom: 0.5em;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .item-card.ticket-item:active {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .drag-icon {
+    margin-right: 0.5em;
+    cursor: grab;
+    font-size: 1.2em;
+  }

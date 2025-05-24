@@ -56,14 +56,15 @@ const PricingTab = ({
                 <Draggable key={ticket.id || index} draggableId={ticket.id || `ticket-${index}`} index={index}>
                   {(provided) => (
                     <div
-                      className="item-card ticket-item"
-                      ref={provided.innerRef}
-                    >
-                      <span className="drag-icon" {...provided.dragHandleProps}>⋮⋮</span>
-                      <span className="item-name clickable" onClick={() => openEditTicket(index)}>
-                        {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
-                      </span>
-                    </div>
+                    className="item-card ticket-item"
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                  >
+                    <span className="drag-icon" {...provided.dragHandleProps}>⋮⋮</span>
+                    <span className="item-name clickable" onClick={() => openEditTicket(index)}>
+                      {ticket['Ticket Name'] || ticket.name || 'Unnamed Ticket'}
+                    </span>
+                  </div>
                   )}
                 </Draggable>
               ))}
