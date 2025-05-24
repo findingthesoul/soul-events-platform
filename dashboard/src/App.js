@@ -92,8 +92,9 @@ function App() {
     setPendingEventSwitch(null);
   };
 
-  const handleEventSaved = () => {
-    fetchEvents();
+  const handleEventSaved = async () => {
+    await fetchEvents();                  // Re-fetch from Airtable
+    setEvents(prev => [...prev]);        // 👈 Force React to re-render even if data seems the same
     setHasUnsavedChanges(false);
     setPendingEventSwitch(null);
   };
