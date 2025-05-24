@@ -251,6 +251,18 @@ const EventEditorModal = ({
     }
   };
 
+  const saveNewCouponToAirtable = async (couponData) => {
+    try {
+      const result = await saveCoupons([{ ...couponData }], eventId);
+      if (result && result.length > 0) {
+        return { ...couponData, id: result[0].id };
+      }
+    } catch (error) {
+      console.error('❌ Failed to save coupon to Airtable:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="event-editor-modal">
       <div className="modal-header">
@@ -371,6 +383,7 @@ const EventEditorModal = ({
               setEditingCouponIndex(null);
             }
           }}
+          saveNewCouponToAirtable={saveNewCouponToAirtable}
         />
       )}
     </div>
