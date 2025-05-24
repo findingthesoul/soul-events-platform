@@ -31,6 +31,7 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
+    gap: 0.4em; /* Use gap instead of margin for consistent spacing */
   }
   
   .item-card {
@@ -113,9 +114,10 @@
     border: 1px solid #ddd;
     border-radius: 6px;
     background-color: #fff;
-    margin-bottom: 0.5em;
+    margin-bottom: 0em;
     transition: box-shadow 0.2s ease;
   }
+  
   
   .item-card.ticket-item:active {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
