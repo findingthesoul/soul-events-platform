@@ -320,6 +320,22 @@ export const fetchCouponsByIds = async (ids = []) => {
   }));
 };
 
+export const deleteTicket = async (ticketId) => {
+  try {
+    const res = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Tickets/${ticketId}`,
+      {
+        method: 'DELETE',
+        headers,
+      }
+    );
+    if (!res.ok) throw new Error('Failed to delete ticket');
+  } catch (err) {
+    console.error('❌ Error deleting ticket:', err);
+    throw err;
+  }
+};
+
 export const deleteCoupon = async (couponId) => {
   try {
     const res = await fetch(
