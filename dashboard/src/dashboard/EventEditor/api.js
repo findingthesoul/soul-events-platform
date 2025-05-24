@@ -320,6 +320,22 @@ export const fetchCouponsByIds = async (ids = []) => {
   }));
 };
 
+export const deleteCoupon = async (couponId) => {
+  try {
+    const res = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Coupons/${couponId}`,
+      {
+        method: 'DELETE',
+        headers,
+      }
+    );
+    if (!res.ok) throw new Error('Failed to delete coupon');
+  } catch (err) {
+    console.error('❌ Error deleting coupon:', err);
+    throw err;
+  }
+};
+
 export const updateTicketOrderInAirtable = async (tickets) => {
   const updates = tickets.map((ticket, index) => ({
     id: ticket.id,

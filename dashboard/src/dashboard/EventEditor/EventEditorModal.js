@@ -53,13 +53,60 @@ const EventEditorModal = ({
     setShowCouponModal(true);
   };
 
-  const deleteTicket = (index) => {
-    const updated = [...eventData.tickets];
-    updated.splice(index, 1);
-    handleTicketChange(updated);
+  const deleteTicket = async (index) => {
+    const ticket = eventData.tickets[index];
+    const ticketId = ticket?.id;
+  
+    if (!ticketId) return;
+  
+    // Find related coupons
+    const relatedCoupons = eventData.coupons.filter(
+      (c) => c.linkedTicket === ticketId
+    );
+  
+    let confirmed = true;
+    if (relatedCoupons.length > 0) {
+      confirmed = window.confirm(
+        `This ticket is linked to ${relatedCoupons.length} coupon(s). Deleting it will also remove those. Proceed?`
+      );
+    }
+  
+    if (!confirmed) return;
+  
+    // Delete coupons from Airtable
+    for (const coupon of relatedCoupons) {
+      if (coupon.id) {
+        try {
+          await deleteCoupon(coupon.id);
+        } catch (err) {
+          console.warn(`Failed to delete linked coupon ${coupon.code}`, err);
+        }
+      }
+    }
+  
+    // Remove ticket and coupons from state
+    const updatedTickets = [...eventData.tickets];
+    updatedTickets.splice(index, 1);
+  
+    const updatedCoupons = eventData.coupons.filter(
+      (c) => c.linkedTicket !== ticketId
+    );
+  
+    handleTicketChange(updatedTickets);
+    handleCouponChange(updatedCoupons);
   };
 
-  const deleteCoupon = (index) => {
+  const deleteCoupon = async (index) => {
+    const coupon = eventData.coupons[index];
+    if (coupon?.id) {
+      try {
+        await deleteCoupon(coupon.id);
+      } catch (err) {
+        alert('Failed to delete coupon from Airtable.');
+        return;
+      }
+    }
+  
     const updated = [...eventData.coupons];
     updated.splice(index, 1);
     handleCouponChange(updated);
