@@ -13,7 +13,8 @@ const CouponFormModal = ({
     name: '',
     code: '',
     type: 'FREE',
-    amount: '',
+    discount: '',
+    amount: '',           // quantity of uses
     linkedTicket: '',
   });
 
@@ -28,11 +29,12 @@ const CouponFormModal = ({
   useEffect(() => {
     if (coupon) {
       setFormData({
-        name: coupon['Coupon Name'] || coupon.name || '',
-        code: coupon['Coupon Code'] || coupon.code || '',
-        type: coupon['Coupon Type'] || coupon.type || 'FREE',
-        amount: coupon['Amount'] || coupon.amount || '',
-        linkedTicket: coupon['Linked Ticket'] || coupon.linkedTicket || '',
+        name: coupon.name || coupon['Coupon Name'] || '',
+        code: coupon.code || coupon['Coupon Code'] || '',
+        type: coupon.type || coupon['Coupon Type'] || 'FREE',
+        discount: coupon.discount || coupon['Discount Percentage'] || coupon['Discount Amount'] || '',
+        amount: coupon.amount || coupon['Amount'] || '',
+        linkedTicket: coupon.linkedTicket || coupon['Linked Ticket'] || '',
       });
     } else {
       setFormData((prev) => ({
@@ -54,11 +56,9 @@ const CouponFormModal = ({
   const handleSubmit = async () => {
     const fullCoupon = {
       ...(coupon || {}),
-      ...formData
+      ...formData,
     };
-  
-    console.log('📤 Submitting full coupon:', fullCoupon); // ← Add this line
-  
+
     if (!coupon && typeof saveNewCouponToAirtable === 'function') {
       try {
         const newCoupon = await saveNewCouponToAirtable(fullCoupon);
@@ -78,28 +78,17 @@ const CouponFormModal = ({
 
         <div className="form-group">
           <label>Coupon Name</label>
-          <input
-            type="text"
-            value={formData.name || ''}
-            onChange={(e) => handleChange('name', e.target.value)}
-          />
+          <input type="text" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} />
         </div>
 
         <div className="form-group">
           <label>Coupon Code</label>
-          <input
-            type="text"
-            value={formData.code}
-            onChange={(e) => handleChange('code', e.target.value)}
-          />
+          <input type="text" value={formData.code} onChange={(e) => handleChange('code', e.target.value)} />
         </div>
 
         <div className="form-group">
           <label>Linked Ticket</label>
-          <select
-            value={formData.linkedTicket}
-            onChange={(e) => handleChange('linkedTicket', e.target.value)}
-          >
+          <select value={formData.linkedTicket} onChange={(e) => handleChange('linkedTicket', e.target.value)}>
             <option value="">-- None --</option>
             {availableTickets.map((ticket) => (
               <option key={ticket.id} value={ticket.id}>
@@ -111,10 +100,7 @@ const CouponFormModal = ({
 
         <div className="form-group">
           <label>Type</label>
-          <select
-            value={formData.type}
-            onChange={(e) => handleChange('type', e.target.value)}
-          >
+          <select value={formData.type} onChange={(e) => handleChange('type', e.target.value)}>
             <option value="FREE">Free</option>
             <option value="PERCENTAGE">Percentage</option>
             <option value="AMOUNT">Amount</option>
@@ -123,12 +109,14 @@ const CouponFormModal = ({
 
         {formData.type !== 'FREE' && (
           <div className="form-group">
-            <label>Amount</label>
+            <label>
+              Discount {formData.type === 'PERCENTAGE' ? '(%)' : '(Amount)'}
+            </label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <input
                 type="number"
-                value={formData.amount}
-                onChange={(e) => handleChange('amount', e.target.value)}
+                value={formData.discount}
+                onChange={(e) => handleChange('discount', e.target.value)}
               />
               <span style={{ marginLeft: '0.5em' }}>
                 {formData.type === 'PERCENTAGE' ? '%' : linkedTicketCurrency()}
@@ -136,6 +124,15 @@ const CouponFormModal = ({
             </div>
           </div>
         )}
+
+        <div className="form-group">
+          <label>Quantity (Available Uses)</label>
+          <input
+            type="number"
+            value={formData.amount}
+            onChange={(e) => handleChange('amount', e.target.value)}
+          />
+        </div>
 
         <div className="modal-actions">
           <button onClick={handleSubmit}>Save Coupon</button>
@@ -149,9 +146,7 @@ const CouponFormModal = ({
           <DeleteConfirmModal
             itemType="coupon"
             onConfirm={() => {
-              if (deleteConfirmText === 'DELETE') {
-                onDelete();
-              }
+              if (deleteConfirmText === 'DELETE') onDelete();
             }}
             onCancel={() => {
               setShowDeleteConfirm(false);
@@ -168,10 +163,6 @@ const CouponFormModal = ({
               <button
                 className="danger"
                 disabled={deleteConfirmText !== 'DELETE'}
-                style={{
-                  backgroundColor: deleteConfirmText === 'DELETE' ? 'blue' : '#ccc',
-                  color: 'white',
-                }}
                 onClick={() => {
                   if (deleteConfirmText === 'DELETE') onDelete();
                 }}
