@@ -98,10 +98,18 @@ const EventEditorModal = ({
   
     const updatedCoupons = eventData.coupons.filter(c => c.linkedTicket !== ticketId);
   
-    handleTicketChange(updatedTickets);
-    handleCouponChange(updatedCoupons);
+    // After updating tickets and coupons
+      handleTicketChange(updatedTickets);
+      handleCouponChange(updatedCoupons);
 
-    if (typeof onSave === 'function') onSave(); // 👈 refreshes the parent list
+      // Force local eventData update so UI reflects changes
+      setEventData((prev) => ({
+        ...prev,
+        tickets: updatedTickets,
+        coupons: updatedCoupons,
+      }));
+
+      if (typeof onSave === 'function') onSave(); // Still good to refresh parent if needed
   
     // Trigger event list refresh
     if (typeof onSave === 'function') onSave();
