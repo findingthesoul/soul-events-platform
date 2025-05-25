@@ -104,8 +104,6 @@
 .coupon-item {
   background: #f9f9f9;
   padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -430,7 +428,9 @@ input:checked + .slider:before {
 .confirm-modal button:nth-child(3) {
   background-color: #e74c3c;
   color: white;
-}button.unsaved {
+}
+
+button.unsaved {
   background-color: #007BFF; /* Bootstrap blue */
   color: white;
   border: none;
