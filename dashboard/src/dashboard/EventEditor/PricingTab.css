@@ -126,3 +126,16 @@
   .item-card.ticket-item:active {
     background-color: #f7f7f7;
   }
+
+  .item-card.ticket-item:first-child {
+    border-top: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .item-card.ticket-item:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+
+  
