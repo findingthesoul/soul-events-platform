@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import EventDetailsTab from './EventDetailsTab';
 import PricingTab from './PricingTab';
 import MoreSettingsTab from './MoreSettingsTab';
+import GuestsTab from './GuestsTab';
 import TicketFormModal from './TicketFormModal';
 import CouponFormModal from './CouponFormModal';
 import {
@@ -22,6 +23,7 @@ import './EventEditorModal.css';
 
 const EventEditorModal = ({
   eventId,
+  vendorId,
   onClose,
   onSave,
   pendingEventSwitch,
@@ -339,6 +341,7 @@ const EventEditorModal = ({
       <div className="tab-header">
         <button className={`tab-button ${activeTab === 'details' ? 'active' : ''}`} onClick={() => handleTabSwitch('details')}>Details</button>
         <button className={`tab-button ${activeTab === 'pricing' ? 'active' : ''}`} onClick={() => handleTabSwitch('pricing')}>Pricing</button>
+        {eventId && <button className={`tab-button ${activeTab === 'guests' ? 'active' : ''}`} onClick={() => handleTabSwitch('guests')}>Guests</button>}
         <button className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => handleTabSwitch('settings')}>Settings</button>
       </div>
 
@@ -357,6 +360,13 @@ const EventEditorModal = ({
             deleteTicket={deleteTicket}
             deleteCoupon={deleteCoupon}
             availableTickets={eventData.tickets || []}
+          />
+        )}
+        {activeTab === 'guests' && eventId && (
+          <GuestsTab
+            eventId={eventId}
+            vendorId={vendorId}
+            hasCertificate={!!(eventData.certificate && eventData.certificate !== 'none')}
           />
         )}
         {activeTab === 'settings' && (

@@ -74,6 +74,23 @@ const MoreSettingsTab = ({ eventData, onFieldChange, calendarsList, onDelete, on
         </select>
       </div>
 
+      <h3>Certificate</h3>
+      <div className="form-group">
+        <label>Certificate Provider</label>
+        <select
+          value={eventData.certificate || 'none'}
+          onChange={(e) => onFieldChange('certificate', e.target.value)}
+        >
+          <option value="none">None (no certificate)</option>
+          <option value="accredible" disabled>Accredible (coming soon)</option>
+        </select>
+        {(!eventData.certificate || eventData.certificate === 'none') && (
+          <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '4px' }}>
+            When set to None, certificate actions are hidden in the Guests tab.
+          </p>
+        )}
+      </div>
+
       <h3>Danger Zone</h3>
       <div className="danger-zone">
         <button className="delete-btn" onClick={onDelete}>

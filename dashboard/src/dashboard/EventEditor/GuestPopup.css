@@ -1,0 +1,228 @@
+/* ── Overlay ── */
+.guest-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Popup box ── */
+.guest-popup {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  width: 480px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.guest-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #f0f0f4;
+}
+.guest-popup-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #111827;
+}
+.guest-popup-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+  padding: 0 4px;
+}
+.guest-popup-close:hover { color: #111; }
+
+/* ── Body ── */
+.guest-popup-body {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Fields ── */
+.guest-popup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.guest-popup-field label {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #374151;
+}
+.guest-popup-field input,
+.guest-popup-field select {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.guest-popup-field input:focus,
+.guest-popup-field select:focus {
+  border-color: #7c3aed;
+}
+
+/* ── Error ── */
+.guest-popup-error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ── Meta ── */
+.guest-popup-meta {
+  border: 1px solid #f0f0f4;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.guest-popup-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  font-size: 0.87rem;
+}
+.guest-popup-meta-row:not(:last-child) {
+  border-bottom: 1px solid #f0f0f4;
+}
+.guest-popup-meta-row span:first-child {
+  color: #6b7280;
+}
+.meta-positive { color: #16a34a; font-weight: 500; }
+.meta-neutral  { color: #9ca3af; }
+
+/* ── Cross-event history ── */
+.guest-popup-history h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px;
+}
+.history-loading,
+.history-empty {
+  font-size: 0.83rem;
+  color: #9ca3af;
+}
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+.history-event {
+  flex: 1;
+  color: #1f2937;
+}
+.history-checked {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* ── Status badge (reused from GuestsTab.css) ── */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.status-enrolled   { background: #dbeafe; color: #1e40af; }
+.status-accepted   { background: #dcfce7; color: #166534; }
+.status-waitlisted { background: #fef9c3; color: #854d0e; }
+.status-cancelled  { background: #fee2e2; color: #991b1b; }
+
+/* ── Footer ── */
+.guest-popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid #f0f0f4;
+  flex-wrap: wrap;
+}
+.guest-popup-footer-left,
+.guest-popup-footer-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.reset-pwd-btn {
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.83rem;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+}
+.reset-pwd-btn:hover:not(:disabled) { background: #f3f4f6; }
+.reset-pwd-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.unregister-btn {
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid #fca5a5;
+  background: #fff;
+  font-size: 0.83rem;
+  cursor: pointer;
+  color: #dc2626;
+  transition: background 0.15s;
+}
+.unregister-btn:hover { background: #fef2f2; }
+
+.cancel-btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.87rem;
+  cursor: pointer;
+  color: #374151;
+}
+.cancel-btn:hover { background: #f3f4f6; }
+
+.save-btn {
+  padding: 7px 18px;
+  border-radius: 6px;
+  border: none;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 0.87rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.save-btn:hover:not(:disabled) { background: #6d28d9; }
+.save-btn:disabled { opacity: 0.5; cursor: not-allowed; }

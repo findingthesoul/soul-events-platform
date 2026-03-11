@@ -1,0 +1,116 @@
+.guests-tab {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Toolbar ── */
+.guests-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.guests-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.guests-selected-count {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.bulk-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.83rem;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+}
+.bulk-btn:hover:not(:disabled) { background: #f3f4f6; }
+.bulk-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Table ── */
+.guests-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.guests-table th {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+}
+
+.guests-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #1f2937;
+}
+
+.guest-row {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.guest-row:hover { background: #f5f3ff; }
+.guest-row.selected { background: #ede9fe; }
+
+/* ── Status badges ── */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.status-enrolled  { background: #dbeafe; color: #1e40af; }
+.status-accepted  { background: #dcfce7; color: #166534; }
+.status-waitlisted{ background: #fef9c3; color: #854d0e; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+
+/* ── Check-in toggle ── */
+.checkin-toggle {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #9ca3af;
+}
+.checkin-toggle.checked {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+/* ── Certificate ── */
+.cert-yes { color: #16a34a; font-weight: 600; }
+.cert-no  { color: #9ca3af; }
+
+/* ── Empty / loading ── */
+.guests-empty,
+.guests-loading {
+  font-size: 0.9rem;
+  color: #6b7280;
+  padding: 24px 0;
+  text-align: center;
+}

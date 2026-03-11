@@ -13,7 +13,11 @@ export const fetchEventById = async (eventId) => {
       { headers }
     );
     const data = await response.json();
-    return data.fields ? { ...data.fields } : null;
+    if (!data.fields) return null;
+    return {
+      ...data.fields,
+      certificate: data.fields['Certificate'] || 'none',
+    };
   } catch (error) {
     console.error('Error fetching event:', error);
     throw error;
@@ -56,6 +60,7 @@ export const saveEvent = async (eventId, eventData) => {
     "Coupon ID": Array.isArray(eventData.coupons)
       ? eventData.coupons.map(c => c.id).filter(id => typeof id === 'string' && id.trim() !== '')
       : [],
+    "Certificate": eventData.certificate || 'none',
   };
 
   const cleanFields = Object.fromEntries(
@@ -372,5 +377,133 @@ export const updateTicketOrderInAirtable = async (tickets) => {
   } catch (error) {
     console.error('❌ Error updating ticket sort order:', error);
     throw error;
+  }
+};
+
+// ─── Registrations ────────────────────────────────────────────────────────────
+
+const mapRegistration = (rec) => ({
+  id: rec.id,
+  name: rec.fields['Name'] || '',
+  email: rec.fields['Email'] || '',
+  organisation: rec.fields['Organisation'] || '',
+  checkedIn: rec.fields['Checked In'] || false,
+  certificateIssued: rec.fields['Certificate Issued'] || false,
+  status: rec.fields['Status'] || 'enrolled',
+  eventIds: rec.fields['Events ID'] || [],
+  vendorIds: rec.fields['Vendors ID'] || [],
+  password: rec.fields['Password'] || '',
+});
+
+export const fetchRegistrationsByEvent = async (eventId) => {
+  if (!eventId) return [];
+  const formula = `FIND("${eventId}", ARRAYJOIN({Events ID}))`;
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Registrations?filterByFormula=${encodeURIComponent(formula)}`,
+      { headers }
+    );
+    const data = await response.json();
+    return (data.records || []).map(mapRegistration);
+  } catch (error) {
+    console.error('Error fetching registrations:', error);
+    return [];
+  }
+};
+
+export const fetchRegistrationsByEmail = async (email) => {
+  if (!email) return [];
+  const formula = `{Email}="${email}"`;
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Registrations?filterByFormula=${encodeURIComponent(formula)}`,
+      { headers }
+    );
+    const data = await response.json();
+    return (data.records || []).map(mapRegistration);
+  } catch (error) {
+    console.error('Error fetching registrations by email:', error);
+    return [];
+  }
+};
+
+export const createRegistration = async (data, eventId, vendorId) => {
+  const fields = {
+    'Name': data.name,
+    'Email': data.email,
+    'Organisation': data.organisation || '',
+    'Status': data.status || 'enrolled',
+    'Events ID': [eventId],
+    'Vendors ID': vendorId ? [vendorId] : [],
+  };
+  if (data.password) fields['Password'] = data.password;
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Registrations`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ fields }),
+    }
+  );
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || 'Failed to create registration');
+  return mapRegistration(result);
+};
+
+export const updateRegistration = async (id, data) => {
+  const fields = {};
+  if (data.name !== undefined) fields['Name'] = data.name;
+  if (data.email !== undefined) fields['Email'] = data.email;
+  if (data.organisation !== undefined) fields['Organisation'] = data.organisation;
+  if (data.checkedIn !== undefined) fields['Checked In'] = data.checkedIn;
+  if (data.certificateIssued !== undefined) fields['Certificate Issued'] = data.certificateIssued;
+  if (data.status !== undefined) fields['Status'] = data.status;
+  if (data.password !== undefined) fields['Password'] = data.password;
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Registrations/${id}`,
+    {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ fields }),
+    }
+  );
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || 'Failed to update registration');
+  return mapRegistration(result);
+};
+
+export const deleteRegistration = async (id) => {
+  const response = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Registrations/${id}`,
+    { method: 'DELETE', headers }
+  );
+  if (!response.ok) throw new Error('Failed to delete registration');
+};
+
+export const loginGuest = async (email, password) => {
+  const registrations = await fetchRegistrationsByEmail(email);
+  if (!registrations.length) throw new Error('No account found with this email');
+  const match = registrations.find((r) => r.password === password);
+  if (!match) throw new Error('Incorrect password');
+  // Gather unique event IDs across all registrations for this guest
+  const allEventIds = [...new Set(registrations.flatMap((r) => r.eventIds))];
+  return { email, registrations, allEventIds };
+};
+
+export const fetchEventsByIds = async (ids = []) => {
+  if (!ids.length) return [];
+  const formula = `OR(${ids.map((id) => `RECORD_ID()='${id}'`).join(',')})`;
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Events?filterByFormula=${encodeURIComponent(formula)}`,
+      { headers }
+    );
+    const data = await response.json();
+    return data.records || [];
+  } catch (error) {
+    console.error('Error fetching events by ids:', error);
+    return [];
   }
 };

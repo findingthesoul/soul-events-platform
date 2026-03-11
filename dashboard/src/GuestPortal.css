@@ -1,0 +1,145 @@
+.guest-portal {
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 32px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.guest-portal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.guest-portal-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+.guest-portal-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.guest-email {
+  font-size: 0.88rem;
+  color: #6b7280;
+}
+.logout-link {
+  background: none;
+  border: none;
+  font-size: 0.88rem;
+  color: #7c3aed;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.logout-link:hover { color: #5b21b6; }
+
+.portal-loading {
+  color: #6b7280;
+  text-align: center;
+  padding: 60px 0;
+  font-size: 0.95rem;
+}
+
+/* ── Sections ── */
+.portal-section {
+  margin-bottom: 40px;
+}
+.portal-section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+.portal-empty {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+/* ── Event list ── */
+.portal-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Event card ── */
+.portal-event-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  transition: box-shadow 0.15s;
+}
+.portal-event-card:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+.portal-event-card.past {
+  opacity: 0.8;
+}
+
+.portal-event-info {
+  flex: 1;
+}
+.portal-event-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px;
+}
+.portal-event-date {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0 0 2px;
+}
+.portal-event-location {
+  font-size: 0.83rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.portal-event-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+/* ── Badges ── */
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.status-enrolled   { background: #dbeafe; color: #1e40af; }
+.status-accepted   { background: #dcfce7; color: #166534; }
+.status-waitlisted { background: #fef9c3; color: #854d0e; }
+.status-cancelled  { background: #fee2e2; color: #991b1b; }
+
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+.badge-checkin { background: #dcfce7; color: #166534; }
+.badge-cert    { background: #ede9fe; color: #5b21b6; }

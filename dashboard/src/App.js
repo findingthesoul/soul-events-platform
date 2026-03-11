@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Login from './Login';
+import GuestPortal from './GuestPortal';
 import EventEditorModal from './dashboard/EventEditor/EventEditorModal';
 import './App.css';
 
@@ -8,9 +9,14 @@ const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 const AIRTABLE_TABLE_NAME = 'Events';
 
 function App() {
+  // ── Vendor session ──────────────────────────────────────────────────────────
   const [token, setToken] = useState(null);
   const [vendorId, setVendorId] = useState(null);
   const [vendorName, setVendorName] = useState(null);
+
+  // ── Guest session ───────────────────────────────────────────────────────────
+  const [guestSession, setGuestSession] = useState(null);
+
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -23,12 +29,16 @@ function App() {
     const storedToken = localStorage.getItem('token');
     const storedVendorId = localStorage.getItem('vendorId');
     const storedVendorName = localStorage.getItem('vendorName');
+    const storedGuest = localStorage.getItem('guestSession');
 
     if (storedToken && storedVendorId) {
       setToken(storedToken);
       setVendorId(storedVendorId);
       setVendorName(storedVendorName);
       fetchEvents(storedToken, storedVendorId);
+    } else if (storedGuest) {
+      try { setGuestSession(JSON.parse(storedGuest)); }
+      catch { localStorage.removeItem('guestSession'); }
     }
   }, []);
 
@@ -69,6 +79,16 @@ function App() {
     setSelectedEvent(null);
   };
 
+  const handleGuestLogin = (data) => {
+    setGuestSession(data);
+    localStorage.setItem('guestSession', JSON.stringify(data));
+  };
+
+  const handleGuestLogout = () => {
+    setGuestSession(null);
+    localStorage.removeItem('guestSession');
+  };
+
   const openEditor = (event = null) => {
     if (hasUnsavedChanges) {
       setPendingEventSwitch(event);
@@ -106,7 +126,15 @@ function App() {
     })
     .sort((a, b) => new Date(a.fields['Start Date']) - new Date(b.fields['Start Date']));
 
-  if (!token || !vendorId) return <Login onLogin={handleLogin} />;
+  // Not logged in
+  if (!token && !vendorId && !guestSession) {
+    return <Login onLogin={handleLogin} onGuestLogin={handleGuestLogin} />;
+  }
+
+  // Guest portal
+  if (guestSession) {
+    return <GuestPortal guestEmail={guestSession.email} onLogout={handleGuestLogout} />;
+  }
 
   return (
     <div className="app-container">
